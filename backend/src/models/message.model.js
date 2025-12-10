@@ -10,7 +10,12 @@ const messageSchema = new mongoose.Schema(
         receiverId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
-            required: true,
+            required: false,
+        },
+        groupId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Group',
+            required: false,
         },
         text: {
             type: String,
@@ -19,9 +24,9 @@ const messageSchema = new mongoose.Schema(
             type: String,
         },
     },
-      {timestamps: true,}
-    );
+    { timestamps: true, }
+);
 
-    const Message = mongoose.model('Message', messageSchema);
+const Message = mongoose.model('Message', messageSchema);
 
-    export default Message
+export default Message

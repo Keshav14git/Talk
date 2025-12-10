@@ -1,26 +1,30 @@
 import mongoose from 'mongoose';
 
 const connectionSchema = new mongoose.Schema({
-  user: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User', 
-    required: true 
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   },
-  friend: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User', 
-    required: true 
+  friend: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   },
   status: {
-    type: String, 
+    type: String,
     enum: ['pending', 'accepted', 'rejected'],
     default: 'pending'
   },
-  createdAt: { 
-    type: Date, 
-    default: Date.now 
+  archivedBy: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  createdAt: {
+    type: Date,
+    default: Date.now
   }
-}, { 
+}, {
   timestamps: true
 });
 

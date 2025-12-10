@@ -4,11 +4,16 @@ import {
   acceptFriendRequest,
   getFriendRequests,
   getFriendsList,
-  removeFriend
+  removeFriend,
+  searchUsers,
+  toggleArchive
 } from '../controllers/connection.controller.js';
 import { protectRoute } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
+
+// Search users
+router.get('/search', protectRoute, searchUsers);
 
 // Send friend request
 router.post('/request', protectRoute, sendFriendRequest);
@@ -24,5 +29,8 @@ router.get('/friends', protectRoute, getFriendsList);
 
 // Remove friend
 router.delete('/remove', protectRoute, removeFriend);
+
+// Toggle archive
+router.post('/archive', protectRoute, toggleArchive);
 
 export default router;

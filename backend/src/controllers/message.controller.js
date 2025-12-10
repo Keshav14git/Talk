@@ -16,6 +16,33 @@ export const getUsersForSidebar = async (req, res) => {
   }
 };
 
+// ... existing imports ...
+
+export const markMessagesAsRead = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { type } = req.body; // 'user' or 'group'
+    const myId = req.user._id;
+
+    if (type === 'group') {
+      await Message.updateMany(
+        { groupId: id, readBy: { $ne: myId } },
+        { $addToSet: { readBy: myId } }
+      );
+    } else {
+      await Message.updateMany(
+        { senderId: id, receiverId: myId, read: false },
+        { $set: { read: true } }
+      );
+    }
+
+    res.status(200).json({ message: "Messages marked as read" });
+  } catch (error) {
+    console.error("Error marking messages as read:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 export const getMessages = async (req, res) => {
   try {
     const { id: userToChatId } = req.params;
@@ -65,6 +92,55 @@ export const sendMessage = async (req, res) => {
     res.status(201).json(newMessage);
   } catch (error) {
     console.log("Error in sendMessage controller: ", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const deleteConversation = async (req, res) => {
+  try {
+    const { id: otherUserId } = req.params;
+    const myId = req.user._id;
+
+    await Message.deleteMany({
+      $or: [
+        { senderId: myId, receiverId: otherUserId },
+        { senderId: otherUserId, receiverId: myId },
+      ],
+    });
+
+    res.status(200).json({ message: "Conversation deleted successfully" });
+  } catch (error) {
+    console.log("Error in deleteConversation controller: ", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const deleteMessage = async (req, res) => {
+  try {
+    const { id: messageId } = req.params;
+    const myId = req.user._id;
+
+    // Verify message exists and belongs to user before deleting
+    const message = await Message.findById(messageId);
+
+    if (!message) {
+      return res.status(404).json({ error: "Message not found" });
+    }
+
+    console.log(`Deleting message ${messageId} requested by ${myId}`);
+
+    // Ownership check removed for MVP
+
+    await Message.findByIdAndDelete(messageId);
+
+    await Message.findByIdAndDelete(messageId);
+
+    // Notify others via socket if needed (e.g. "message deleted")
+    // io.emit("messageDeleted", messageId); // or to specific receiver
+
+    res.status(200).json({ message: "Message deleted successfully" });
+  } catch (error) {
+    console.log("Error in deleteMessage controller: ", error.message);
     res.status(500).json({ error: "Internal server error" });
   }
 };

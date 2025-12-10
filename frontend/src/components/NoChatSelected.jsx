@@ -3,7 +3,7 @@ const NoChatSelected = () => {
     <div className="w-full flex flex-1 flex-col items-center justify-center p-16 bg-base-100/50">
       <div className="max-w-md text-center space-y-6">
         {/* Image Display */}
-        <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center animate-bounce">
+        <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center animate-bounce mx-auto">
           <img src="/talkw.svg" alt="logo" className="w-[124px] h-[124px] " />
         </div>
 

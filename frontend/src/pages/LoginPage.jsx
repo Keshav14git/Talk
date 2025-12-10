@@ -29,7 +29,7 @@ const LoginPage = () => {
                 className=" rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20
               transition-colors"
               >
-                <img src="/talkb.svg" alt="logo" className="w-[100px] h-[100px] object-contain transition-transform duration-300 ease-in-out group-hover:scale-150 translate-y-6" />
+                <img src="/talkw.svg" alt="logo" className="w-[124px] h-[124px] object-contain transition-transform duration-300 ease-in-out group-hover:scale-150 translate-y-6" />
               </div>
               <h1 className="text-2xl font-bold mt-2">Welcome Back</h1>
               <p className="text-base-content/60">Sign in to your account</p>

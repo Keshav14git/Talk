@@ -47,7 +47,7 @@ const SignUpPage = () => {
                 className="rounded-xl bg-primary/10 flex items-center justify-center 
               group-hover:bg-primary/20 transition-colors min-w-[150px] min-h-[150px]::"
               >
-                <img src="/talkb.svg" alt="logo" className="w-[100px] h-[100px] translate-y-6 object-contain transition-transform duration-300 ease-in-out group-hover:scale-150" />
+                <img src="/talkw.svg" alt="logo" className="w-[124px] h-[124px] translate-y-6 object-contain transition-transform duration-300 ease-in-out group-hover:scale-150" />
               </div>
               <h1 className="text-2xl font-bold mt-2">Create Account</h1>
               <p className="text-base-content/60">Get started with your free account</p>

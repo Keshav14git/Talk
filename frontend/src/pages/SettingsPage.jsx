@@ -1,5 +1,6 @@
 import { Send } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
+import { useNavigate } from "react-router-dom";
 
 const PREVIEW_MESSAGES = [
   { id: 1, content: "Hey! How's it going?", isSent: false },
@@ -8,6 +9,7 @@ const PREVIEW_MESSAGES = [
 
 const SettingsPage = () => {
   const { authUser } = useAuthStore();
+  const navigate = useNavigate();
 
   return (
     <div className="h-screen container mx-auto px-4 pt-20 max-w-5xl">
@@ -33,7 +35,7 @@ const SettingsPage = () => {
               </div>
 
               <div className="flex flex-col gap-2">
-                <button className="btn btn-neutral btn-sm" onClick={() => window.location.href = '/profile'}>
+                <button className="btn btn-neutral btn-sm" onClick={() => navigate('/profile')}>
                   Edit Profile
                 </button>
                 <button className="btn btn-error btn-sm text-white" onClick={useAuthStore.getState().logout}>

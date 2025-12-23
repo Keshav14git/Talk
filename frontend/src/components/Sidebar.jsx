@@ -277,29 +277,34 @@ const ListItem = ({ user, icon: Icon, isSelected, isOnline, onClick, useAvatar, 
   >
     {useAvatar ? (
       <div className="relative shrink-0">
-        <img src={user.profilePic || "/avatar.png"} alt="" className="size-10 rounded-full object-cover bg-gray-800 ring-2 ring-gray-950" />
-        {isOnline && <span className="absolute bottom-0 right-0 size-2.5 bg-green-500 rounded-full border-2 border-gray-900" />}
+        <img src={user.profilePic || "/avatar.png"} alt="" className="size-12 rounded-full object-cover bg-gray-800 ring-2 ring-gray-950" />
+        {isOnline && <span className="absolute bottom-0 right-0 size-3 bg-green-500 rounded-full border-2 border-gray-900" />}
       </div>
     ) : (
-      <div className={`size-10 rounded-full flex items-center justify-center ${isSelected ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-500 group-hover:bg-gray-700 group-hover:text-gray-300'}`}>
-        <Icon className="size-5" />
+      <div className={`size-12 rounded-full flex items-center justify-center ${isSelected ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-500 group-hover:bg-gray-700 group-hover:text-gray-300'}`}>
+        <Icon className="size-6" />
       </div>
     )}
 
-    <div className="flex-1 text-left min-w-0">
-      <div className="flex justify-between items-baseline">
-        <span className={`text-[14px] font-medium truncate heading-font ${isSelected || isOnline ? "text-gray-200" : "text-gray-400"}`}>
+    <div className="flex-1 text-left min-w-0 flex flex-col justify-center">
+      <div className="flex justify-between items-center mb-0.5">
+        <span className={`text-[15px] font-semibold truncate heading-font ${isSelected || isOnline ? "text-gray-100" : "text-gray-300"}`}>
           {user.fullName}
         </span>
-        {/* Unread Count Badge */}
+        {/* Optional: Time could go here if available */}
+      </div>
+
+      <div className="flex justify-between items-center text-[13px] text-gray-500 h-5">
+        <span className="truncate max-w-[85%] pr-2">
+          {user.lastMessage?.text || (useAvatar ? "Click to chat" : "View messages")}
+        </span>
+
+        {/* Unread Badge - Bottom Right */}
         {unreadCount > 0 && (
-          <span className="bg-green-500 text-gray-950 text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[1.25rem] text-center">
+          <span className="bg-[#25D366] text-white text-[10px] font-bold h-5 min-w-[1.25rem] px-1.5 flex items-center justify-center rounded-full shadow-sm">
             {unreadCount}
           </span>
         )}
-      </div>
-      <div className="text-[12px] text-gray-500 truncate mt-0.5 flex justify-between">
-        <span className="truncate max-w-[85%]">{user.lastMessage?.text ? user.lastMessage.text : (useAvatar ? "Click to chat" : "View messages")}</span>
       </div>
     </div>
   </button>

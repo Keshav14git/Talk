@@ -231,43 +231,67 @@ export const useChatStore = create((set, get) => ({
     };
 
     socket.on("newMessage", (newMessage) => {
-      const currentSelectedUser = get().selectedUser;
-      const currentViewType = get().selectedType;
-      const isChatOpen = currentSelectedUser?._id === newMessage.senderId && currentViewType !== "group";
+      const { selectedUser, selectedType } = get();
+      const isChatOpen = selectedUser?._id === newMessage.senderId && selectedType !== "group";
 
       if (isChatOpen) {
         set({ messages: [...get().messages, newMessage] });
-      } else {
-        // Increment unread count
-        playNotificationSound();
-        set(state => ({
-          users: state.users.map(u =>
-            u._id === newMessage.senderId ? { ...u, unreadCount: (u.unreadCount || 0) + 1 } : u
-          )
-        }));
-        toast.success(`New message from ${newMessage.senderId}`); // Optional: Replace ID with name if possible (need lookup)
       }
+
+      // Update User List (Sort & Unread)
+      set(state => {
+        const userIndex = state.users.findIndex(u => u._id === newMessage.senderId);
+        if (userIndex === -1) return {}; // New user? Might need re-fetch, but for now ignore
+
+        const updatedUsers = [...state.users];
+        const [user] = updatedUsers.splice(userIndex, 1);
+
+        user.lastMessage = newMessage;
+        if (!isChatOpen) {
+          user.unreadCount = (user.unreadCount || 0) + 1;
+        } else {
+          user.unreadCount = 0;
+        }
+
+        updatedUsers.unshift(user);
+        return { users: updatedUsers };
+      });
     });
 
     socket.on("newGroupMessage", (newMessage) => {
-      const currentSelectedUser = get().selectedUser;
-      const currentViewType = get().selectedType;
-      const isGroupOpen = currentSelectedUser?._id === newMessage.groupId && currentViewType === "group";
+      const { selectedUser, selectedType } = get();
+      const isGroupOpen = selectedUser?._id === newMessage.groupId && selectedType === "group";
 
-      // Don't notify for own messages (if backend echoes them back?) usually socket excludes sender but be safe
+      // Ignore own messages for notification logic usually, but for sorting we want it on top too? 
+      // User says "most latest message to a chat will be on top". Yes, even my own should move it to top.
+      // But socket usually sends only *incoming*. If I send, `sendMessage` handles it? `sendMessage` endpoint should return the message. 
+      // We generally update list order on send too in `sendMessage` function? 
+
       const myId = useAuthStore.getState().authUser?._id;
-      if (newMessage.senderId === myId) return;
+      if (newMessage.senderId === myId) return; // Socket usually echoes back in some setups, assuming strict broadcast to others here based on previous code.
 
       if (isGroupOpen) {
         set({ messages: [...get().messages, newMessage] });
-      } else {
-        playNotificationSound();
-        set(state => ({
-          groups: state.groups.map(g =>
-            g._id === newMessage.groupId ? { ...g, unreadCount: (g.unreadCount || 0) + 1 } : g
-          )
-        }));
       }
+
+      // Update Group List
+      set(state => {
+        const groupIndex = state.groups.findIndex(g => g._id === newMessage.groupId);
+        if (groupIndex === -1) return {};
+
+        const updatedGroups = [...state.groups];
+        const [group] = updatedGroups.splice(groupIndex, 1);
+
+        group.lastMessage = newMessage;
+        if (!isGroupOpen) {
+          group.unreadCount = (group.unreadCount || 0) + 1;
+        } else {
+          group.unreadCount = 0;
+        }
+
+        updatedGroups.unshift(group);
+        return { groups: updatedGroups };
+      });
     });
   },
 

@@ -8,8 +8,12 @@ export const createGroup = async (req, res) => {
         const { name, members, image, type, description } = req.body;
         const admin = req.user._id;
 
-        if (!name || !members || members.length === 0) {
-            return res.status(400).json({ message: "Name and members are required" });
+        if (!name) {
+            return res.status(400).json({ message: "Name is required" });
+        }
+
+        if (type !== 'channel' && (!members || members.length === 0)) {
+            return res.status(400).json({ message: "Group members are required" });
         }
 
         let imageUrl = "";

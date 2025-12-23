@@ -2,11 +2,10 @@ import { useState, useEffect } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { X, Search, CheckCircle2, Hash, Users } from "lucide-react";
 
-const CreateGroupModal = ({ onClose, initialType = "group" }) => {
+const CreateGroupModal = ({ onClose }) => {
     const { users, getUsers, createGroup } = useChatStore();
     const [groupName, setGroupName] = useState("");
     const [description, setDescription] = useState("");
-    const [type, setType] = useState(initialType); // 'group' or 'channel'
     const [selectedMembers, setSelectedMembers] = useState([]);
     const [isCreating, setIsCreating] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
@@ -29,15 +28,14 @@ const CreateGroupModal = ({ onClose, initialType = "group" }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        // Validation: Group needs name and members. Channel needs name.
-        if (!groupName.trim()) return;
-        if (type === 'group' && selectedMembers.length === 0) return;
+        // Validation: Group needs name and members.
+        if (!groupName.trim() || selectedMembers.length === 0) return;
 
         setIsCreating(true);
         const success = await createGroup({
             name: groupName,
             description,
-            type,
+            type: "group",
             members: selectedMembers
         });
 
@@ -50,7 +48,7 @@ const CreateGroupModal = ({ onClose, initialType = "group" }) => {
             <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden border border-gray-100 ring-1 ring-black/5 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-                    <h3 className="text-lg font-semibold text-gray-900">Create New Space</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">Create New Group</h3>
                     <button
                         onClick={onClose}
                         className="p-1 rounded-full hover:bg-gray-200 text-gray-500 transition-colors"
@@ -61,48 +59,16 @@ const CreateGroupModal = ({ onClose, initialType = "group" }) => {
 
                 <div className="p-6 flex-1 overflow-y-auto custom-scrollbar space-y-5">
 
-                    {/* Type Selector */}
-                    <div className="grid grid-cols-2 gap-3">
-                        <button
-                            type="button"
-                            onClick={() => setType("group")}
-                            className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${type === "group"
-                                ? "border-[#FF5636] bg-[#FF5636]/5"
-                                : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                                }`}
-                        >
-                            <Users className={`size-6 ${type === "group" ? "text-[#FF5636]" : "text-gray-400"}`} />
-                            <div className="text-center">
-                                <div className={`font-medium ${type === "group" ? "text-[#FF5636]" : "text-gray-900"}`}>Group Chat</div>
-                                <div className="text-xs text-gray-500 mt-1">Private collaboration</div>
-                            </div>
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setType("channel")}
-                            className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${type === "channel"
-                                ? "border-[#FF5636] bg-[#FF5636]/5"
-                                : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                                }`}
-                        >
-                            <Hash className={`size-6 ${type === "channel" ? "text-[#FF5636]" : "text-gray-400"}`} />
-                            <div className="text-center">
-                                <div className={`font-medium ${type === "channel" ? "text-[#FF5636]" : "text-gray-900"}`}>Channel</div>
-                                <div className="text-xs text-gray-500 mt-1">Broadcast updates</div>
-                            </div>
-                        </button>
-                    </div>
-
                     {/* Inputs */}
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Group Name</label>
                             <input
                                 type="text"
                                 className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:border-[#FF5636] focus:ring-1 focus:ring-[#FF5636]"
                                 value={groupName}
                                 onChange={(e) => setGroupName(e.target.value)}
-                                placeholder={`e.g. ${type === 'group' ? 'Product Team' : 'Announcements'}`}
+                                placeholder="e.g. Product Team"
                             />
                         </div>
                         <div>
@@ -112,7 +78,7 @@ const CreateGroupModal = ({ onClose, initialType = "group" }) => {
                                 className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:border-[#FF5636] focus:ring-1 focus:ring-[#FF5636]"
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
-                                placeholder="What's this space for?"
+                                placeholder="What's this group for?"
                             />
                         </div>
                     </div>
@@ -172,9 +138,9 @@ const CreateGroupModal = ({ onClose, initialType = "group" }) => {
                     <button
                         onClick={handleSubmit}
                         className="w-full py-2.5 bg-[#FF5636] hover:bg-[#E04529] text-white rounded-xl font-medium shadow-sm shadow-orange-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled={isCreating || !groupName.trim() || (type === 'group' && selectedMembers.length === 0)}
+                        disabled={isCreating || !groupName.trim() || selectedMembers.length === 0}
                     >
-                        {isCreating ? "Creating..." : `Create ${type === 'group' ? 'Group' : 'Channel'}`}
+                        {isCreating ? "Creating..." : "Create Group"}
                     </button>
                 </div>
             </div>

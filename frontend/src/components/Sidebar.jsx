@@ -7,6 +7,7 @@ import AddFriendModal from "./AddFriendModal";
 import FriendRequestsModal from "./FriendRequestsModal";
 import CreateGroupModal from "./CreateGroupModal";
 import ExploreChannelsModal from "./ExploreChannelsModal";
+import CreateChannelModal from "./CreateChannelModal";
 import { motion, AnimatePresence } from "framer-motion";
 
 const Sidebar = () => {
@@ -21,6 +22,7 @@ const Sidebar = () => {
     friendRequests, getFriendRequests,
     unfriendUser
   } = useChatStore();
+
 
   const { onlineUsers } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState("");
@@ -232,7 +234,8 @@ const Sidebar = () => {
       {/* Modals */}
       {activeModal === 'addFriend' && <AddFriendModal onClose={() => setActiveModal(null)} />}
       {activeModal === 'requests' && <FriendRequestsModal onClose={() => setActiveModal(null)} />}
-      {activeModal === 'createGroup' && <CreateGroupModal onClose={() => setActiveModal(null)} initialType="group" />}
+      {activeModal === 'createGroup' && <CreateGroupModal onClose={() => setActiveModal(null)} />}
+      {activeModal === 'createChannel' && <CreateChannelModal onClose={() => setActiveModal(null)} />}
       {activeModal === 'explore' && <ExploreChannelsModal onClose={() => setActiveModal(null)} />}
     </aside>
   );

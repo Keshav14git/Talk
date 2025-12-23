@@ -112,10 +112,10 @@ const MessageInput = () => {
         </div>
       )}
 
-      <div className="flex items-end gap-2 bg-gray-50 p-2 rounded-3xl border border-gray-200 focus-within:ring-1 focus-within:ring-[#FF5636] focus-within:border-[#FF5636] transition-all">
+      <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-2xl border border-gray-100 focus-within:ring-2 focus-within:ring-[#FF5636]/10 focus-within:border-[#FF5636]/50 transition-all shadow-sm">
         <button
           type="button"
-          className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-full transition-colors shrink-0"
+          className="p-2 text-gray-400 hover:text-[#FF5636] hover:bg-[#FF5636]/10 rounded-xl transition-all shrink-0"
           onClick={() => fileInputRef.current?.click()}
           title="Attach file"
         >
@@ -124,8 +124,8 @@ const MessageInput = () => {
 
         <textarea
           ref={textareaRef}
-          className="flex-1 bg-transparent border-none outline-none text-gray-900 placeholder:text-gray-400 px-2 py-2.5 min-h-[44px] max-h-[150px] resize-none overflow-y-auto w-full custom-scrollbar"
-          placeholder="Message..."
+          className="flex-1 bg-transparent border-none outline-none text-gray-900 placeholder:text-gray-400/80 px-2 py-3 min-h-[44px] max-h-[150px] resize-none overflow-y-auto w-full custom-scrollbar text-sm leading-relaxed font-medium"
+          placeholder="Type a message..."
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -142,8 +142,8 @@ const MessageInput = () => {
 
         <button
           onClick={handleSendMessage}
-          className={`p-2 rounded-full flex items-center justify-center shrink-0 transition-all duration-200
-                        ${!text.trim() && !imagePreview ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-[#FF5636] text-white hover:bg-[#E04529] shadow-md"}
+          className={`p-2.5 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200
+                        ${!text.trim() && !imagePreview ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-[#FF5636] text-white hover:bg-[#E04529] shadow-md shadow-[#FF5636]/20"}
                     `}
           disabled={!text.trim() && !imagePreview}
         >

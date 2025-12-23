@@ -14,6 +14,10 @@ export const useChatStore = create((set, get) => ({
   isMessagesLoading: false,
   isGroupsLoading: false,
 
+  // Reply State
+  replyMessage: null,
+  setReplyMessage: (message) => set({ replyMessage: message }),
+
   // UI State
   viewType: "chats", // "chats" | "groups" | "archived"
   isSidebarOpen: true, // Default open on desktop, should handle mobile separately if needed
@@ -157,20 +161,21 @@ export const useChatStore = create((set, get) => ({
   },
 
   sendMessage: async (messageData) => {
-    const { selectedUser, selectedType, messages } = get();
+    const { selectedUser, selectedType, messages, replyMessage } = get();
     if (!selectedUser) {
       toast.error("No conversation selected");
       return;
     }
 
     try {
+      const payload = { ...messageData, replyTo: replyMessage?._id };
       let res;
       if (selectedType === "group") {
-        res = await axiosInstance.post(`/groups/send/${selectedUser._id}`, messageData);
+        res = await axiosInstance.post(`/groups/send/${selectedUser._id}`, payload);
       } else {
-        res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
+        res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, payload);
       }
-      set({ messages: [...messages, res.data] });
+      set({ messages: [...messages, res.data], replyMessage: null });
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to send message");
     }

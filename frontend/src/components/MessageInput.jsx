@@ -1,22 +1,30 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
-import { Image, Send, X, Smile, Paperclip, Mic } from "lucide-react";
+import { Send, X, Paperclip, Reply } from "lucide-react";
 import toast from "react-hot-toast";
 
 const MessageInput = () => {
   const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
-  const { sendMessage, selectedUser } = useChatStore(); // Get selectedUser (which is group/user)
-  const { authUser } = useAuthStore(); // Get authUser to check admin status
+  const textareaRef = useRef(null);
 
-  // Check Permissions
+  const { sendMessage, selectedUser, replyMessage, setReplyMessage } = useChatStore();
+  const { authUser } = useAuthStore();
+
   const isChannel = selectedUser?.type === 'channel';
-  // Admin can be populated object or just ID depending on endpoint. Handle both.
   const adminId = selectedUser?.admin?._id || selectedUser?.admin || "";
   const isAdmin = adminId === authUser?._id;
   const isReadOnly = isChannel && !isAdmin;
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 150)}px`;
+    }
+  }, [text]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -24,7 +32,6 @@ const MessageInput = () => {
       toast.error("Please select an image file");
       return;
     }
-
     const reader = new FileReader();
     reader.onloadend = () => {
       setImagePreview(reader.result);
@@ -38,7 +45,7 @@ const MessageInput = () => {
   };
 
   const handleSendMessage = async (e) => {
-    e.preventDefault();
+    e?.preventDefault();
     if (!text.trim() && !imagePreview) return;
 
     try {
@@ -51,8 +58,19 @@ const MessageInput = () => {
       setText("");
       setImagePreview(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
+
+      // Reset height
+      if (textareaRef.current) textareaRef.current.style.height = 'auto';
+
     } catch (error) {
       console.error("Failed to send message:", error);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
     }
   };
 
@@ -67,68 +85,73 @@ const MessageInput = () => {
   }
 
   return (
-    <div className="p-4 w-full bg-white border-t border-gray-200">
+    <div className="p-2 w-full bg-white border-t border-gray-200">
+      {/* Reply Banner */}
+      {replyMessage && (
+        <div className="flex items-center justify-between bg-gray-50 p-2 mb-2 rounded-lg border-l-4 border-[#FF5636]">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 text-xs font-semibold text-[#FF5636] mb-0.5">
+              <Reply className="size-3" />
+              <span>Replying to {replyMessage.senderId === authUser._id ? 'yourself' : 'sender'}</span>
+            </div>
+            <div className="text-sm text-gray-600 truncate">
+              {replyMessage.image && <span className="italic mr-1">[Image]</span>}
+              {replyMessage.text}
+            </div>
+          </div>
+          <button onClick={() => setReplyMessage(null)} className="p-1 hover:bg-gray-200 rounded-full text-gray-500">
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
       {imagePreview && (
-        <div className="mb-3 relative w-fit">
+        <div className="mb-3 relative w-fit ml-4">
           <img src={imagePreview} className="h-32 rounded-lg border border-gray-200 object-cover" alt="Preview" />
           <button onClick={removeImage} className="absolute -top-2 -right-2 p-1 bg-gray-900 rounded-full text-white hover:bg-gray-700 transition-colors"><X size={12} /></button>
         </div>
       )}
 
-      <form onSubmit={handleSendMessage} className="border border-gray-300 rounded-xl bg-white shadow-sm focus-within:ring-1 focus-within:ring-[#FF5636] focus-within:border-[#FF5636] transition-all">
-        {/* Toolbar */}
-        <div className="flex items-center gap-1 p-2 bg-gray-50 border-b border-gray-100 rounded-t-xl">
-          <button
-            type="button"
-            className="p-1.5 text-gray-500 hover:bg-gray-200 rounded-md transition-colors"
-            onClick={() => fileInputRef.current?.click()}
-            title="Attach file"
-          >
-            <Paperclip size={16} />
-          </button>
-          <div className="h-4 w-px bg-gray-300 mx-1" />
-          <button type="button" className="p-1.5 text-gray-500 hover:bg-gray-200 rounded-md transition-colors">
-            <span className="font-bold text-xs font-serif">B</span>
-          </button>
-          <button type="button" className="p-1.5 text-gray-500 hover:bg-gray-200 rounded-md transition-colors">
-            <span className="italic text-xs font-serif">I</span>
-          </button>
-          <button type="button" className="p-1.5 text-gray-500 hover:bg-gray-200 rounded-md transition-colors">
-            <span className="underline text-xs font-serif">U</span>
-          </button>
-        </div>
+      <div className="flex items-end gap-2 bg-gray-50 p-2 rounded-3xl border border-gray-200 focus-within:ring-1 focus-within:ring-[#FF5636] focus-within:border-[#FF5636] transition-all">
+        <button
+          type="button"
+          className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-full transition-colors shrink-0"
+          onClick={() => fileInputRef.current?.click()}
+          title="Attach file"
+        >
+          <Paperclip size={20} />
+        </button>
 
-        {/* Text Area */}
-        <div className="flex items-end gap-2 p-2">
-          <input
-            type="text"
-            className="flex-1 bg-transparent border-none outline-none text-sm text-gray-900 placeholder:text-gray-400 px-2 min-h-[40px]"
-            placeholder="Message..."
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-          />
+        <textarea
+          ref={textareaRef}
+          className="flex-1 bg-transparent border-none outline-none text-gray-900 placeholder:text-gray-400 px-2 py-2.5 min-h-[44px] max-h-[150px] resize-none overflow-y-auto w-full custom-scrollbar"
+          placeholder="Message..."
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={handleKeyDown}
+          rows={1}
+        />
 
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            ref={fileInputRef}
-            onChange={handleImageChange}
-          />
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          ref={fileInputRef}
+          onChange={handleImageChange}
+        />
 
-          <button
-            type="submit"
-            className={`p-2 rounded-lg transition-colors flex items-center justify-center
-                    ${!text.trim() && !imagePreview ? "bg-gray-100 text-gray-400" : "bg-[#007a5a] text-white hover:bg-[#007a5a]/90"}
-                `}
-            disabled={!text.trim() && !imagePreview}
-          >
-            <Send size={16} />
-          </button>
-        </div>
-      </form>
-      <div className="text-[10px] text-gray-400 mt-2 text-center">
-        <strong>Return</strong> to send, <strong>Shift + Return</strong> to add a new line
+        <button
+          onClick={handleSendMessage}
+          className={`p-2 rounded-full flex items-center justify-center shrink-0 transition-all duration-200
+                        ${!text.trim() && !imagePreview ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-[#FF5636] text-white hover:bg-[#E04529] shadow-md"}
+                    `}
+          disabled={!text.trim() && !imagePreview}
+        >
+          <Send size={18} className={(!text.trim() && !imagePreview) ? "" : "ml-0.5"} />
+        </button>
+      </div>
+      <div className="text-[10px] text-gray-300 mt-1 text-center opacity-60">
+        <strong>Enter</strong> to send, <strong>Shift + Enter</strong> for new line
       </div>
     </div>
   );

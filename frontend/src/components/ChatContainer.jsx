@@ -5,10 +5,10 @@ import MessageInput from "./MessageInput";
 import MessageSkeleton from "./skeletons/MessageSkeleton";
 import { useAuthStore } from "../store/useAuthStore";
 import { formatMessageTime } from "../lib/utils";
-import { X, Trash2 } from "lucide-react";
+import { X, Trash2, Reply } from "lucide-react";
 
 const ChatContainer = () => {
-  const { messages, getMessages, isMessagesLoading, subscribeToMessages, unsubscribeFromMessages, selectedUser, deleteMessage } = useChatStore();
+  const { messages, getMessages, isMessagesLoading, subscribeToMessages, unsubscribeFromMessages, selectedUser, deleteMessage, setReplyMessage } = useChatStore();
   const { authUser } = useAuthStore();
   const messageEndRef = useRef(null);
 
@@ -63,6 +63,10 @@ const ChatContainer = () => {
     }
   };
 
+  const handleReply = (message) => {
+    setReplyMessage(message);
+  };
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-white relative">
       <div className="relative z-10">
@@ -104,15 +108,33 @@ const ChatContainer = () => {
           const isPrevSame = idx > 0 && messages[idx - 1].senderId === message.senderId;
           const isSelected = selectedMessageIds.includes(message._id);
 
-          // Timestamp check (only show if gap is large or if specific logic) - for now just always show time on hover or in line?
-          // Notion/Slack style: Grouped messages often share one avatar, but here we'll keep it simple: Avatar always for first in group.
+          // Grouping logic for rounded corners
+          // If previous was same sender, top corners are small. If next is same sender, bottom corners are small.
+          const isNextSame = idx < messages.length - 1 && messages[idx + 1].senderId === message.senderId;
+
+          let borderRadiusClass = "rounded-2xl";
+          if (isMe) {
+            if (isPrevSame && isNextSame) borderRadiusClass = "rounded-r-sm rounded-l-2xl"; // Middle
+            else if (isPrevSame && !isNextSame) borderRadiusClass = "rounded-tr-sm rounded-br-2xl rounded-l-2xl"; // Last
+            else if (!isPrevSame && isNextSame) borderRadiusClass = "rounded-br-sm rounded-tr-2xl rounded-l-2xl"; // First
+            else borderRadiusClass = "rounded-2xl rounded-tr-sm"; // Single
+          } else {
+            if (isPrevSame && isNextSame) borderRadiusClass = "rounded-l-sm rounded-r-2xl";
+            else if (isPrevSame && !isNextSame) borderRadiusClass = "rounded-tl-sm rounded-bl-2xl rounded-r-2xl";
+            else if (!isPrevSame && isNextSame) borderRadiusClass = "rounded-bl-sm rounded-tl-2xl rounded-r-2xl";
+            else borderRadiusClass = "rounded-2xl rounded-tl-sm";
+          }
+
+          // Force grouping visual: margin-top tiny for same sender, larger for diff
+          const marginTopClass = isPrevSame ? "mt-[2px]" : "mt-4";
+
 
           return (
             <div
               key={message._id}
-              className={`group flex ${isMe ? "flex-row-reverse" : "flex-row"} gap-3 py-1 px-4 hover:bg-gray-50/50 transition-colors relative
+              className={`group flex ${isMe ? "flex-row-reverse" : "flex-row"} gap-3 px-4 hover:bg-gray-50/50 transition-colors relative
                 ${isSelected ? "bg-[#FF5636]/5 hover:bg-[#FF5636]/10" : ""}
-                ${!isPrevSame ? "mt-4" : "mt-0.5"}
+                ${marginTopClass}
               `}
               onClick={() => isSelectionMode && toggleSelection(message._id)}
             >
@@ -128,50 +150,40 @@ const ChatContainer = () => {
                 </div>
               )}
 
-              {/* Avatar */}
-              <div className="w-8 flex-shrink-0 flex flex-col items-center">
-                {!isPrevSame && !isMe && (
+              {/* Avatar - Only show for last message in group if not me */}
+              <div className="w-8 flex-shrink-0 flex flex-col items-end justify-end pb-1">
+                {!isMe && !isNextSame && (
                   <img
                     src={selectedUser.profilePic || "/avatar.png"}
                     alt="avatar"
                     className="size-8 rounded-full object-cover shadow-sm"
                   />
                 )}
-                {/* No avatar for "Me" to keep it clean, or could add it. Let's hide "Me" avatar for typical bubble feel, looking cleaner. */}
-                {!isPrevSame && isMe && (
-                  <img
-                    src={authUser.profilePic || "/avatar.png"}
-                    alt="avatar"
-                    className="size-8 rounded-full object-cover shadow-sm"
-                  />
-                )}
-                {isPrevSame && <div className="w-8" />}
               </div>
 
               {/* Content Bubble */}
               <div className={`flex flex-col max-w-[70%] ${isMe ? "items-end" : "items-start"}`}>
 
-                {/* Name/Time Header (Only for first in group) */}
-                {!isPrevSame && (
-                  <div className={`flex items-baseline gap-2 mb-1 text-xs text-gray-400 ${isMe ? "flex-row-reverse" : "flex-row"}`}>
-                    <span className="font-medium text-gray-600">
-                      {isMe ? "You" : selectedUser.fullName}
-                    </span>
-                    <span>
-                      {formatMessageTime(message.createdAt)}
-                    </span>
-                  </div>
-                )}
+                {/* Name header only if not prev same and not me (or handle group names logic later) */}
+                {/* For now, simplified: clean look, no repeated names */}
 
                 {/* Bubble */}
                 <div
-                  className={`relative px-4 py-2 shadow-sm text-[15px] leading-relaxed break-words
+                  className={`relative px-4 py-2 shadow-sm text-[15px] leading-relaxed break-words border border-transparent
                      ${isMe
-                      ? "bg-gray-900 text-white rounded-2xl rounded-tr-sm"
-                      : "bg-gray-100 text-gray-800 rounded-2xl rounded-tl-sm"
+                      ? `bg-gray-900 text-white ${borderRadiusClass}`
+                      : `bg-white text-gray-800 border-gray-100 ${borderRadiusClass}`
                     }
                    `}
                 >
+                  {/* Reply Context */}
+                  {message.replyTo && (
+                    <div className={`mb-2 p-2 rounded text-xs border-l-2 ${isMe ? "bg-gray-800 border-gray-600 text-gray-300" : "bg-gray-50 border-[#FF5636] text-gray-500"}`}>
+                      <div className="font-semibold opacity-75 mb-0.5">Replying to</div>
+                      <div className="truncate opacity-90">{message.replyTo.text || "Photo"}</div>
+                    </div>
+                  )}
+
                   {message.image && (
                     <div className="mb-2">
                       <img
@@ -183,18 +195,35 @@ const ChatContainer = () => {
                     </div>
                   )}
                   {message.text}
+
+                  <div className={`text-[10px] mt-1 text-right w-full ${isMe ? "text-gray-400" : "text-gray-400"}`}>
+                    {formatMessageTime(message.createdAt)}
+                  </div>
+
                 </div>
               </div>
 
-              {/* Delete Hover Action */}
-              {!isSelectionMode && isMe && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleDelete(message._id); }}
-                  className="self-center p-1.5 text-gray-400 hover:text-red-500 hover:bg-gray-100 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                  title="Delete Message"
-                >
-                  <Trash2 size={14} />
-                </button>
+              {/* Hover Actions (Reply, Delete) */}
+              {!isSelectionMode && (
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity self-center px-2">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleReply(message); }}
+                    className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
+                    title="Reply"
+                  >
+                    <Reply size={14} />
+                  </button>
+
+                  {isMe && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDelete(message._id); }}
+                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-gray-100 rounded"
+                      title="Delete"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           );

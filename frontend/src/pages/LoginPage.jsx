@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
-import AuthImagePattern from "../components/AuthImagePattern";
 import { Link } from "react-router-dom";
-import { Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
-import { motion } from "framer-motion";
+import { Eye, EyeOff, Loader2, Mail, Lock } from "lucide-react";
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -19,111 +17,80 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2 bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
-      {/* Left Side - Form */}
-      <motion.div
-        initial={{ opacity: 0, x: -50 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5 }}
-        className="flex flex-col justify-center items-center p-6 sm:p-12 relative z-10"
-      >
-        <div className="w-full max-w-md space-y-8 bg-white/70 backdrop-blur-2xl p-10 rounded-[2.5rem] shadow-2xl border border-white/60 ring-1 ring-white/50">
-          {/* Logo */}
-          <div className="text-center mb-8">
-            <div className="flex flex-col items-center gap-2 group">
-              <div
-                className="size-16 rounded-2xl bg-gradient-to-tr from-primary/10 to-secondary/10 flex items-center justify-center group-hover:from-primary/20 group-hover:to-secondary/20 transition-all shadow-md group-hover:shadow-lg"
-              >
-                <img src="/talkw.svg" alt="logo" className="w-10 h-10 object-contain transition-transform duration-300 ease-in-out group-hover:rotate-12" />
-              </div>
-              <h1 className="text-3xl font-extrabold mt-6 tracking-tight text-gray-900">Welcome Back</h1>
-              <p className="text-gray-500 font-medium">Sign in to your account</p>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-4">
+            <div className="size-12 bg-blue-100 rounded-xl flex items-center justify-center">
+              <img src="/talkw.svg" alt="logo" className="size-6" />
             </div>
           </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text font-medium text-base-content/70">Email</span>
-              </label>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-base-content/40 group-focus-within:text-primary transition-colors" />
-                </div>
-                <input
-                  type="email"
-                  className={`input w-full pl-11 h-12 rounded-xl bg-white/50 border-white/50 focus:border-primary/50 focus:bg-white/80 transition-all shadow-sm`}
-                  placeholder="you@example.com"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text font-medium text-base-content/70">Password</span>
-              </label>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-base-content/40 group-focus-within:text-primary transition-colors" />
-                </div>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  className={`input w-full pl-11 h-12 rounded-xl bg-white/50 border-white/50 focus:border-primary/50 focus:bg-white/80 transition-all shadow-sm`}
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-base-content/40 hover:text-primary transition-colors" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-base-content/40 hover:text-primary transition-colors" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              type="submit"
-              className="btn btn-primary w-full h-12 rounded-xl text-lg font-semibold shadow-lg shadow-primary/30"
-              disabled={isLoggingIn}
-            >
-              {isLoggingIn ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  Loading...
-                </>
-              ) : (
-                "Sign in"
-              )}
-            </motion.button>
-          </form>
-
-          <div className="text-center">
-            <p className="text-base-content/60 font-medium">
-              Don&apos;t have an account?{" "}
-              <Link to="/signup" className="link link-primary no-underline hover:underline font-bold transition-all">
-                Create account
-              </Link>
-            </p>
-          </div>
+          <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
+          <p className="text-gray-500 text-sm mt-1">Enter your details to sign in</p>
         </div>
-      </motion.div>
 
-      {/* Right Side - Image/Pattern */}
-      <AuthImagePattern
-        title={"Welcome back!"}
-        subtitle={"Sign in to continue your conversations and catch up with your messages."}
-      />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Email</label>
+            <div className="relative">
+              <input
+                type="email"
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors placeholder:text-gray-400"
+                placeholder="you@example.com"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Password</label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors placeholder:text-gray-400"
+                placeholder="••••••••"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="size-4 text-gray-400 hover:text-gray-600" />
+                ) : (
+                  <Eye className="size-4 text-gray-400 hover:text-gray-600" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            className="w-full py-2.5 bg-[#1164A3] hover:bg-[#0f548c] text-white rounded-lg font-medium text-sm transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+            disabled={isLoggingIn}
+          >
+            {isLoggingIn ? (
+              <>
+                <Loader2 className="size-4 animate-spin mr-2" />
+                Signing in...
+              </>
+            ) : (
+              "Sign in"
+            )}
+          </button>
+        </form>
+
+        <div className="mt-6 text-center text-xs text-gray-500">
+          Don&apos;t have an account?{" "}
+          <Link to="/signup" className="text-[#1164A3] hover:text-[#0f548c] font-medium hover:underline">
+            Create account
+          </Link>
+        </div>
+      </div>
     </div>
   );
 };

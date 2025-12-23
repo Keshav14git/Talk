@@ -20,26 +20,36 @@ const App = () => {
   console.log({ authUser });
 
   if (isCheckingAuth && !authUser) return (
-    <div className='flex items-center justify-center h-screen'>
-      <Loader className="size-10 animate-spin" />
+    <div className="flex items-center justify-center h-screen bg-gray-50">
+      <Loader className="size-10 animate-spin text-gray-400" />
     </div>
   );
 
   return (
-    <div data-theme="pastel-modern" className="app-container flex-col relative">
-      <Navbar />
-
-      <main className="flex-1 w-full overflow-hidden relative">
-        <Routes>
-          <Route path="/" element={authUser ? <HomePage /> : <Navigate to="/login" />} />
-          <Route path="/signup" element={!authUser ? <SignUpPage /> : <Navigate to="/" />} />
-          <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to="/" />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login" />} />
-        </Routes>
+    <div className="flex h-screen bg-gray-50 overflow-hidden font-sans">
+      <main className="flex-1 flex flex-col h-full w-full relative">
+        <Navbar />
+        <div className="flex-1 flex overflow-hidden relative">
+          <Routes>
+            <Route path="/" element={authUser ? <HomePage /> : <Navigate to="/login" />} />
+            <Route path="/signup" element={!authUser ? <SignUpPage /> : <Navigate to="/" />} />
+            <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to="/" />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login" />} />
+          </Routes>
+        </div>
       </main>
 
-      <Toaster />
+      <Toaster
+        toastOptions={{
+          className: 'text-sm font-medium text-gray-900',
+          style: {
+            background: 'white',
+            border: '1px solid #E5E7EB',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          },
+        }}
+      />
     </div>
   );
 };

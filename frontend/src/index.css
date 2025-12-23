@@ -1,18 +1,20 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  html {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  body {
+    @apply antialiased text-gray-900 bg-white;
+    font-feature-settings: "cv11", "ss01";
   }
 }
 
-/* Polished Social Scrollbar */
+/* Minimalist Scrollbar (Slack-like) */
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -20,29 +22,9 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(156, 163, 175, 0.3);
-  /* Subtle gray */
-  border-radius: 10px;
+  @apply bg-gray-300 rounded-full;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(156, 163, 175, 0.5);
-}
-
-/* Utilities for Social App Feel */
-.app-container {
-  @apply h-screen w-full bg-base-200 text-base-content overflow-hidden flex font-sans;
-  background-image:
-    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(217, 70, 239, 0.15) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.15) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, rgba(99, 102, 241, 0.15) 0px, transparent 50%);
-}
-
-.glass-morphism {
-  @apply backdrop-blur-xl bg-white/70 border border-white/20 shadow-xl;
-}
-
-.glass-panel {
-  @apply backdrop-blur-2xl bg-base-100 bg-opacity-60 border border-white/50 shadow-sm;
+  @apply bg-gray-400;
 }

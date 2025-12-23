@@ -4,27 +4,31 @@ import daisyui from "daisyui";
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+      },
+      colors: {
+        // Notion/Slack influenced palette
+        gray: {
+          50: '#F9FAFB',  // Main background
+          100: '#F3F4F6', // Secondary background (sidebar)
+          200: '#E5E7EB', // Borders
+          300: '#D1D5DB', // Disabled/Subtle borders
+          500: '#6B7280', // Secondary text
+          700: '#374151', // Primary text
+          900: '#111827', // Headings
+        },
+        primary: {
+          DEFAULT: '#0F172A', // Slate-900 (Professional dark blue/black for distinct actions)
+          hover: '#334155',
+        }
+      }
+    },
   },
   plugins: [daisyui],
   daisyui: {
-    themes: [
-      {
-        "pastel-modern": {
-          "primary": "#6366f1",
-          "secondary": "#d946ef",
-          "accent": "#06b6d4",
-          "neutral": "#374151",
-          "base-100": "#ffffff",
-          "base-200": "#f3f4f6",
-          "base-300": "#e5e7eb",
-          "info": "#3abff8",
-          "success": "#36d399",
-          "warning": "#fbbd23",
-          "error": "#f87272",
-        },
-      },
-      "light",
-    ],
+    themes: ["light"], // Fallback to standard light theme to avoid interference
+    logs: false,
   },
 };

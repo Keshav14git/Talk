@@ -1,8 +1,7 @@
 import { useRef, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
-import { Image, Send, X, Smile, Paperclip } from "lucide-react";
+import { Image, Send, X, Smile, Paperclip, Mic } from "lucide-react";
 import toast from "react-hot-toast";
-import { motion, AnimatePresence } from "framer-motion";
 
 const MessageInput = () => {
   const [text, setText] = useState("");
@@ -49,35 +48,43 @@ const MessageInput = () => {
   };
 
   return (
-    <div className="p-4 w-full bg-transparent relative z-20">
-      <AnimatePresence>
-        {imagePreview && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="mb-3 relative w-fit mx-auto"
-          >
-            <img src={imagePreview} className="h-40 rounded-2xl border border-white/40 shadow-xl" alt="Preview" />
-            <button onClick={removeImage} className="absolute -top-2 -right-2 btn btn-circle btn-xs btn-error text-white shadow-md"><X size={12} /></button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+    <div className="p-4 w-full bg-white border-t border-gray-200">
+      {imagePreview && (
+        <div className="mb-3 relative w-fit">
+          <img src={imagePreview} className="h-32 rounded-lg border border-gray-200 object-cover" alt="Preview" />
+          <button onClick={removeImage} className="absolute -top-2 -right-2 p-1 bg-gray-900 rounded-full text-white hover:bg-gray-700 transition-colors"><X size={12} /></button>
+        </div>
+      )}
 
-      <form onSubmit={handleSendMessage} className="flex items-center gap-2 max-w-4xl mx-auto">
-        <div className="flex-1 bg-white/70 backdrop-blur-xl rounded-[2rem] flex items-center px-2 py-1.5 shadow-lg border border-white/40 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/30 transition-all">
+      <form onSubmit={handleSendMessage} className="border border-gray-300 rounded-xl bg-white shadow-sm focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all">
+        {/* Toolbar */}
+        <div className="flex items-center gap-1 p-2 bg-gray-50 border-b border-gray-100 rounded-t-xl">
           <button
             type="button"
-            className="btn btn-circle btn-sm btn-ghost text-base-content/50 hover:text-primary transition-colors"
+            className="p-1.5 text-gray-500 hover:bg-gray-200 rounded-md transition-colors"
             onClick={() => fileInputRef.current?.click()}
+            title="Attach file"
           >
-            <Paperclip size={20} />
+            <Paperclip size={16} />
           </button>
+          <div className="h-4 w-px bg-gray-300 mx-1" />
+          <button type="button" className="p-1.5 text-gray-500 hover:bg-gray-200 rounded-md transition-colors">
+            <span className="font-bold text-xs font-serif">B</span>
+          </button>
+          <button type="button" className="p-1.5 text-gray-500 hover:bg-gray-200 rounded-md transition-colors">
+            <span className="italic text-xs font-serif">I</span>
+          </button>
+          <button type="button" className="p-1.5 text-gray-500 hover:bg-gray-200 rounded-md transition-colors">
+            <span className="underline text-xs font-serif">U</span>
+          </button>
+        </div>
 
+        {/* Text Area */}
+        <div className="flex items-end gap-2 p-2">
           <input
             type="text"
-            className="flex-1 bg-transparent border-none outline-none text-base text-base-content placeholder:text-base-content/40 px-2 h-10 w-full"
-            placeholder="Type a message..."
+            className="flex-1 bg-transparent border-none outline-none text-sm text-gray-900 placeholder:text-gray-400 px-2 min-h-[40px]"
+            placeholder="Message..."
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
@@ -90,21 +97,20 @@ const MessageInput = () => {
             onChange={handleImageChange}
           />
 
-          <button type="button" className="btn btn-circle btn-sm btn-ghost text-base-content/50 hover:text-secondary transition-colors">
-            <Smile size={20} />
+          <button
+            type="submit"
+            className={`p-2 rounded-lg transition-colors flex items-center justify-center
+                    ${!text.trim() && !imagePreview ? "bg-gray-100 text-gray-400" : "bg-[#007a5a] text-white hover:bg-[#007a5a]/90"}
+                `}
+            disabled={!text.trim() && !imagePreview}
+          >
+            <Send size={16} />
           </button>
         </div>
-
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          type="submit"
-          className={`btn btn-circle h-12 w-12 min-h-0 bg-gradient-to-tr from-primary to-secondary text-white border-none shadow-lg shadow-primary/30 disabled:opacity-50 disabled:shadow-none`}
-          disabled={!text.trim() && !imagePreview}
-        >
-          <Send size={20} className="ml-0.5" />
-        </motion.button>
       </form>
+      <div className="text-[10px] text-gray-400 mt-2 text-center">
+        <strong>Return</strong> to send, <strong>Shift + Return</strong> to add a new line
+      </div>
     </div>
   );
 };

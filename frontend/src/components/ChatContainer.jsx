@@ -1,13 +1,11 @@
 import { useChatStore } from "../store/useChatStore";
 import { useEffect, useRef, useState } from "react";
-
 import ChatHeader from "./ChatHeader";
 import MessageInput from "./MessageInput";
 import MessageSkeleton from "./skeletons/MessageSkeleton";
 import { useAuthStore } from "../store/useAuthStore";
 import { formatMessageTime } from "../lib/utils";
 import { X, Trash2 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 
 const ChatContainer = () => {
   const { messages, getMessages, isMessagesLoading, subscribeToMessages, unsubscribeFromMessages, selectedUser, deleteMessage } = useChatStore();
@@ -51,7 +49,7 @@ const ChatContainer = () => {
 
   if (isMessagesLoading) {
     return (
-      <div className="flex-1 flex flex-col overflow-hidden bg-transparent">
+      <div className="flex-1 flex flex-col overflow-hidden bg-white">
         <ChatHeader />
         <MessageSkeleton />
         <MessageInput />
@@ -66,38 +64,33 @@ const ChatContainer = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-transparent relative">
+    <div className="flex-1 flex flex-col overflow-hidden bg-white relative">
       <div className="relative z-10">
         <ChatHeader />
 
         {/* Selection Banner */}
-        <AnimatePresence>
-          {isSelectionMode && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="absolute inset-x-0 top-[73px] bg-white/80 backdrop-blur-md z-10 flex items-center justify-between px-6 py-2 border-b border-white/20 shadow-sm"
-            >
-              <span className="font-bold text-sm text-primary">{selectedMessageIds.length} selected</span>
-              <div className="flex gap-2">
-                <button onClick={() => { setIsSelectionMode(false); setSelectedMessageIds([]); }} className="btn btn-xs btn-ghost text-base-content/60">Cancel</button>
-                <button
-                  onClick={handleBulkDelete}
-                  className="btn btn-xs btn-error text-white shadow-md shadow-error/20"
-                  disabled={selectedMessageIds.length === 0}
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {isSelectionMode && (
+          <div
+            className="absolute inset-x-0 top-[64px] bg-blue-50 z-10 flex items-center justify-between px-6 py-2 border-b border-blue-100"
+          >
+            <span className="font-bold text-sm text-blue-900">{selectedMessageIds.length} selected</span>
+            <div className="flex gap-2">
+              <button onClick={() => { setIsSelectionMode(false); setSelectedMessageIds([]); }} className="text-xs text-blue-600 hover:underline px-2">Cancel</button>
+              <button
+                onClick={handleBulkDelete}
+                className="text-xs text-red-600 hover:text-red-700 font-medium px-2"
+                disabled={selectedMessageIds.length === 0}
+              >
+                Delete Selected
+              </button>
+            </div>
+          </div>
+        )}
 
         {!isSelectionMode && (
           <button
             onClick={() => setIsSelectionMode(true)}
-            className="absolute right-4 top-[80px] btn btn-xs btn-ghost opacity-0 hover:opacity-100 transition-opacity z-0"
+            className="absolute right-4 top-[72px] text-xs text-gray-400 hover:text-gray-600 z-0 bg-white/50 px-2 rounded"
             title="Select Messages"
           >
             Select
@@ -105,122 +98,106 @@ const ChatContainer = () => {
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-2 relative z-0 scrollbar-hide">
+      <div className="flex-1 overflow-y-auto p-4 relative z-0 custom-scrollbar">
         {messages.map((message, idx) => {
           const isMe = message.senderId === authUser._id;
           const isPrevSame = idx > 0 && messages[idx - 1].senderId === message.senderId;
-          const isNextSame = idx < messages.length - 1 && messages[idx + 1].senderId === message.senderId;
           const isSelected = selectedMessageIds.includes(message._id);
 
+          // Timestamp check (only show if gap is large or if specific logic) - for now just always show time on hover or in line?
+          // Notion/Slack style: Grouped messages often share one avatar, but here we'll keep it simple: Avatar always for first in group.
+
           return (
-            <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.2 }}
+            <div
               key={message._id}
-              className={`flex w-full ${isMe ? "justify-end" : "justify-start"} mb-1 group relative items-end gap-2`}
-              ref={messageEndRef}
+              className={`group flex gap-3 py-1 px-4 hover:bg-gray-50 transition-colors relative
+                ${isSelected ? "bg-blue-50 hover:bg-blue-50/80" : ""}
+                ${!isPrevSame ? "mt-4" : ""}
+              `}
               onClick={() => isSelectionMode && toggleSelection(message._id)}
             >
+              {/* Selection Checkbox */}
               {isSelectionMode && (
-                <input
-                  type="checkbox"
-                  checked={isSelected}
-                  onChange={() => toggleSelection(message._id)}
-                  className="checkbox checkbox-xs checkbox-primary mr-2"
-                />
+                <div className="flex items-center justify-center mr-2">
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => toggleSelection(message._id)}
+                    className="size-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                </div>
               )}
 
-              <div className={`
-                  chat ${isMe ? "chat-end" : "chat-start"} max-w-[75%] flex items-end gap-2 
-                  ${isSelectionMode ? "cursor-pointer" : ""}
-              `}>
-                {!isSelectionMode && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleDelete(message._id); }}
-                    className={`btn btn-xs btn-circle btn-ghost text-error opacity-0 group-hover:opacity-100 transition-opacity self-center mb-2 ${isMe ? "order-first" : "order-last"}`}
-                    title="Delete Message"
-                  >
-                    <Trash2 size={12} />
-                  </button>
+              {/* Avatar Column */}
+              <div className="w-9 flex-shrink-0">
+                {!isPrevSame ? (
+                  <img
+                    src={(isMe ? authUser.profilePic : selectedUser.profilePic) || "/avatar.png"}
+                    alt="avatar"
+                    className="size-9 rounded-md object-cover bg-gray-200"
+                  />
+                ) : (
+                  <div className="w-9 text-[10px] text-gray-300 opacity-0 group-hover:opacity-100 text-right pr-1 pt-1 font-mono">
+                    {formatMessageTime(message.createdAt).split(' ')[0]}
+                  </div>
                 )}
+              </div>
 
-                {!isMe && (
-                  <div className="chat-image avatar w-8 h-8 self-end mb-1 opacity-100 flex-shrink-0">
-                    {!isNextSame ? (
-                      <div className="size-8 rounded-full overflow-hidden ring-2 ring-white shadow-sm">
-                        <img
-                          src={selectedUser.profilePic || "/avatar.png"}
-                          alt="profile"
-                        />
-                      </div>
-                    ) : <div className="w-8" />}
+              {/* Content Column */}
+              <div className="flex-1 min-w-0">
+                {!isPrevSame && (
+                  <div className="flex items-baseline gap-2 mb-0.5">
+                    <span className="font-bold text-gray-900 text-[15px]">
+                      {isMe ? "You" : selectedUser.fullName}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {formatMessageTime(message.createdAt)}
+                    </span>
                   </div>
                 )}
 
-                <div className={`
-                        px-4 py-2.5 text-[15px] leading-relaxed shadow-sm relative min-w-[60px] pb-6 backdrop-blur-sm
-                        ${isMe
-                    ? "bg-gradient-to-br from-primary to-secondary text-white rounded-[22px] rounded-tr-sm shadow-primary/20"
-                    : "bg-white/80 text-base-content rounded-[22px] rounded-tl-sm shadow-sm"
-                  }
-                    `}>
-                  {message.image && (
+                <div className="text-[15px] text-gray-800 leading-relaxed whitespace-pre-wrap">
+                  {message.text}
+                </div>
+
+                {message.image && (
+                  <div className="mt-2">
                     <img
                       src={message.image}
                       alt="Attachment"
-                      className="max-w-[280px] rounded-xl mb-2 cursor-pointer hover:opacity-95 shadow-sm"
-                      onClick={() => setSelectedImage(message.image)}
+                      className="max-w-sm max-h-60 rounded-lg border border-gray-200 cursor-zoom-in"
+                      onClick={(e) => { e.stopPropagation(); setSelectedImage(message.image); }}
                     />
-                  )}
-                  {message.text && <p>{message.text}</p>}
-
-                  <span className={`
-                      text-[9px] absolute bottom-1.5 right-3 font-medium tracking-wide
-                      ${isMe ? "text-white/70" : "text-base-content/40"}
-                  `}>
-                    {formatMessageTime(message.createdAt)}
-                  </span>
-                </div>
+                  </div>
+                )}
               </div>
-            </motion.div>
+
+              {/* Delete Hover Action */}
+              {!isSelectionMode && isMe && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleDelete(message._id); }}
+                  className="absolute top-2 right-4 p-1.5 text-gray-400 hover:text-red-500 hover:bg-gray-100 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Delete Message"
+                >
+                  <Trash2 size={14} />
+                </button>
+              )}
+            </div>
           );
         })}
+        <div ref={messageEndRef} />
       </div>
 
       <MessageInput />
 
       {/* Image Modal */}
-      <AnimatePresence>
-        {selectedImage && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-6 backdrop-blur-sm"
-          >
-            <div className="relative max-w-4xl max-h-[90vh] w-full flex items-center justify-center">
-              <button
-                onClick={() => setSelectedImage(null)}
-                className="absolute -top-12 right-0 btn btn-circle btn-ghost text-white bg-white/10 hover:bg-white/20"
-              >
-                <X className="size-6" />
-              </button>
-              <motion.img
-                initial={{ scale: 0.8 }}
-                animate={{ scale: 1 }}
-                src={selectedImage}
-                alt="Full View"
-                className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl ring-1 ring-white/10"
-              />
-            </div>
-            <div
-              className="absolute inset-0 -z-10"
-              onClick={() => setSelectedImage(null)}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {selectedImage && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-6" onClick={() => setSelectedImage(null)}>
+          <div className="relative max-w-5xl max-h-full">
+            <img src={selectedImage} alt="Full View" className="max-w-full max-h-[90vh] rounded-md shadow-2xl" />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

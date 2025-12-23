@@ -239,7 +239,7 @@ const Sidebar = () => {
 
 // --- Sub Components ---
 
-const NavIcon = ({ icon: Icon, isActive, onClick, title }) => (
+const NavIcon = ({ icon: Icon, isActive, onClick, title, unreadCount }) => (
   <button
     onClick={onClick}
     title={title}
@@ -251,8 +251,13 @@ const NavIcon = ({ icon: Icon, isActive, onClick, title }) => (
         `}
   >
     <Icon className="size-6" strokeWidth={1.5} />
-    {/* Active Indicator Dot (optional, maybe not needed with filled bg) */}
-    {/* Tooltip on right? */}
+
+    {/* Unread Dot */}
+    {unreadCount > 0 && (
+      <div className="absolute top-2 right-2 size-2.5 bg-green-500 rounded-full border-2 border-gray-950 animate-pulse" />
+    )}
+
+    {/* Tooltip */}
     <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-gray-800">
       {title}
     </div>
@@ -260,7 +265,7 @@ const NavIcon = ({ icon: Icon, isActive, onClick, title }) => (
 );
 
 
-const ListItem = ({ user, icon: Icon, isSelected, isOnline, onClick, useAvatar }) => (
+const ListItem = ({ user, icon: Icon, isSelected, isOnline, onClick, useAvatar, unreadCount }) => (
   <button
     onClick={onClick}
     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group border border-transparent
@@ -286,10 +291,15 @@ const ListItem = ({ user, icon: Icon, isSelected, isOnline, onClick, useAvatar }
         <span className={`text-[14px] font-medium truncate heading-font ${isSelected || isOnline ? "text-gray-200" : "text-gray-400"}`}>
           {user.fullName}
         </span>
-        {/* Optional: Time snippet or Count */}
+        {/* Unread Count Badge */}
+        {unreadCount > 0 && (
+          <span className="bg-green-500 text-gray-950 text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[1.25rem] text-center">
+            {unreadCount}
+          </span>
+        )}
       </div>
-      <div className="text-[12px] text-gray-500 truncate mt-0.5">
-        {user.lastMessage?.text ? user.lastMessage.text : (useAvatar ? "Click to chat" : "View messages")}
+      <div className="text-[12px] text-gray-500 truncate mt-0.5 flex justify-between">
+        <span className="truncate max-w-[85%]">{user.lastMessage?.text ? user.lastMessage.text : (useAvatar ? "Click to chat" : "View messages")}</span>
       </div>
     </div>
   </button>

@@ -210,38 +210,70 @@ export const useChatStore = create((set, get) => ({
   },
 
   subscribeToMessages: () => {
-    const { selectedUser, selectedType } = get();
-    if (!selectedUser) return;
+    const { selectedUser } = get();
+    // We want to subscribe globally, but we need current state inside the callback.
+    // Zustand's get() inside the callback will be fresh.
 
     const socket = useAuthStore.getState().socket;
-
     if (!socket) return;
 
-    // Unsubscribe from previous events to avoid duplicates if switched quickly
     socket.off("newMessage");
     socket.off("newGroupMessage");
 
-    if (selectedType === "group") {
-      socket.on("newGroupMessage", (newMessage) => {
-        if (newMessage.groupId !== selectedUser._id) return;
-        set({
-          messages: [...get().messages, newMessage],
-        });
-      });
-    } else {
-      socket.on("newMessage", (newMessage) => {
-        if (newMessage.senderId !== selectedUser._id) return;
-        set({
-          messages: [...get().messages, newMessage],
-        });
-      });
-    }
+    const playNotificationSound = () => {
+      try {
+        // Simple soft beep
+        const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3");
+        audio.play().catch(e => console.log("Audio play failed (interaction needed first?)", e));
+      } catch (err) {
+        console.error("Sound error", err);
+      }
+    };
+
+    socket.on("newMessage", (newMessage) => {
+      const currentSelectedUser = get().selectedUser;
+      const currentViewType = get().selectedType;
+      const isChatOpen = currentSelectedUser?._id === newMessage.senderId && currentViewType !== "group";
+
+      if (isChatOpen) {
+        set({ messages: [...get().messages, newMessage] });
+      } else {
+        // Increment unread count
+        playNotificationSound();
+        set(state => ({
+          users: state.users.map(u =>
+            u._id === newMessage.senderId ? { ...u, unreadCount: (u.unreadCount || 0) + 1 } : u
+          )
+        }));
+        toast.success(`New message from ${newMessage.senderId}`); // Optional: Replace ID with name if possible (need lookup)
+      }
+    });
+
+    socket.on("newGroupMessage", (newMessage) => {
+      const currentSelectedUser = get().selectedUser;
+      const currentViewType = get().selectedType;
+      const isGroupOpen = currentSelectedUser?._id === newMessage.groupId && currentViewType === "group";
+
+      // Don't notify for own messages (if backend echoes them back?) usually socket excludes sender but be safe
+      const myId = useAuthStore.getState().authUser?._id;
+      if (newMessage.senderId === myId) return;
+
+      if (isGroupOpen) {
+        set({ messages: [...get().messages, newMessage] });
+      } else {
+        playNotificationSound();
+        set(state => ({
+          groups: state.groups.map(g =>
+            g._id === newMessage.groupId ? { ...g, unreadCount: (g.unreadCount || 0) + 1 } : g
+          )
+        }));
+      }
+    });
   },
 
   unsubscribeFromMessages: () => {
     const socket = useAuthStore.getState().socket;
     if (!socket) return;
-
     socket.off("newMessage");
     socket.off("newGroupMessage");
   },

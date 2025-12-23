@@ -14,11 +14,18 @@ import { Loader } from "lucide-react"
 import { Toaster } from "react-hot-toast"
 const App = () => {
   const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
-  const { selectedUser } = useChatStore();
+  const { selectedUser, subscribeToMessages, unsubscribeFromMessages } = useChatStore();
 
   useEffect(() => {
-    checkAuth()
+    checkAuth();
   }, [checkAuth]);
+
+  useEffect(() => {
+    if (authUser) {
+      subscribeToMessages();
+      return () => unsubscribeFromMessages();
+    }
+  }, [authUser, subscribeToMessages, unsubscribeFromMessages]);
 
   console.log({ authUser });
 

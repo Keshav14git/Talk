@@ -12,103 +12,99 @@ const SettingsPage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="h-screen container mx-auto px-4 pt-20 max-w-5xl">
-      <div className="space-y-6">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-2xl font-bold">Settings</h2>
-          <p className="text-base-content/70">Manage your account and preferences</p>
-        </div>
-
-        <div className="card bg-base-100 shadow-xl border border-base-300">
-          <div className="card-body">
-            <h3 className="text-lg font-semibold mb-4">Account Information</h3>
-            <div className="flex items-center gap-4">
-              <div className="avatar">
-                <div className="w-20 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
-                  <img src={authUser?.profilePic || "/avatar.png"} alt="Profile" />
+    <div className="min-h-screen pt-20 px-4 max-w-6xl mx-auto">
+      <div className="grid md:grid-cols-3 gap-8">
+        {/* Sidebar / Info */}
+        <div className="md:col-span-1 space-y-6">
+          <div className="bg-white/70 backdrop-blur-2xl rounded-[2rem] p-6 shadow-xl border border-white/60 ring-1 ring-white/50">
+            <h2 className="text-xl font-bold mb-4 text-gray-800">Settings</h2>
+            <div className="flex flex-col items-center gap-4 py-4">
+              <div className="relative">
+                <div className="w-24 h-24 rounded-full p-1 bg-gradient-to-tr from-primary to-secondary">
+                  <img
+                    src={authUser?.profilePic || "/avatar.png"}
+                    alt="Profile"
+                    className="w-full h-full rounded-full object-cover border-4 border-white"
+                  />
                 </div>
               </div>
-              <div className="flex-1">
-                <h4 className="text-xl font-bold">{authUser?.fullName}</h4>
-                <p className="text-base-content/60">{authUser?.email}</p>
-                <p className="text-xs text-base-content/40 mt-1">Member since {new Date(authUser?.createdAt).toLocaleDateString()}</p>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <button className="btn btn-neutral btn-sm" onClick={() => navigate('/profile')}>
-                  Edit Profile
-                </button>
-                <button className="btn btn-error btn-sm text-white" onClick={useAuthStore.getState().logout}>
-                  Logout
-                </button>
+              <div className="text-center">
+                <h3 className="text-lg font-bold text-gray-900">{authUser?.fullName}</h3>
+                <p className="text-sm text-gray-500">{authUser?.email}</p>
+                <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-medium">
+                  Active
+                </div>
               </div>
             </div>
+            <div className="bg-gray-50 rounded-2xl p-4 mt-4">
+              <div className="flex justify-between items-center text-sm py-2 border-b border-gray-200">
+                <span className="text-gray-500">Member Since</span>
+                <span className="font-medium text-gray-900">{new Date(authUser?.createdAt).toLocaleDateString()}</span>
+              </div>
+            </div>
+            <button className="btn btn-primary w-full mt-6 rounded-xl font-semibold shadow-lg shadow-primary/20" onClick={() => navigate('/profile')}>
+              Edit Profile
+            </button>
           </div>
         </div>
 
-        {/* Preview Section - Kept for visual reference of the theme */}
-        <h3 className="text-lg font-semibold mb-3">Interface Preview</h3>
-        <div className="rounded-xl border border-base-300 overflow-hidden bg-base-100 shadow-lg">
-          <div className="p-4 bg-base-200">
-            <div className="max-w-lg mx-auto">
-              {/* Mock Chat UI */}
-              <div className="bg-base-100 rounded-xl shadow-sm overflow-hidden">
-                {/* Chat Header */}
-                <div className="px-4 py-3 border-b border-base-300 bg-base-100/50 backdrop-blur-md">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-medium">
+        {/* Main Content / Preview */}
+        <div className="md:col-span-2 space-y-6">
+          <div className="bg-white/70 backdrop-blur-2xl rounded-[2rem] p-8 shadow-xl border border-white/60 ring-1 ring-white/50">
+            <h3 className="text-xl font-bold mb-6 text-gray-800">Interface Preview</h3>
+
+            <div className="rounded-3xl border border-gray-200 overflow-hidden bg-gray-50 shadow-inner">
+              <div className="p-6 bg-gray-100/50">
+                <div className="max-w-md mx-auto bg-white rounded-3xl shadow-lg overflow-hidden border border-gray-100">
+                  {/* Mock Chat Header */}
+                  <div className="px-5 py-4 border-b border-gray-100 bg-white/80 backdrop-blur-md flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
                       J
                     </div>
                     <div>
-                      <h3 className="font-medium text-sm">John Doe</h3>
-                      <p className="text-xs text-base-content/70">Online</p>
+                      <h4 className="font-bold text-gray-900 text-sm">John Doe</h4>
+                      <p className="text-xs text-green-500 font-medium">Online</p>
                     </div>
                   </div>
-                </div>
 
-                {/* Chat Messages */}
-                <div className="p-4 space-y-4 min-h-[200px] max-h-[200px] overflow-y-auto bg-base-100">
-                  {PREVIEW_MESSAGES.map((message) => (
-                    <div
-                      key={message.id}
-                      className={`flex ${message.isSent ? "justify-end" : "justify-start"}`}
-                    >
-                      <div
-                        className={`
-                          max-w-[80%] rounded-2xl p-2.5 shadow-none
-                          ${message.isSent ? "bg-primary text-primary-content rounded-tr-sm" : "bg-base-200 text-base-content rounded-tl-sm"}
-                        `}
-                      >
-                        <p className="text-sm leading-relaxed">{message.content}</p>
-                        <p
-                          className={`
-                            text-[9px] mt-1
-                            ${message.isSent ? "text-primary-content/70" : "text-base-content/60"}
-                          `}
-                        >
-                          12:00 PM
-                        </p>
+                  {/* Mock Messages */}
+                  <div className="p-5 space-y-4 min-h-[240px] bg-white">
+                    {PREVIEW_MESSAGES.map((message) => (
+                      <div key={message.id} className={`flex ${message.isSent ? "justify-end" : "justify-start"}`}>
+                        <div className={`max-w-[85%] rounded-[1.2rem] px-4 py-3 shadow-sm ${message.isSent
+                          ? "bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-tr-none"
+                          : "bg-gray-100 text-gray-800 rounded-tl-none border border-gray-200"
+                          }`}>
+                          <p className="text-sm">{message.content}</p>
+                          <p className={`text-[10px] mt-1.5 ${message.isSent ? "text-indigo-100" : "text-gray-400"}`}>
+                            12:00 PM
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
 
-                {/* Chat Input */}
-                <div className="p-3 border-t border-base-content/10 bg-base-100">
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      className="input input-sm h-9 flex-1 text-sm rounded-full bg-base-200 border-none"
-                      placeholder="Type a message..."
-                      value="This is a preview"
-                      readOnly
-                    />
-                    <button className="btn btn-primary h-9 min-h-0 w-9 btn-circle shadow-sm">
-                      <Send size={16} />
-                    </button>
+                  {/* Mock Input */}
+                  <div className="p-4 bg-white border-t border-gray-100">
+                    <div className="flex gap-2">
+                      <input
+                        readOnly
+                        value="This is a preview"
+                        className="flex-1 bg-gray-100 border-0 rounded-full px-4 text-sm text-gray-600 focus:outline-none"
+                      />
+                      <button className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white shadow-md">
+                        <Send size={18} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div className="mt-8 flex justify-end">
+              <button className="btn btn-ghost text-red-500 hover:bg-red-50 rounded-xl" onClick={useAuthStore.getState().logout}>
+                Sign Out
+              </button>
             </div>
           </div>
         </div>

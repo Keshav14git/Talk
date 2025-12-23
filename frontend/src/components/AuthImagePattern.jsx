@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 
 const AuthImagePattern = ({ title, subtitle }) => {
   return (
-    <div className="hidden lg:flex items-center justify-center bg-gradient-to-br from-base-200 to-indigo-50 h-full w-full p-12 relative overflow-hidden">
+    <div className="hidden lg:flex items-center justify-center bg-gradient-to-br from-white via-indigo-50 to-blue-50 h-full w-full p-12 relative overflow-hidden">
       {/* Animated Background */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-secondary/20 animate-gradient-xy" />

@@ -167,7 +167,7 @@ const ChatContainer = () => {
                 <div
                   className={`relative px-4 py-2 shadow-sm text-[15px] leading-relaxed break-words
                      ${isMe
-                      ? "bg-[#FF5636] text-white rounded-2xl rounded-tr-sm"
+                      ? "bg-gray-900 text-white rounded-2xl rounded-tr-sm"
                       : "bg-gray-100 text-gray-800 rounded-2xl rounded-tl-sm"
                     }
                    `}

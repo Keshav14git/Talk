@@ -1,16 +1,23 @@
 import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
-import { Phone, Video, Info, ArrowLeft } from "lucide-react";
+import { Phone, Video, Info, ArrowLeft, MoreVertical } from "lucide-react";
+import { motion } from "framer-motion";
 
 const ChatHeader = () => {
-  const { selectedUser, setSelectedUser, toggleArchive, selectedType } = useChatStore();
+  const { selectedUser, setSelectedUser } = useChatStore();
   const { onlineUsers } = useAuthStore();
 
   if (!selectedUser) return null;
 
+  const isOnline = onlineUsers.includes(selectedUser._id);
+
   return (
-    <div className="px-4 py-3 border-b border-base-content/10 bg-base-100 flex items-center justify-between sticky top-0 z-20">
-      <div className="flex items-center gap-3">
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="px-6 py-4 border-b border-white/20 bg-white/40 backdrop-blur-md flex items-center justify-between sticky top-0 z-20 shadow-sm"
+    >
+      <div className="flex items-center gap-4">
         {/* Back Button (Mobile Only) */}
         <button
           onClick={() => setSelectedUser(null)}
@@ -19,36 +26,34 @@ const ChatHeader = () => {
           <ArrowLeft className="size-5" />
         </button>
 
-        <div className="relative">
+        <div className="relative group cursor-pointer">
           <img
             src={selectedUser.profilePic || selectedUser.image || "/avatar.png"}
             alt={selectedUser.fullName}
-            className="size-10 rounded-full object-cover ring-2 ring-base-200"
+            className="size-12 rounded-full object-cover ring-2 ring-white shadow-md transition-transform group-hover:scale-105"
           />
-          {onlineUsers.includes(selectedUser._id) && (
-            <span className="absolute bottom-0 right-0 size-3 bg-green-500 rounded-full ring-2 ring-base-100" />
+          {isOnline && (
+            <span className="absolute bottom-0 right-0 size-3.5 bg-green-500 rounded-full ring-2 ring-white shadow-sm" />
           )}
         </div>
         <div>
-          <h3 className="font-bold text-base leading-tight">{selectedUser.fullName || selectedUser.name}</h3>
-          <p className="text-xs text-base-content/60 font-medium">
-            {onlineUsers.includes(selectedUser._id) ? "Active now" : "Offline"}
+          <h3 className="font-bold text-lg leading-tight text-base-content">{selectedUser.fullName || selectedUser.name}</h3>
+          <p className={`text-xs font-medium ${isOnline ? "text-primary" : "text-base-content/50"}`}>
+            {isOnline ? "Active now" : "Offline"}
           </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
-        <button title="Voice Call" className="btn btn-circle btn-ghost btn-sm">
-          <Phone className="size-5" />
-        </button>
-        <button title="Video Call" className="btn btn-circle btn-ghost btn-sm">
-          <Video className="size-5" />
-        </button>
-        <button title="More Info" className="btn btn-circle btn-ghost btn-sm">
-          <Info className="size-5" />
-        </button>
+      <div className="flex items-center gap-2">
+        {["Voice Call", "Video Call", "Info"].map((title, idx) => (
+          <button key={idx} title={title} className="btn btn-circle btn-ghost btn-sm hover:bg-white/50 text-base-content/70">
+            {title === "Voice Call" && <Phone className="size-5" />}
+            {title === "Video Call" && <Video className="size-5" />}
+            {title === "Info" && <MoreVertical className="size-5" />}
+          </button>
+        ))}
       </div>
-    </div>
+    </motion.div>
   );
 };
 

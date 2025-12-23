@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
 import SidebarSkeleton from "./skeletons/SidebarSkeleton";
-import { Users, UserPlus, CirclePlus, MessageSquare, Archive, Search, Bell, Menu, Settings, ListChecks } from "lucide-react";
+import { Users, UserPlus, CirclePlus, MessageSquare, Archive, Search, Bell, Menu, ListChecks } from "lucide-react";
 import AddFriendModal from "./AddFriendModal";
 import FriendRequestsModal from "./FriendRequestsModal";
 import CreateGroupModal from "./CreateGroupModal";
+import { motion, AnimatePresence } from "framer-motion";
 
 const Sidebar = () => {
   const {
@@ -14,21 +15,16 @@ const Sidebar = () => {
     selectedUser, setSelectedUser,
     isUsersLoading,
     viewType, setViewType,
-    selectedType,
     isSidebarOpen, toggleSidebar,
-    deleteConversation, // Import delete action
+    deleteConversation,
     friendRequests, getFriendRequests,
     unfriendUser
   } = useChatStore();
 
   const { onlineUsers } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState("");
-
-  // Selection Mode State
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
-
-  // Modals
   const [activeModal, setActiveModal] = useState(null);
 
   useEffect(() => {
@@ -63,12 +59,10 @@ const Sidebar = () => {
 
     if (confirm(confirmMessage)) {
       if (viewType === "chats") {
-        // For users, we unfriend
         for (const id of selectedIds) {
           await unfriendUser(id);
         }
       } else {
-        // For groups/others, we delete conversation (leave group?)
         await deleteConversation(selectedIds);
       }
       setSelectedIds([]);
@@ -79,35 +73,41 @@ const Sidebar = () => {
   if (isUsersLoading) return <SidebarSkeleton />;
 
   return (
-    <aside className="h-full flex flex-col bg-base-100 transition-all duration-300 w-full">
-      {/* Header - Instagram/Messenger Style */}
-      <div className="p-4 border-b border-base-200">
-        <div className="flex items-center justify-between mb-4 px-1">
+    <aside className="h-full flex flex-col w-full transition-all duration-300">
+      {/* Header */}
+      <div className="p-4">
+        <div className="flex items-center justify-between mb-2 px-1">
           {isSidebarOpen ? (
-            <h1 className="text-2xl font-bold tracking-tight">Chats</h1>
+            <motion.h1
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="text-2xl font-bold tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
+            >
+              Chats
+            </motion.h1>
           ) : (
             <div className="w-full flex justify-center">
-              <div className="size-10 btn btn-ghost btn-circle flex items-center justify-center p-0">
-                <MessageSquare className="size-5 text-primary" />
+              <div className="size-10 flex items-center justify-center">
+                <MessageSquare className="size-6 text-primary" />
               </div>
             </div>
           )}
 
           {isSidebarOpen && (
-            <div className="flex gap-2">
+            <div className="flex gap-1">
               {isSelectionMode ? (
                 <button onClick={() => { setIsSelectionMode(false); setSelectedIds([]); }} className="btn btn-xs btn-ghost text-error">Cancel</button>
               ) : (
                 <>
-                  <button onClick={() => setIsSelectionMode(true)} className="btn btn-circle btn-sm btn-ghost" title="Select Chats">
-                    <ListChecks className="size-5" />
+                  <button onClick={() => setIsSelectionMode(true)} className="btn btn-circle btn-sm btn-ghost hover:bg-white/20" title="Select Chats">
+                    <ListChecks className="size-5 text-base-content/70" />
                   </button>
-                  <button onClick={() => setActiveModal('requests')} className="btn btn-circle btn-sm btn-ghost relative">
-                    <Bell className="size-5" />
-                    {friendRequests.length > 0 && <span className="absolute top-0 right-0 size-2.5 bg-error rounded-full ring-2 ring-base-100" />}
+                  <button onClick={() => setActiveModal('requests')} className="btn btn-circle btn-sm btn-ghost relative hover:bg-white/20">
+                    <Bell className="size-5 text-base-content/70" />
+                    {friendRequests.length > 0 && <span className="absolute top-1 right-1 size-2.5 bg-error rounded-full ring-2 ring-white" />}
                   </button>
-                  <button onClick={() => setActiveModal('addFriend')} className="btn btn-circle btn-sm btn-ghost">
-                    <UserPlus className="size-5" />
+                  <button onClick={() => setActiveModal('addFriend')} className="btn btn-circle btn-sm btn-ghost hover:bg-white/20">
+                    <UserPlus className="size-5 text-base-content/70" />
                   </button>
                 </>
               )}
@@ -116,22 +116,29 @@ const Sidebar = () => {
         </div>
 
         {/* Delete Action Bar */}
-        {isSelectionMode && selectedIds.length > 0 && (
-          <div className="mb-2 animate-fade-in">
-            <button onClick={handleDeleteSelected} className="btn btn-error btn-sm w-full text-white">
-              {viewType === "chats" ? "Unfriend" : "Delete"} ({selectedIds.length})
-            </button>
-          </div>
-        )}
+        <AnimatePresence>
+          {isSelectionMode && selectedIds.length > 0 && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="mb-2 overflow-hidden"
+            >
+              <button onClick={handleDeleteSelected} className="btn btn-error btn-sm w-full text-white shadow-lg shadow-error/30">
+                {viewType === "chats" ? "Unfriend" : "Delete"} ({selectedIds.length})
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {/* Search Bar - Only visible when open */}
+        {/* Search Bar */}
         {isSidebarOpen && !isSelectionMode && (
-          <div className="relative mb-2">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-base-content/40" />
+          <div className="relative mb-2 group">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-base-content/40 group-focus-within:text-primary transition-colors" />
             <input
               type="text"
-              placeholder="Search"
-              className="input input-sm h-10 w-full pl-9 rounded-full bg-base-200 border-none focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-base-content/40"
+              placeholder="Search conversations..."
+              className="input input-sm h-10 w-full pl-10 rounded-2xl bg-white/40 border-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-base-content/40 backdrop-blur-sm shadow-sm"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -139,8 +146,8 @@ const Sidebar = () => {
         )}
       </div>
 
-      {/* Navigation Tabs - Icons only when closed */}
-      <div className={`flex px-2 ${isSidebarOpen ? "gap-2" : "flex-col gap-4 mt-2 justify-center"}`}>
+      {/* Navigation Tabs */}
+      <div className={`flex px-4 ${isSidebarOpen ? "gap-2" : "flex-col gap-4 mt-2 justify-center px-2"}`}>
         {[
           { id: "chats", label: "Inbox", icon: MessageSquare },
           { id: "groups", label: "Groups", icon: Users },
@@ -150,10 +157,12 @@ const Sidebar = () => {
             key={tab.id}
             onClick={() => setViewType(tab.id)}
             className={`
-                        btn btn-sm border-none shadow-none rounded-full flex items-center justify-center
-                        ${viewType === tab.id ? "bg-primary/10 text-primary" : "bg-transparent hover:bg-base-200 text-base-content/60"}
-                        ${!isSidebarOpen ? "size-10 p-0" : ""} 
-                    `}
+                btn btn-sm border-none shadow-none rounded-xl flex items-center justify-center transition-all duration-300
+                ${viewType === tab.id
+                ? "bg-primary text-white shadow-lg shadow-primary/30 scale-105"
+                : "bg-transparent hover:bg-white/20 text-base-content/60"}
+                ${!isSidebarOpen ? "size-10 p-0 rounded-full" : "flex-1"} 
+            `}
             title={tab.label}
           >
             <tab.icon className={isSidebarOpen ? "size-4 mr-2" : "size-5"} />
@@ -162,12 +171,14 @@ const Sidebar = () => {
         ))}
       </div>
 
+
       {/* Content List */}
-      <div className="flex-1 overflow-y-auto mt-2 px-2 scrollbar-hide space-y-1">
-        {viewType === "chats" && filteredUsers.map(user => (
+      <div className="flex-1 overflow-y-auto mt-4 px-3 space-y-1 pb-4 scrollbar-hide">
+        {viewType === "chats" && filteredUsers.map((user, idx) => (
           <UserItem
             key={user._id}
             user={user}
+            index={idx}
             isSelected={selectedUser?._id === user._id}
             isOnline={onlineUsers.includes(user._id)}
             isOpen={isSidebarOpen}
@@ -183,17 +194,23 @@ const Sidebar = () => {
         {viewType === "groups" && (
           <>
             {isSidebarOpen && !isSelectionMode && (
-              <button onClick={() => setActiveModal('createGroup')} className="w-full flex items-center gap-3 p-3 text-primary hover:bg-base-200 rounded-xl transition-colors mb-1">
-                <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <CirclePlus className="size-6" />
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setActiveModal('createGroup')}
+                className="w-full flex items-center gap-3 p-3 bg-gradient-to-r from-primary/10 to-secondary/10 hover:from-primary/20 hover:to-secondary/20 rounded-2xl transition-all mb-3 border border-primary/10"
+              >
+                <div className="size-10 rounded-full bg-white flex items-center justify-center shadow-sm">
+                  <CirclePlus className="size-6 text-primary" />
                 </div>
-                <span className="font-semibold">Create New Group</span>
-              </button>
+                <span className="font-semibold text-primary/80">Create Group</span>
+              </motion.button>
             )}
-            {filteredGroups.map(group => (
+            {filteredGroups.map((group, idx) => (
               <UserItem
                 key={group._id}
                 user={{ ...group, fullName: group.name, profilePic: group.image }}
+                index={idx}
                 isSelected={selectedUser?._id === group._id}
                 isOpen={isSidebarOpen}
                 isGroup
@@ -208,10 +225,11 @@ const Sidebar = () => {
           </>
         )}
 
-        {viewType === "archived" && filteredArchived.map(user => (
+        {viewType === "archived" && filteredArchived.map((user, idx) => (
           <UserItem
             key={user._id}
             user={user}
+            index={idx}
             isSelected={selectedUser?._id === user._id}
             isOnline={onlineUsers.includes(user._id)}
             isOpen={isSidebarOpen}
@@ -226,11 +244,11 @@ const Sidebar = () => {
         ))}
       </div>
 
-      {/* Footer/Profile - Optional but good for pro apps */}
-      <div className="p-3 border-t border-base-content/5 mt-auto">
-        <button onClick={toggleSidebar} className="btn btn-ghost btn-circle btn-sm w-full h-auto py-2 flex items-center justify-center gap-2 hover:bg-base-200 rounded-xl">
-          <Menu className="size-5" />
-          {isSidebarOpen && <span className="text-sm font-medium">More</span>}
+      {/* Footer */}
+      <div className="p-3 mt-auto">
+        <button onClick={toggleSidebar} className="btn btn-ghost btn-circle btn-sm w-full h-auto py-2 flex items-center justify-center gap-2 hover:bg-white/20 rounded-xl transition-all group">
+          <Menu className="size-5 text-base-content/60 group-hover:text-primary transition-colors" />
+          {isSidebarOpen && <span className="text-sm font-medium text-base-content/60 group-hover:text-primary">Collapse</span>}
         </button>
       </div>
 
@@ -242,52 +260,58 @@ const Sidebar = () => {
   );
 };
 
-const UserItem = ({ user, isSelected, isOnline, isOpen, onClick, isGroup, isArchived, isSelectionMode, isChecked }) => {
+const UserItem = ({ user, index, isSelected, isOnline, isOpen, onClick, isGroup, isArchived, isSelectionMode, isChecked }) => {
   return (
-    <button
+    <motion.button
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05 }}
+      whileHover={{ scale: 1.02, backgroundColor: "rgba(255, 255, 255, 0.4)" }}
+      whileTap={{ scale: 0.98 }}
       onClick={onClick}
       className={`
-                w-full flex items-center gap-3 p-2 rounded-xl transition-all duration-200 group
-                ${isSelected && !isSelectionMode ? "bg-base-200" : "hover:bg-base-200/50"}
-                ${!isOpen && "justify-center"}
+                w-full flex items-center gap-3 p-3 rounded-2xl transition-all duration-200 group relative
+                ${isSelected && !isSelectionMode ? "bg-white/60 shadow-md ring-1 ring-white/50" : "hover:bg-white/30"}
+                ${!isOpen && "justify-center px-0"}
             `}
     >
       <div className="relative flex-shrink-0">
         {isSelectionMode && isOpen ? (
-          <div className={`size-10 rounded-full border-2 flex items-center justify-center ${isChecked ? "bg-primary border-primary" : "border-base-content/20"}`}>
-            {isChecked && <div className="size-3 bg-white rounded-full" />}
+          <div className={`size-12 rounded-full border-2 flex items-center justify-center transition-colors ${isChecked ? "bg-primary border-primary" : "border-base-content/20 bg-white/50"}`}>
+            {isChecked && <div className="size-4 bg-white rounded-full shadow-sm" />}
           </div>
         ) : (
-          <>
+          <div className="relative">
             <img
               src={user.profilePic || "/avatar.png"}
               alt={user.fullName}
-              className={`object-cover rounded-full bg-base-300 ring-2 ring-transparent group-hover:ring-base-100 transition-all size-10`}
+              className={`object-cover rounded-full bg-base-200 ring-2 ring-white shadow-sm transition-all size-12
+                ${isSelected ? "ring-primary/50" : "group-hover:ring-primary/30"}
+              `}
             />
             {!isGroup && isOnline && (
-              <span className="absolute bottom-0 right-0 size-3.5 bg-green-500 rounded-full ring-2 ring-base-100" />
+              <span className="absolute bottom-0 right-0 size-3.5 bg-green-500 rounded-full ring-2 ring-white shadow-sm" />
             )}
-          </>
+          </div>
         )}
       </div>
 
       {isOpen && (
         <div className="flex-1 text-left min-w-0">
-          <div className="flex justify-between items-baseline">
-            <h3 className={`font-semibold text-sm truncate ${isSelected ? "text-base-content" : "text-base-content"}`}>
+          <div className="flex justify-between items-baseline mb-0.5">
+            <h3 className={`font-semibold text-sm truncate ${isSelected ? "text-primary" : "text-base-content"}`}>
               {user.fullName}
             </h3>
-            {/* Placeholder Time - In real app, pass last message time */}
-            {!isSelectionMode && <span className="text-[11px] text-base-content/40 font-medium">10:42 PM</span>}
+            {!isSelectionMode && <span className="text-[10px] text-base-content/40 font-medium">10:42 PM</span>}
           </div>
           <div className="flex items-center gap-1">
-            <p className={`text-xs truncate ${isSelected ? "text-base-content/70" : "text-base-content/50"}`}>
+            <p className={`text-xs truncate ${isSelected ? "text-primary/70" : "text-base-content/50"}`}>
               {isGroup ? `${user.members?.length} members` : isArchived ? "Archived" : isSelectionMode ? "Tap to select" : "Click to chat"}
             </p>
           </div>
         </div>
       )}
-    </button>
+    </motion.button>
   );
 };
 

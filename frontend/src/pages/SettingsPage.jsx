@@ -17,7 +17,12 @@ const SettingsPage = () => {
         {/* Sidebar / Info */}
         <div className="md:col-span-1">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div className="p-6 border-b border-gray-100 flex flex-col items-center">
+            <div className="p-6 border-b border-gray-100 flex flex-col items-center relative">
+              <div className="absolute left-4 top-4">
+                <button onClick={() => navigate('/')} className="text-gray-400 hover:text-gray-600">
+                  ←
+                </button>
+              </div>
               <img
                 src={authUser?.profilePic || "/avatar.png"}
                 alt="Profile"

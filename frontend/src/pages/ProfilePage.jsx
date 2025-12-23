@@ -25,7 +25,12 @@ const ProfilePage = () => {
     <div className="h-full w-full bg-gray-50 p-6 overflow-y-auto">
       <div className="max-w-2xl mx-auto">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="p-8 border-b border-gray-100 text-center">
+          <div className="p-8 border-b border-gray-100 text-center relative">
+            <div className="absolute left-8 top-8">
+              <button onClick={() => window.history.back()} className="text-gray-500 hover:text-gray-700 font-medium text-sm flex items-center gap-1">
+                ← Back
+              </button>
+            </div>
             <h1 className="text-2xl font-bold text-gray-900">Profile Settings</h1>
             <p className="text-gray-500 text-sm mt-1">Manage your account information</p>
           </div>

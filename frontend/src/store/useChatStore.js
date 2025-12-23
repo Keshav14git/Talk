@@ -58,6 +58,35 @@ export const useChatStore = create((set, get) => ({
     }
   },
 
+  publicChannels: [],
+  isJoiningGroup: false,
+
+  getPublicChannels: async () => {
+    try {
+      const res = await axiosInstance.get("/groups/public");
+      set({ publicChannels: res.data });
+    } catch (error) {
+      console.error("Failed to fetch public channels", error);
+    }
+  },
+
+  joinGroup: async (groupId) => {
+    set({ isJoiningGroup: true });
+    try {
+      const res = await axiosInstance.post(`/groups/join/${groupId}`);
+      set(state => ({
+        groups: [...state.groups, res.data],
+        publicChannels: state.publicChannels.filter(c => c._id !== groupId)
+      }));
+      return true;
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to join group");
+      return false;
+    } finally {
+      set({ isJoiningGroup: false });
+    }
+  },
+
   getFriendRequests: async () => {
     try {
       const res = await axiosInstance.get("/connections/requests");

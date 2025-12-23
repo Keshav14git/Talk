@@ -21,6 +21,15 @@ const groupSchema = new mongoose.Schema(
             type: String,
             default: "",
         },
+        type: {
+            type: String, // 'group' (chat) or 'channel' (broadcast)
+            enum: ["group", "channel"],
+            default: "group",
+        },
+        description: {
+            type: String,
+            default: "",
+        },
         lastMessage: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Message"

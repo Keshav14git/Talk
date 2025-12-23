@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
+import { useAuthStore } from "../store/useAuthStore";
 import { Image, Send, X, Smile, Paperclip, Mic } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -7,7 +8,15 @@ const MessageInput = () => {
   const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
-  const { sendMessage } = useChatStore();
+  const { sendMessage, selectedUser } = useChatStore(); // Get selectedUser (which is group/user)
+  const { authUser } = useAuthStore(); // Get authUser to check admin status
+
+  // Check Permissions
+  const isChannel = selectedUser?.type === 'channel';
+  // Admin can be populated object or just ID depending on endpoint. Handle both.
+  const adminId = selectedUser?.admin?._id || selectedUser?.admin || "";
+  const isAdmin = adminId === authUser?._id;
+  const isReadOnly = isChannel && !isAdmin;
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -46,6 +55,16 @@ const MessageInput = () => {
       console.error("Failed to send message:", error);
     }
   };
+
+  if (isReadOnly) {
+    return (
+      <div className="p-4 w-full bg-gray-50 border-t border-gray-200 text-center">
+        <p className="text-sm text-gray-500 italic">
+          Only admins can post in this channel.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 w-full bg-white border-t border-gray-200">

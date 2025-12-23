@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
 import { useChatStore } from "../store/useChatStore";
-import { X, Search, CheckCircle2 } from "lucide-react";
+import { X, Search, CheckCircle2, Hash, Users } from "lucide-react";
 
 const CreateGroupModal = ({ onClose }) => {
     const { users, getUsers, createGroup } = useChatStore();
     const [groupName, setGroupName] = useState("");
+    const [description, setDescription] = useState("");
+    const [type, setType] = useState("group"); // 'group' or 'channel'
     const [selectedMembers, setSelectedMembers] = useState([]);
     const [isCreating, setIsCreating] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
 
     useEffect(() => {
         if (users.length === 0) getUsers();
@@ -20,6 +23,10 @@ const CreateGroupModal = ({ onClose }) => {
         );
     };
 
+    const filteredUsers = users.filter(user =>
+        user.fullName.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!groupName.trim() || selectedMembers.length === 0) return;
@@ -27,6 +34,8 @@ const CreateGroupModal = ({ onClose }) => {
         setIsCreating(true);
         const success = await createGroup({
             name: groupName,
+            description,
+            type,
             members: selectedMembers
         });
 
@@ -35,55 +44,137 @@ const CreateGroupModal = ({ onClose }) => {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-base-100 p-6 rounded-lg w-full max-w-md shadow-xl relative max-h-[90vh] flex flex-col">
-                <button onClick={onClose} className="absolute top-4 right-4 btn btn-sm btn-circle btn-ghost">
-                    <X className="size-5" />
-                </button>
-
-                <h3 className="text-lg font-bold mb-4">Create New Group</h3>
-
-                <div className="mb-4">
-                    <label className="label">
-                        <span className="label-text">Group Name</span>
-                    </label>
-                    <input
-                        type="text"
-                        className="input input-bordered w-full"
-                        value={groupName}
-                        onChange={(e) => setGroupName(e.target.value)}
-                        placeholder="e.g. Weekend Trip"
-                    />
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden border border-gray-100 ring-1 ring-black/5 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+                {/* Header */}
+                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                    <h3 className="text-lg font-semibold text-gray-900">Create New Space</h3>
+                    <button
+                        onClick={onClose}
+                        className="p-1 rounded-full hover:bg-gray-200 text-gray-500 transition-colors"
+                    >
+                        <X className="size-5" />
+                    </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto min-h-0 mb-4 border rounded-lg p-2">
-                    <h4 className="font-medium text-sm mb-2 px-2 text-zinc-500">Select Members</h4>
-                    {users.map((user) => (
-                        <div
-                            key={user._id}
-                            onClick={() => toggleMember(user._id)}
-                            className={`flex items-center gap-3 p-2 rounded cursor-pointer transition-colors ${selectedMembers.includes(user._id) ? "bg-base-300" : "hover:bg-base-200"}`}
+                <div className="p-6 flex-1 overflow-y-auto custom-scrollbar space-y-5">
+
+                    {/* Type Selector */}
+                    <div className="grid grid-cols-2 gap-3">
+                        <button
+                            type="button"
+                            onClick={() => setType("group")}
+                            className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${type === "group"
+                                    ? "border-[#FF5636] bg-[#FF5636]/5"
+                                    : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                                }`}
                         >
-                            <img
-                                src={user.profilePic || "/avatar.png"}
-                                alt={user.fullName}
-                                className="size-10 rounded-full object-cover"
+                            <Users className={`size-6 ${type === "group" ? "text-[#FF5636]" : "text-gray-400"}`} />
+                            <div className="text-center">
+                                <div className={`font-medium ${type === "group" ? "text-[#FF5636]" : "text-gray-900"}`}>Group Chat</div>
+                                <div className="text-xs text-gray-500 mt-1">Private collaboration</div>
+                            </div>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setType("channel")}
+                            className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${type === "channel"
+                                    ? "border-[#FF5636] bg-[#FF5636]/5"
+                                    : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                                }`}
+                        >
+                            <Hash className={`size-6 ${type === "channel" ? "text-[#FF5636]" : "text-gray-400"}`} />
+                            <div className="text-center">
+                                <div className={`font-medium ${type === "channel" ? "text-[#FF5636]" : "text-gray-900"}`}>Channel</div>
+                                <div className="text-xs text-gray-500 mt-1">Broadcast updates</div>
+                            </div>
+                        </button>
+                    </div>
+
+                    {/* Inputs */}
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                            <input
+                                type="text"
+                                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:border-[#FF5636] focus:ring-1 focus:ring-[#FF5636]"
+                                value={groupName}
+                                onChange={(e) => setGroupName(e.target.value)}
+                                placeholder={`e.g. ${type === 'group' ? 'Product Team' : 'Announcements'}`}
                             />
-                            <div className="flex-1 font-medium">{user.fullName}</div>
-                            {selectedMembers.includes(user._id) && (
-                                <CheckCircle2 className="size-5 text-primary" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Description <span className="text-gray-400 font-normal">(Optional)</span></label>
+                            <input
+                                type="text"
+                                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:border-[#FF5636] focus:ring-1 focus:ring-[#FF5636]"
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
+                                placeholder="What's this space for?"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Member Selection */}
+                    <div>
+                        <div className="flex items-center justify-between mb-2">
+                            <label className="block text-sm font-medium text-gray-700">Add Members</label>
+                            <span className="text-xs text-gray-500">{selectedMembers.length} selected</span>
+                        </div>
+
+                        <div className="relative mb-2">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Search users..."
+                                className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#FF5636]"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="border border-gray-200 rounded-xl overflow-hidden max-h-[200px] overflow-y-auto">
+                            {filteredUsers.length === 0 ? (
+                                <div className="p-4 text-center text-gray-500 text-sm">No users found</div>
+                            ) : (
+                                filteredUsers.map((user) => (
+                                    <div
+                                        key={user._id}
+                                        onClick={() => toggleMember(user._id)}
+                                        className={`flex items-center gap-3 p-3 cursor-pointer transition-colors border-b border-gray-50 last:border-0 ${selectedMembers.includes(user._id) ? "bg-[#FF5636]/5" : "hover:bg-gray-50"
+                                            }`}
+                                    >
+                                        <div className="relative">
+                                            <img
+                                                src={user.profilePic || "/avatar.png"}
+                                                alt={user.fullName}
+                                                className="size-9 rounded-full object-cover border border-gray-100"
+                                            />
+                                            {selectedMembers.includes(user._id) && (
+                                                <div className="absolute -bottom-1 -right-1 bg-white rounded-full">
+                                                    <CheckCircle2 className="size-4 text-[#FF5636] fill-white" />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="font-medium text-sm text-gray-900">{user.fullName}</div>
+                                        </div>
+                                    </div>
+                                ))
                             )}
                         </div>
-                    ))}
+                    </div>
                 </div>
 
-                <button
-                    onClick={handleSubmit}
-                    className="btn btn-primary w-full"
-                    disabled={isCreating || !groupName || selectedMembers.length === 0}
-                >
-                    {isCreating ? "Creating..." : "Create Group"}
-                </button>
+                <div className="p-6 border-t border-gray-100 bg-gray-50/50">
+                    <button
+                        onClick={handleSubmit}
+                        className="w-full py-2.5 bg-[#FF5636] hover:bg-[#E04529] text-white rounded-xl font-medium shadow-sm shadow-orange-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={isCreating || !groupName.trim() || selectedMembers.length === 0}
+                    >
+                        {isCreating ? "Creating..." : `Create ${type === 'group' ? 'Group' : 'Channel'}`}
+                    </button>
+                </div>
             </div>
         </div>
     );

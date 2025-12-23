@@ -5,7 +5,7 @@ import { io } from "../lib/socket.js";
 
 export const createGroup = async (req, res) => {
     try {
-        const { name, members, image } = req.body;
+        const { name, members, image, type, description } = req.body;
         const admin = req.user._id;
 
         if (!name || !members || members.length === 0) {
@@ -26,6 +26,8 @@ export const createGroup = async (req, res) => {
             members: allMembers,
             admin,
             image: imageUrl,
+            type: type || 'group',
+            description: description || ''
         });
 
         await newGroup.save();
@@ -69,6 +71,14 @@ export const sendGroupMessage = async (req, res) => {
         const { groupId } = req.params;
         const senderId = req.user._id;
 
+        // Check Group Type & Permissions
+        const group = await Group.findById(groupId);
+        if (!group) return res.status(404).json({ message: "Group not found" });
+
+        if (group.type === 'channel' && group.admin.toString() !== senderId.toString()) {
+            return res.status(403).json({ message: "Only admins can send messages in a channel" });
+        }
+
         let imageUrl;
         if (image) {
             const uploadResponse = await cloudinary.uploader.upload(image);
@@ -95,5 +105,44 @@ export const sendGroupMessage = async (req, res) => {
     } catch (error) {
         console.log("Error in sendGroupMessage controller: ", error.message);
         res.status(500).json({ error: "Internal server error" });
+    }
+};
+
+export const getPublicChannels = async (req, res) => {
+    try {
+        // Find channels where the user is NOT a member
+        const channels = await Group.find({
+            type: 'channel',
+            members: { $ne: req.user._id }
+        })
+            .select("-members") // Don't send member list for privacy/performance
+            .populate("admin", "fullName");
+
+        res.json(channels);
+    } catch (error) {
+        console.error("Error fetching public channels:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+export const joinGroup = async (req, res) => {
+    try {
+        const { groupId } = req.params;
+        const userId = req.user._id;
+
+        const group = await Group.findById(groupId);
+        if (!group) return res.status(404).json({ message: "Group not found" });
+
+        if (group.members.includes(userId)) {
+            return res.status(400).json({ message: "Already a member" });
+        }
+
+        group.members.push(userId);
+        await group.save();
+
+        res.json(group);
+    } catch (error) {
+        console.error("Error joining group:", error);
+        res.status(500).json({ message: "Internal server error" });
     }
 };

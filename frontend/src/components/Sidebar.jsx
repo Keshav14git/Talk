@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
 import SidebarSkeleton from "./skeletons/SidebarSkeleton";
-import { Users, UserPlus, CirclePlus, MessageSquare, Archive, Search, Bell, Menu, ListChecks, Hash, User } from "lucide-react";
+import { Users, UserPlus, CirclePlus, MessageSquare, Archive, Search, Bell, Menu, ListChecks, Hash, User, Compass, Lock } from "lucide-react";
 import AddFriendModal from "./AddFriendModal";
 import FriendRequestsModal from "./FriendRequestsModal";
 import CreateGroupModal from "./CreateGroupModal";
+import ExploreChannelsModal from "./ExploreChannelsModal";
 import { motion, AnimatePresence } from "framer-motion";
 
 const Sidebar = () => {
@@ -86,7 +87,10 @@ const Sidebar = () => {
 
         {isSidebarOpen && (
           <div className="flex items-center gap-1">
-            <button onClick={() => setActiveModal('requests')} className="p-1 hover:bg-gray-700 rounded-md relative text-slate-400">
+            <button onClick={() => setActiveModal('explore')} className="p-1 hover:bg-gray-700 rounded-md relative text-slate-400" title="Explore Channels">
+              <Compass className="size-3.5" />
+            </button>
+            <button onClick={() => setActiveModal('requests')} className="p-1 hover:bg-gray-700 rounded-md relative text-slate-400" title="Friend Requests">
               <Bell className="size-3.5" />
               {friendRequests.length > 0 && <span className="absolute top-1 right-1 size-1.5 bg-red-500 rounded-full" />}
             </button>
@@ -144,7 +148,7 @@ const Sidebar = () => {
             <ListItem
               key={group._id}
               user={{ ...group, fullName: group.name, profilePic: group.image }}
-              icon={Hash}
+              icon={group.type === 'channel' ? Hash : Lock}
               isSelected={selectedUser?._id === group._id}
               isOpen={isSidebarOpen}
               onClick={() => setSelectedUser(group, 'group')}
@@ -191,6 +195,7 @@ const Sidebar = () => {
       {activeModal === 'addFriend' && <AddFriendModal onClose={() => setActiveModal(null)} />}
       {activeModal === 'requests' && <FriendRequestsModal onClose={() => setActiveModal(null)} />}
       {activeModal === 'createGroup' && <CreateGroupModal onClose={() => setActiveModal(null)} />}
+      {activeModal === 'explore' && <ExploreChannelsModal onClose={() => setActiveModal(null)} />}
     </aside>
   );
 };

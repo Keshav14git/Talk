@@ -179,6 +179,7 @@ const Sidebar = () => {
               icon={Lock}
               isSelected={selectedUser?._id === group._id}
               onClick={() => setSelectedUser(group, 'group')}
+              unreadCount={group.unreadCount}
             />
           ))}
 
@@ -191,6 +192,7 @@ const Sidebar = () => {
                   icon={Hash}
                   isSelected={selectedUser?._id === channel._id}
                   onClick={() => setSelectedUser(channel, 'channel')}
+                  unreadCount={channel.unreadCount}
                 />
               ))}
               {filteredGroups.filter(g => g.type === 'channel').length === 0 && (
@@ -211,6 +213,7 @@ const Sidebar = () => {
               isOnline={onlineUsers.includes(user._id)}
               onClick={() => setSelectedUser(user, 'user')}
               useAvatar
+              unreadCount={user.unreadCount}
             />
           ))}
 
@@ -222,6 +225,7 @@ const Sidebar = () => {
               isSelected={selectedUser?._id === user._id}
               onClick={() => setSelectedUser(user, 'user')}
               useAvatar
+              unreadCount={user.unreadCount}
             />
           ))}
         </div>

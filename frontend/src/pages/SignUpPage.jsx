@@ -35,7 +35,7 @@ const SignUpPage = () => {
   };
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2 bg-gradient-to-br from-base-100 to-base-200">
+    <div className="min-h-screen grid lg:grid-cols-2 bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
       {/* Left */}
       <motion.div
         initial={{ opacity: 0, x: -50 }}
@@ -43,17 +43,17 @@ const SignUpPage = () => {
         transition={{ duration: 0.5 }}
         className="flex flex-col justify-center items-center p-6 sm:p-12 relative z-10"
       >
-        <div className="w-full max-w-md space-y-8 bg-white/50 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-xl border border-white/40">
+        <div className="w-full max-w-md space-y-8 bg-white/70 backdrop-blur-2xl p-10 rounded-[2.5rem] shadow-2xl border border-white/60 ring-1 ring-white/50">
           {/* Logo */}
           <div className="text-center mb-8">
             <div className="flex flex-col items-center gap-2 group">
               <div
-                className="size-16 rounded-2xl bg-gradient-to-tr from-primary/20 to-secondary/20 flex items-center justify-center group-hover:from-primary/30 group-hover:to-secondary/30 transition-all shadow-lg"
+                className="size-16 rounded-2xl bg-gradient-to-tr from-primary/10 to-secondary/10 flex items-center justify-center group-hover:from-primary/20 group-hover:to-secondary/20 transition-all shadow-md group-hover:shadow-lg"
               >
                 <img src="/talkw.svg" alt="logo" className="w-10 h-10 object-contain transition-transform duration-300 ease-in-out group-hover:rotate-12" />
               </div>
-              <h1 className="text-3xl font-bold mt-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">Create Account</h1>
-              <p className="text-base-content/60 font-medium">Get started with your free account</p>
+              <h1 className="text-3xl font-extrabold mt-6 tracking-tight text-gray-900">Create Account</h1>
+              <p className="text-gray-500 font-medium">Get started with your free account</p>
             </div>
           </div>
 

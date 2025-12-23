@@ -44,5 +44,5 @@
 }
 
 .glass-panel {
-  @apply backdrop-blur-2xl bg-base-100/60 border border-white/50 shadow-sm;
+  @apply backdrop-blur-2xl bg-base-100 bg-opacity-60 border border-white/50 shadow-sm;
 }

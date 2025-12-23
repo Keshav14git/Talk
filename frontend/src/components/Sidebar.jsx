@@ -73,7 +73,7 @@ const Sidebar = () => {
   if (isUsersLoading) return <SidebarSkeleton />;
 
   return (
-    <aside className={`h-full flex flex-col transition-all duration-300 bg-gray-900 border-r border-gray-700 ${isSidebarOpen ? "w-64" : "w-16"}`}>
+    <aside className={`h-full flex flex-col transition-all duration-300 bg-gray-900 border-r border-gray-700 ${isSidebarOpen ? "w-72" : "w-20"}`}>
       {/* Workspace Header (Slack-style) */}
       <div className="h-12 min-h-[3rem] px-3 pl-4 flex items-center justify-between border-b border-gray-700 hover:bg-gray-800 transition-colors cursor-pointer text-slate-200">
         {isSidebarOpen ? (

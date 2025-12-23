@@ -7,11 +7,14 @@ import LoginPage from './pages/LoginPage';
 import SettingsPage from './pages/SettingsPage';
 import ProfilePage from './pages/ProfilePage';
 import Navbar from './components/Navbar.jsx'
+import Sidebar from './components/Sidebar.jsx';
 import { useAuthStore } from './store/useAuthStore.js';
+import { useChatStore } from './store/useChatStore.js';
 import { Loader } from "lucide-react"
 import { Toaster } from "react-hot-toast"
 const App = () => {
   const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
+  const { selectedUser } = useChatStore();
 
   useEffect(() => {
     checkAuth()
@@ -27,7 +30,17 @@ const App = () => {
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden font-sans">
-      <main className="flex-1 flex flex-col h-full w-full relative">
+
+      {/* Sidebar - Global & Full Height */}
+      {authUser && (
+        <div className={`h-full shrink-0 border-r border-gray-200 transition-all duration-300 ease-in-out
+          ${selectedUser ? "hidden md:flex" : "flex"} 
+        `}>
+          <Sidebar />
+        </div>
+      )}
+
+      <main className="flex-1 flex flex-col h-full w-full relative min-w-0">
         <Navbar />
         <div className="flex-1 flex overflow-hidden relative">
           <Routes>

@@ -30,7 +30,7 @@ const SignUpPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="h-full w-full bg-gray-50 flex items-center justify-center p-4 overflow-y-auto">
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
 
         <div className="text-center mb-8">

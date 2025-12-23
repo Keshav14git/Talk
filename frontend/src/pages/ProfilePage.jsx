@@ -22,7 +22,7 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20 px-4">
+    <div className="h-full w-full bg-gray-50 p-6 overflow-y-auto">
       <div className="max-w-2xl mx-auto">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="p-8 border-b border-gray-100 text-center">

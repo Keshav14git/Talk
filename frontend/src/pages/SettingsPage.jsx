@@ -12,7 +12,7 @@ const SettingsPage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20 px-4">
+    <div className="h-full w-full bg-gray-50 p-6 overflow-y-auto">
       <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-6">
         {/* Sidebar / Info */}
         <div className="md:col-span-1">

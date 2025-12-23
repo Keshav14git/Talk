@@ -5,7 +5,7 @@ import SidebarSkeleton from "./skeletons/SidebarSkeleton";
 import {
   Users, UserPlus, CirclePlus, MessageSquare, Archive,
   Search, Bell, Menu, ListChecks, Hash, User, Compass, Lock,
-  Settings, LogOut
+  Settings, LogOut, ChevronsLeft, ChevronsRight
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import AddFriendModal from "./AddFriendModal";
@@ -22,7 +22,8 @@ const Sidebar = () => {
     isUsersLoading,
     viewType, setViewType,
     friendRequests, getFriendRequests,
-    unfriendUser, deleteConversation
+    unfriendUser, deleteConversation,
+    isSidebarOpen, toggleSidebar, setSidebarOpen
   } = useChatStore();
 
   const { logout, onlineUsers } = useAuthStore();
@@ -46,6 +47,16 @@ const Sidebar = () => {
   const filteredGroups = filterList(groups);
   const filteredArchived = filterList(users.filter(u => u.isArchived));
 
+  const handleNavClick = (type) => {
+    if (viewType === type && isSidebarOpen) {
+      // If already active and open, close it (optional behavior, or just stay open? Let's stay open unless toggled)
+      // Maybe no op.
+    } else {
+      setViewType(type);
+      setSidebarOpen(true);
+    }
+  };
+
   if (isUsersLoading) return <SidebarSkeleton />;
 
   return (
@@ -53,7 +64,7 @@ const Sidebar = () => {
       {/* 1. Navigation Rail (Leftmost strip) */}
       <div className="w-16 flex flex-col items-center py-4 bg-gray-950 border-r border-gray-800 h-full flex-shrink-0 z-20">
         {/* Top: Brand/Logo */}
-        <div className="mb-6 flex justify-center">
+        <div className="mb-6 flex justify-center cursor-pointer" onClick={() => setSidebarOpen(!isSidebarOpen)}>
           <span className="font-bold text-xl text-white tracking-tight">T</span>
         </div>
 
@@ -61,27 +72,27 @@ const Sidebar = () => {
         <div className="flex-1 flex flex-col gap-4 w-full items-center">
           <NavIcon
             icon={MessageSquare}
-            isActive={viewType === "chats"}
-            onClick={() => setViewType("chats")}
+            isActive={viewType === "chats" && isSidebarOpen}
+            onClick={() => handleNavClick("chats")}
             title="Chats"
           />
           <NavIcon
             icon={Lock}
-            isActive={viewType === "groups"}
-            onClick={() => setViewType("groups")}
+            isActive={viewType === "groups" && isSidebarOpen}
+            onClick={() => handleNavClick("groups")}
             title="Groups"
           />
           <NavIcon
             icon={Hash}
-            isActive={viewType === "channels"}
-            onClick={() => setViewType("channels")}
+            isActive={viewType === "channels" && isSidebarOpen}
+            onClick={() => handleNavClick("channels")}
             title="Channels"
           />
           <div className="h-px w-8 bg-gray-800 my-1" />
           <NavIcon
             icon={Archive}
-            isActive={viewType === "archived"}
-            onClick={() => setViewType("archived")}
+            isActive={viewType === "archived" && isSidebarOpen}
+            onClick={() => handleNavClick("archived")}
             title="Archived"
           />
         </div>
@@ -110,33 +121,43 @@ const Sidebar = () => {
         </div>
       </div>
 
-      {/* 2. Side Panel (List) */}
-      <div className="w-72 flex flex-col bg-gray-900 h-full">
+      {/* 2. Side Panel (List) - Collapsible */}
+      <div className={`flex flex-col bg-gray-900 h-full border-r border-gray-800 transition-all duration-300 ease-in-out relative
+                ${isSidebarOpen ? "w-72 translate-x-0 opacity-100" : "w-0 -translate-x-4 opacity-0 overflow-hidden border-none text-[0px]"}
+            `}>
         {/* Header */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-gray-800">
-          <h2 className="text-white font-semibold text-lg tracking-tight">
+        <div className="h-16 flex items-center justify-between px-4 border-b border-gray-800 min-w-[18rem]">
+          <h2 className="text-white font-semibold text-lg tracking-tight whitespace-nowrap">
             {viewType === 'chats' && 'Chats'}
             {viewType === 'groups' && 'Groups'}
             {viewType === 'channels' && 'Channels'}
             {viewType === 'archived' && 'Archived'}
           </h2>
 
-          <div className="flex gap-2">
-            {viewType === 'channels' ? (
-              <>
-                <button onClick={() => setActiveModal('createChannel')} className="p-2 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg transition-all"><CirclePlus className="size-4" /></button>
-                <button onClick={() => setActiveModal('explore')} className="p-2 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg transition-all"><Compass className="size-4" /></button>
-              </>
-            ) : viewType === 'groups' ? (
-              <button onClick={() => setActiveModal('createGroup')} className="p-2 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg transition-all"><CirclePlus className="size-4" /></button>
-            ) : (
-              <button onClick={() => setActiveModal('addFriend')} className="p-2 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg transition-all"><UserPlus className="size-4" /></button>
-            )}
+          <div className="flex gap-1 items-center">
+            {/* Action Buttons */}
+            <div className="flex gap-1 mr-2">
+              {viewType === 'channels' ? (
+                <>
+                  <button onClick={() => setActiveModal('createChannel')} className="p-2 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg transition-all"><CirclePlus className="size-4" /></button>
+                  <button onClick={() => setActiveModal('explore')} className="p-2 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg transition-all"><Compass className="size-4" /></button>
+                </>
+              ) : viewType === 'groups' ? (
+                <button onClick={() => setActiveModal('createGroup')} className="p-2 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg transition-all"><CirclePlus className="size-4" /></button>
+              ) : (
+                <button onClick={() => setActiveModal('addFriend')} className="p-2 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg transition-all"><UserPlus className="size-4" /></button>
+              )}
+            </div>
+
+            {/* Collapse Button */}
+            <button onClick={toggleSidebar} className="p-1.5 text-gray-500 hover:text-white hover:bg-gray-800 rounded-md transition-all">
+              <ChevronsLeft className="size-4" />
+            </button>
           </div>
         </div>
 
         {/* Search */}
-        <div className="p-3">
+        <div className="p-3 min-w-[18rem]">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-500" />
             <input
@@ -150,7 +171,7 @@ const Sidebar = () => {
         </div>
 
         {/* List Content */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar px-2 space-y-1">
+        <div className="flex-1 overflow-y-auto custom-scrollbar px-2 space-y-1 min-w-[18rem]">
           {viewType === "groups" && filteredGroups.filter(g => g.type !== 'channel').map((group) => (
             <ListItem
               key={group._id}

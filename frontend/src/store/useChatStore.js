@@ -18,6 +18,10 @@ export const useChatStore = create((set, get) => ({
   replyMessage: null,
   setReplyMessage: (message) => set({ replyMessage: message }),
 
+  // Search State
+  messageSearchQuery: "",
+  setMessageSearchQuery: (query) => set({ messageSearchQuery: query }),
+
   // UI State
   viewType: "chats", // "chats" | "groups" | "archived"
   isSidebarOpen: true, // Default open on desktop, should handle mobile separately if needed

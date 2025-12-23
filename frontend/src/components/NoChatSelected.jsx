@@ -6,8 +6,8 @@ const NoChatSelected = () => {
       <div className="max-w-md text-center space-y-6">
         <div className="flex justify-center mb-4">
           <div className="relative">
-            <div className="w-24 h-24 bg-blue-100 rounded-2xl flex items-center justify-center animate-bounce">
-              <MessageSquare className="size-12 text-blue-600" />
+            <div className="w-24 h-24 bg-[#FF5636]/10 rounded-2xl flex items-center justify-center animate-bounce">
+              <MessageSquare className="size-12 text-[#FF5636]" />
             </div>
           </div>
         </div>

@@ -71,11 +71,11 @@ const ChatContainer = () => {
         {/* Selection Banner */}
         {isSelectionMode && (
           <div
-            className="absolute inset-x-0 top-[64px] bg-blue-50 z-10 flex items-center justify-between px-6 py-2 border-b border-blue-100"
+            className="absolute inset-x-0 top-[64px] bg-[#FF5636]/5 z-10 flex items-center justify-between px-6 py-2 border-b border-[#FF5636]/20"
           >
-            <span className="font-bold text-sm text-blue-900">{selectedMessageIds.length} selected</span>
+            <span className="font-bold text-sm text-[#FF5636]">{selectedMessageIds.length} selected</span>
             <div className="flex gap-2">
-              <button onClick={() => { setIsSelectionMode(false); setSelectedMessageIds([]); }} className="text-xs text-blue-600 hover:underline px-2">Cancel</button>
+              <button onClick={() => { setIsSelectionMode(false); setSelectedMessageIds([]); }} className="text-xs text-[#FF5636] hover:underline px-2">Cancel</button>
               <button
                 onClick={handleBulkDelete}
                 className="text-xs text-red-600 hover:text-red-700 font-medium px-2"
@@ -110,73 +110,87 @@ const ChatContainer = () => {
           return (
             <div
               key={message._id}
-              className={`group flex gap-3 py-1 px-4 hover:bg-gray-50 transition-colors relative
-                ${isSelected ? "bg-blue-50 hover:bg-blue-50/80" : ""}
-                ${!isPrevSame ? "mt-4" : ""}
+              className={`group flex ${isMe ? "flex-row-reverse" : "flex-row"} gap-3 py-1 px-4 hover:bg-gray-50/50 transition-colors relative
+                ${isSelected ? "bg-[#FF5636]/5 hover:bg-[#FF5636]/10" : ""}
+                ${!isPrevSame ? "mt-4" : "mt-0.5"}
               `}
               onClick={() => isSelectionMode && toggleSelection(message._id)}
             >
               {/* Selection Checkbox */}
               {isSelectionMode && (
-                <div className="flex items-center justify-center mr-2">
+                <div className="flex items-center justify-center mx-2">
                   <input
                     type="checkbox"
                     checked={isSelected}
                     onChange={() => toggleSelection(message._id)}
-                    className="size-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="size-4 rounded border-gray-300 text-[#FF5636] focus:ring-[#FF5636]"
                   />
                 </div>
               )}
 
-              {/* Avatar Column */}
-              <div className="w-9 flex-shrink-0">
-                {!isPrevSame ? (
+              {/* Avatar */}
+              <div className="w-8 flex-shrink-0 flex flex-col items-center">
+                {!isPrevSame && !isMe && (
                   <img
-                    src={(isMe ? authUser.profilePic : selectedUser.profilePic) || "/avatar.png"}
+                    src={selectedUser.profilePic || "/avatar.png"}
                     alt="avatar"
-                    className="size-9 rounded-md object-cover bg-gray-200"
+                    className="size-8 rounded-full object-cover shadow-sm"
                   />
-                ) : (
-                  <div className="w-9 text-[10px] text-gray-300 opacity-0 group-hover:opacity-100 text-right pr-1 pt-1 font-mono">
-                    {formatMessageTime(message.createdAt).split(' ')[0]}
-                  </div>
                 )}
+                {/* No avatar for "Me" to keep it clean, or could add it. Let's hide "Me" avatar for typical bubble feel, looking cleaner. */}
+                {!isPrevSame && isMe && (
+                  <img
+                    src={authUser.profilePic || "/avatar.png"}
+                    alt="avatar"
+                    className="size-8 rounded-full object-cover shadow-sm"
+                  />
+                )}
+                {isPrevSame && <div className="w-8" />}
               </div>
 
-              {/* Content Column */}
-              <div className="flex-1 min-w-0">
+              {/* Content Bubble */}
+              <div className={`flex flex-col max-w-[70%] ${isMe ? "items-end" : "items-start"}`}>
+
+                {/* Name/Time Header (Only for first in group) */}
                 {!isPrevSame && (
-                  <div className="flex items-baseline gap-2 mb-0.5">
-                    <span className="font-bold text-gray-900 text-[15px]">
+                  <div className={`flex items-baseline gap-2 mb-1 text-xs text-gray-400 ${isMe ? "flex-row-reverse" : "flex-row"}`}>
+                    <span className="font-medium text-gray-600">
                       {isMe ? "You" : selectedUser.fullName}
                     </span>
-                    <span className="text-xs text-gray-500">
+                    <span>
                       {formatMessageTime(message.createdAt)}
                     </span>
                   </div>
                 )}
 
-                <div className="text-[15px] text-gray-800 leading-relaxed whitespace-pre-wrap">
+                {/* Bubble */}
+                <div
+                  className={`relative px-4 py-2 shadow-sm text-[15px] leading-relaxed break-words
+                     ${isMe
+                      ? "bg-[#FF5636] text-white rounded-2xl rounded-tr-sm"
+                      : "bg-gray-100 text-gray-800 rounded-2xl rounded-tl-sm"
+                    }
+                   `}
+                >
+                  {message.image && (
+                    <div className="mb-2">
+                      <img
+                        src={message.image}
+                        alt="Attachment"
+                        className="max-w-[200px] max-h-60 rounded-lg cursor-zoom-in hover:opacity-90 transition-opacity"
+                        onClick={(e) => { e.stopPropagation(); setSelectedImage(message.image); }}
+                      />
+                    </div>
+                  )}
                   {message.text}
                 </div>
-
-                {message.image && (
-                  <div className="mt-2">
-                    <img
-                      src={message.image}
-                      alt="Attachment"
-                      className="max-w-sm max-h-60 rounded-lg border border-gray-200 cursor-zoom-in"
-                      onClick={(e) => { e.stopPropagation(); setSelectedImage(message.image); }}
-                    />
-                  </div>
-                )}
               </div>
 
               {/* Delete Hover Action */}
               {!isSelectionMode && isMe && (
                 <button
                   onClick={(e) => { e.stopPropagation(); handleDelete(message._id); }}
-                  className="absolute top-2 right-4 p-1.5 text-gray-400 hover:text-red-500 hover:bg-gray-100 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="self-center p-1.5 text-gray-400 hover:text-red-500 hover:bg-gray-100 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                   title="Delete Message"
                 >
                   <Trash2 size={14} />

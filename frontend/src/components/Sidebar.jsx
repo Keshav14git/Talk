@@ -75,7 +75,7 @@ const Sidebar = () => {
   return (
     <aside className={`h-full flex flex-col transition-all duration-300 bg-gray-900 border-r border-gray-700 ${isSidebarOpen ? "w-64" : "w-16"}`}>
       {/* Workspace Header (Slack-style) */}
-      <div className="h-12 min-h-[3rem] px-3 flex items-center justify-between border-b border-gray-700 hover:bg-gray-800 transition-colors cursor-pointer text-slate-200">
+      <div className="h-12 min-h-[3rem] px-3 pl-4 flex items-center justify-between border-b border-gray-700 hover:bg-gray-800 transition-colors cursor-pointer text-slate-200">
         {isSidebarOpen ? (
           <h1 className="font-bold text-slate-100 tracking-tight truncate text-sm">Talk Project</h1>
         ) : (
@@ -199,7 +199,7 @@ const Sidebar = () => {
 const SidebarItem = ({ icon: Icon, label, isActive, onClick, isOpen }) => (
   <button
     onClick={onClick}
-    className={`w-full flex items-center gap-2 px-2 py-1 rounded transition-colors ${isActive ? "bg-[#1164A3] text-white" : "text-slate-400 hover:bg-gray-800 hover:text-slate-200"
+    className={`w-full flex items-center gap-2 px-2 py-1 rounded transition-colors ${isActive ? "bg-[#FF5636] text-white" : "text-slate-400 hover:bg-gray-800 hover:text-slate-200"
       } ${!isOpen && "justify-center"}`}
   >
     <Icon className="size-4 shrink-0" />
@@ -210,7 +210,7 @@ const SidebarItem = ({ icon: Icon, label, isActive, onClick, isOpen }) => (
 const ListItem = ({ user, icon: Icon, isSelected, isOpen, isOnline, onClick, useAvatar }) => (
   <button
     onClick={onClick}
-    className={`w-full flex items-center gap-2 px-2 py-1 rounded transition-colors group ${isSelected ? "bg-[#1164A3] text-white" : "text-slate-400 hover:bg-gray-800 hover:text-slate-200"
+    className={`w-full flex items-center gap-2 px-2 py-1 rounded transition-colors group ${isSelected ? "bg-[#FF5636] text-white" : "text-slate-400 hover:bg-gray-800 hover:text-slate-200"
       } ${!isOpen && "justify-center"}`}
   >
     {useAvatar ? (

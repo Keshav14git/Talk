@@ -20,8 +20,8 @@ export default {
           900: '#111827', // Headings
         },
         primary: {
-          DEFAULT: '#0F172A', // Slate-900 (Professional dark blue/black for distinct actions)
-          hover: '#334155',
+          DEFAULT: '#FF5636', // Brand Orange
+          hover: '#E04529',
         }
       }
     },

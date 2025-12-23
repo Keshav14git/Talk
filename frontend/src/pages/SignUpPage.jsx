@@ -35,7 +35,7 @@ const SignUpPage = () => {
 
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="size-12 bg-blue-100 rounded-xl flex items-center justify-center">
+            <div className="size-12 bg-[#FF5636]/10 rounded-xl flex items-center justify-center">
               <img src="/talkw.svg" alt="logo" className="size-6" />
             </div>
           </div>
@@ -49,7 +49,7 @@ const SignUpPage = () => {
             <div className="relative">
               <input
                 type="text"
-                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors placeholder:text-gray-400"
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-[#FF5636] focus:ring-1 focus:ring-[#FF5636] transition-colors placeholder:text-gray-400"
                 placeholder="John Doe"
                 value={formData.fullName}
                 onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
@@ -96,7 +96,7 @@ const SignUpPage = () => {
 
           <button
             type="submit"
-            className="w-full py-2.5 bg-[#1164A3] hover:bg-[#0f548c] text-white rounded-lg font-medium text-sm transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+            className="w-full py-2.5 bg-[#FF5636] hover:bg-[#E04529] text-white rounded-lg font-medium text-sm transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed mt-6"
             disabled={isSigningUp}
           >
             {isSigningUp ? (
@@ -112,7 +112,7 @@ const SignUpPage = () => {
 
         <div className="mt-6 text-center text-xs text-gray-500">
           Already have an account?{" "}
-          <Link to="/login" className="text-[#1164A3] hover:text-[#0f548c] font-medium hover:underline">
+          <Link to="/login" className="text-[#FF5636] hover:text-[#E04529] font-medium hover:underline">
             Sign in
           </Link>
         </div>

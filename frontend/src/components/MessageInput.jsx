@@ -56,7 +56,7 @@ const MessageInput = () => {
         </div>
       )}
 
-      <form onSubmit={handleSendMessage} className="border border-gray-300 rounded-xl bg-white shadow-sm focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all">
+      <form onSubmit={handleSendMessage} className="border border-gray-300 rounded-xl bg-white shadow-sm focus-within:ring-1 focus-within:ring-[#FF5636] focus-within:border-[#FF5636] transition-all">
         {/* Toolbar */}
         <div className="flex items-center gap-1 p-2 bg-gray-50 border-b border-gray-100 rounded-t-xl">
           <button

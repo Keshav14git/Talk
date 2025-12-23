@@ -58,7 +58,7 @@ const SettingsPage = () => {
 
             <div className="rounded-xl border border-gray-200 overflow-hidden bg-gray-100">
               <div className="bg-white border-b border-gray-200 p-4 flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs">JD</div>
+                <div className="w-8 h-8 rounded-full bg-[#FF5636]/10 flex items-center justify-center text-[#FF5636] font-bold text-xs">JD</div>
                 <div>
                   <h4 className="font-bold text-gray-900 text-sm leading-none">John Doe</h4>
                   <p className="text-xs text-green-600 mt-1">Active</p>
@@ -69,11 +69,11 @@ const SettingsPage = () => {
                 {PREVIEW_MESSAGES.map((message) => (
                   <div key={message.id} className={`flex ${message.isSent ? "justify-end" : "justify-start"}`}>
                     <div className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${message.isSent
-                      ? "bg-[#1164A3] text-white rounded-br-sm"
+                      ? "bg-[#FF5636] text-white rounded-br-sm"
                       : "bg-gray-100 text-gray-800 rounded-bl-sm"
                       }`}>
                       <p>{message.content}</p>
-                      <p className={`text-[10px] mt-1 text-right ${message.isSent ? "text-blue-100" : "text-gray-400"}`}>
+                      <p className={`text-[10px] mt-1 text-right ${message.isSent ? "text-orange-100" : "text-gray-400"}`}>
                         12:00 PM
                       </p>
                     </div>
@@ -84,7 +84,7 @@ const SettingsPage = () => {
               <div className="p-4 bg-white border-t border-gray-200">
                 <div className="flex gap-2">
                   <input type="text" value="Start typing..." readOnly className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-500" />
-                  <button className="bg-[#007a5a] text-white p-2 rounded-lg"><Send size={16} /></button>
+                  <button className="bg-[#FF5636] text-white p-2 rounded-lg"><Send size={16} /></button>
                 </div>
               </div>
             </div>

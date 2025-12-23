@@ -3,7 +3,7 @@ import { useChatStore } from "../store/useChatStore";
 import { X, Hash, UserPlus, Compass } from "lucide-react";
 import toast from "react-hot-toast";
 
-const ExploreChannelsModal = ({ onClose }) => {
+const ExploreChannelsModal = ({ onClose, onCreate }) => {
     const { getPublicChannels, publicChannels, joinGroup, isJoiningGroup } = useChatStore();
 
     useEffect(() => {
@@ -41,9 +41,17 @@ const ExploreChannelsModal = ({ onClose }) => {
                                 <Hash className="size-8 text-gray-300" />
                             </div>
                             <h4 className="text-gray-900 font-medium mb-1">No channels to explore</h4>
-                            <p className="text-gray-500 text-sm max-w-xs">
-                                There are no public channels you haven't joined yet. Why not create one?
+                            <p className="text-gray-500 text-sm max-w-xs mb-4">
+                                There are no public channels you haven't joined yet.
                             </p>
+                            {onCreate && (
+                                <button
+                                    onClick={() => { onClose(); onCreate(); }}
+                                    className="px-4 py-2 bg-[#FF5636] text-white text-sm font-medium rounded-lg hover:bg-[#E04529] transition-colors"
+                                >
+                                    Create a Channel
+                                </button>
+                            )}
                         </div>
                     ) : (
                         <div className="space-y-3">

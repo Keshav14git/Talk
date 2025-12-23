@@ -15,7 +15,6 @@ const CreateChannelModal = ({ onClose }) => {
 
         setIsCreating(true);
         // Channels are created with empty members initially (admin only)
-        // Backend handles appending admin to members list automatically
         const success = await createGroup({
             name: channelName,
             description,

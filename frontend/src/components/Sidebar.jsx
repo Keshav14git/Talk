@@ -143,7 +143,10 @@ const Sidebar = () => {
             </span>
             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               {viewType === 'channels' ? (
-                <button onClick={() => setActiveModal('explore')} className="p-0.5 hover:bg-gray-700 rounded" title="Explore Channels"><Compass className="size-3" /></button>
+                <>
+                  <button onClick={() => setActiveModal('createChannel')} className="p-0.5 hover:bg-gray-700 rounded" title="Create Channel"><CirclePlus className="size-3" /></button>
+                  <button onClick={() => setActiveModal('explore')} className="p-0.5 hover:bg-gray-700 rounded" title="Explore Channels"><Compass className="size-3" /></button>
+                </>
               ) : viewType === 'groups' ? (
                 <button onClick={() => setActiveModal('createGroup')} className="p-0.5 hover:bg-gray-700 rounded" title="Create Group"><CirclePlus className="size-3" /></button>
               ) : (
@@ -236,7 +239,7 @@ const Sidebar = () => {
       {activeModal === 'requests' && <FriendRequestsModal onClose={() => setActiveModal(null)} />}
       {activeModal === 'createGroup' && <CreateGroupModal onClose={() => setActiveModal(null)} />}
       {activeModal === 'createChannel' && <CreateChannelModal onClose={() => setActiveModal(null)} />}
-      {activeModal === 'explore' && <ExploreChannelsModal onClose={() => setActiveModal(null)} />}
+      {activeModal === 'explore' && <ExploreChannelsModal onClose={() => setActiveModal(null)} onCreate={() => setActiveModal('createChannel')} />}
     </aside>
   );
 };

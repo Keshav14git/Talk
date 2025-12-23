@@ -2,13 +2,17 @@ import { useEffect, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
 import SidebarSkeleton from "./skeletons/SidebarSkeleton";
-import { Users, UserPlus, CirclePlus, MessageSquare, Archive, Search, Bell, Menu, ListChecks, Hash, User, Compass, Lock } from "lucide-react";
+import {
+  Users, UserPlus, CirclePlus, MessageSquare, Archive,
+  Search, Bell, Menu, ListChecks, Hash, User, Compass, Lock,
+  Settings, LogOut
+} from "lucide-react";
+import { Link } from "react-router-dom";
 import AddFriendModal from "./AddFriendModal";
 import FriendRequestsModal from "./FriendRequestsModal";
 import CreateGroupModal from "./CreateGroupModal";
 import ExploreChannelsModal from "./ExploreChannelsModal";
 import CreateChannelModal from "./CreateChannelModal";
-import { motion, AnimatePresence } from "framer-motion";
 
 const Sidebar = () => {
   const {
@@ -17,17 +21,12 @@ const Sidebar = () => {
     selectedUser, setSelectedUser,
     isUsersLoading,
     viewType, setViewType,
-    isSidebarOpen, toggleSidebar,
-    deleteConversation,
     friendRequests, getFriendRequests,
-    unfriendUser
+    unfriendUser, deleteConversation
   } = useChatStore();
 
-
-  const { onlineUsers } = useAuthStore();
+  const { logout, onlineUsers } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState("");
-  const [isSelectionMode, setIsSelectionMode] = useState(false);
-  const [selectedIds, setSelectedIds] = useState([]);
   const [activeModal, setActiveModal] = useState(null);
 
   useEffect(() => {
@@ -47,130 +46,121 @@ const Sidebar = () => {
   const filteredGroups = filterList(groups);
   const filteredArchived = filterList(users.filter(u => u.isArchived));
 
-  const toggleSelection = (id) => {
-    if (selectedIds.includes(id)) {
-      setSelectedIds(selectedIds.filter(i => i !== id));
-    } else {
-      setSelectedIds([...selectedIds, id]);
-    }
-  };
-
-  const handleDeleteSelected = async () => {
-    const confirmMessage = viewType === "chats"
-      ? `Unfriend ${selectedIds.length} users?`
-      : `Delete ${selectedIds.length} conversations?`;
-
-    if (confirm(confirmMessage)) {
-      if (viewType === "chats") {
-        for (const id of selectedIds) {
-          await unfriendUser(id);
-        }
-      } else {
-        await deleteConversation(selectedIds);
-      }
-      setSelectedIds([]);
-      setIsSelectionMode(false);
-    }
-  };
-
   if (isUsersLoading) return <SidebarSkeleton />;
 
   return (
-    <aside className={`h-full flex flex-col transition-all duration-300 bg-gray-900 border-r border-gray-700 ${isSidebarOpen ? "w-72" : "w-20"}`}>
-      {/* Workspace Header (Slack-style) */}
-      <div className="h-12 min-h-[3rem] px-3 pl-4 flex items-center justify-between border-b border-gray-700 hover:bg-gray-800 transition-colors cursor-pointer text-slate-200">
-        {isSidebarOpen ? (
-          <h1 className="font-bold text-slate-100 tracking-tight truncate text-sm">Talk Project</h1>
-        ) : (
-          <div className="w-full flex justify-center">
-            <span className="font-bold text-lg">T</span>
-          </div>
-        )}
+    <aside className="h-full flex transition-all duration-300 bg-gray-900 border-r border-gray-800">
+      {/* 1. Navigation Rail (Leftmost strip) */}
+      <div className="w-16 flex flex-col items-center py-4 bg-gray-950 border-r border-gray-800 h-full flex-shrink-0 z-20">
+        {/* Top: Brand/Logo */}
+        <div className="mb-6 flex justify-center">
+          <span className="font-bold text-xl text-white tracking-tight">T</span>
+        </div>
 
-        {isSidebarOpen && (
-          <div className="flex items-center gap-1">
-            <button onClick={() => setActiveModal('explore')} className="p-1 hover:bg-gray-700 rounded-md relative text-slate-400" title="Explore Channels">
-              <Compass className="size-3.5" />
-            </button>
-            <button onClick={() => setActiveModal('requests')} className="p-1 hover:bg-gray-700 rounded-md relative text-slate-400" title="Friend Requests">
-              <Bell className="size-3.5" />
-              {friendRequests.length > 0 && <span className="absolute top-1 right-1 size-1.5 bg-red-500 rounded-full" />}
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Navigation / Sections */}
-      {/* Navigation / Sections */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden py-2 custom-scrollbar">
-        {/* Top Actions */}
-        <div className="px-2 mb-4 space-y-0.5">
-          <SidebarItem
+        {/* Nav Items */}
+        <div className="flex-1 flex flex-col gap-4 w-full items-center">
+          <NavIcon
             icon={MessageSquare}
-            label="Threads"
             isActive={viewType === "chats"}
             onClick={() => setViewType("chats")}
-            isOpen={isSidebarOpen}
+            title="Chats"
           />
-          <SidebarItem
+          <NavIcon
             icon={Lock}
-            label="Groups"
             isActive={viewType === "groups"}
             onClick={() => setViewType("groups")}
-            isOpen={isSidebarOpen}
+            title="Groups"
           />
-          <SidebarItem
+          <NavIcon
             icon={Hash}
-            label="Channels"
             isActive={viewType === "channels"}
             onClick={() => setViewType("channels")}
-            isOpen={isSidebarOpen}
+            title="Channels"
           />
-          <SidebarItem
+          <div className="h-px w-8 bg-gray-800 my-1" />
+          <NavIcon
             icon={Archive}
-            label="Archived"
             isActive={viewType === "archived"}
             onClick={() => setViewType("archived")}
-            isOpen={isSidebarOpen}
+            title="Archived"
           />
         </div>
 
-        {/* Section Header */}
-        {isSidebarOpen && (
-          <div className="px-3 mb-1 flex items-center justify-between group text-slate-500">
-            <span className="text-[11px] font-bold uppercase tracking-wider transition-colors">
-              {viewType === 'channels' ? 'Joined Channels' : viewType === 'groups' ? 'Your Groups' : 'Direct Messages'}
-            </span>
-            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              {viewType === 'channels' ? (
-                <>
-                  <button onClick={() => setActiveModal('createChannel')} className="p-0.5 hover:bg-gray-700 rounded" title="Create Channel"><CirclePlus className="size-3" /></button>
-                  <button onClick={() => setActiveModal('explore')} className="p-0.5 hover:bg-gray-700 rounded" title="Explore Channels"><Compass className="size-3" /></button>
-                </>
-              ) : viewType === 'groups' ? (
-                <button onClick={() => setActiveModal('createGroup')} className="p-0.5 hover:bg-gray-700 rounded" title="Create Group"><CirclePlus className="size-3" /></button>
-              ) : (
-                <button onClick={() => setActiveModal('addFriend')} className="p-0.5 hover:bg-gray-700 rounded" title="Add Friend"><UserPlus className="size-3" /></button>
-              )}
-            </div>
-          </div>
-        )}
+        {/* Bottom: Settings & User */}
+        <div className="mt-auto flex flex-col gap-4 w-full items-center">
+          <button onClick={() => setActiveModal('requests')} className="relative p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-all" title="Friend Requests">
+            <Bell className="size-5" />
+            {friendRequests.length > 0 && <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-gray-950" />}
+          </button>
 
-        {/* User/Group List */}
-        <div className="space-y-0.5 px-2">
-          {/* Groups View */}
+          <Link to="/settings" className="p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-all" title="Settings">
+            <Settings className="size-5" />
+          </Link>
+
+          <button onClick={logout} className="p-2.5 rounded-xl text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-all" title="Logout">
+            <LogOut className="size-5" />
+          </button>
+
+          {/* Mini Profile Av */}
+          <Link to="/profile" className="mt-2 text-gray-400 hover:opacity-80 transition-opacity">
+            <div className="size-8 rounded-full bg-gradient-to-tr from-[#FF5636] to-orange-400 flex items-center justify-center text-white font-bold text-xs ring-2 ring-gray-900">
+              U
+            </div>
+          </Link>
+        </div>
+      </div>
+
+      {/* 2. Side Panel (List) */}
+      <div className="w-72 flex flex-col bg-gray-900 h-full">
+        {/* Header */}
+        <div className="h-16 flex items-center justify-between px-4 border-b border-gray-800">
+          <h2 className="text-white font-semibold text-lg tracking-tight">
+            {viewType === 'chats' && 'Chats'}
+            {viewType === 'groups' && 'Groups'}
+            {viewType === 'channels' && 'Channels'}
+            {viewType === 'archived' && 'Archived'}
+          </h2>
+
+          <div className="flex gap-2">
+            {viewType === 'channels' ? (
+              <>
+                <button onClick={() => setActiveModal('createChannel')} className="p-2 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg transition-all"><CirclePlus className="size-4" /></button>
+                <button onClick={() => setActiveModal('explore')} className="p-2 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg transition-all"><Compass className="size-4" /></button>
+              </>
+            ) : viewType === 'groups' ? (
+              <button onClick={() => setActiveModal('createGroup')} className="p-2 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg transition-all"><CirclePlus className="size-4" /></button>
+            ) : (
+              <button onClick={() => setActiveModal('addFriend')} className="p-2 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg transition-all"><UserPlus className="size-4" /></button>
+            )}
+          </div>
+        </div>
+
+        {/* Search */}
+        <div className="p-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-500" />
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-gray-950 text-gray-300 placeholder-gray-600 pl-9 pr-4 py-2 rounded-lg text-sm border-none focus:ring-1 focus:ring-gray-700 transition-all"
+            />
+          </div>
+        </div>
+
+        {/* List Content */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar px-2 space-y-1">
           {viewType === "groups" && filteredGroups.filter(g => g.type !== 'channel').map((group) => (
             <ListItem
               key={group._id}
               user={{ ...group, fullName: group.name, profilePic: group.image }}
               icon={Lock}
               isSelected={selectedUser?._id === group._id}
-              isOpen={isSidebarOpen}
               onClick={() => setSelectedUser(group, 'group')}
             />
           ))}
 
-          {/* Channels View */}
           {viewType === "channels" && (
             <>
               {filteredGroups.filter(g => g.type === 'channel').map((channel) => (
@@ -179,26 +169,18 @@ const Sidebar = () => {
                   user={{ ...channel, fullName: channel.name, profilePic: channel.image }}
                   icon={Hash}
                   isSelected={selectedUser?._id === channel._id}
-                  isOpen={isSidebarOpen}
                   onClick={() => setSelectedUser(channel, 'channel')}
                 />
               ))}
-
-              {/* Explore Button at bottom of list if open */}
-              {isSidebarOpen && (
-                <button
-                  onClick={() => setActiveModal('explore')}
-                  className="w-full text-left px-2 py-2 mt-2 text-xs text-slate-400 hover:text-slate-200 flex items-center gap-2 hover:bg-gray-800 rounded transition-colors"
-                >
-                  <Compass className="size-3.5" />
-                  Explore more channels
-                </button>
+              {filteredGroups.filter(g => g.type === 'channel').length === 0 && (
+                <div className="p-4 text-center">
+                  <p className="text-xs text-gray-500 mb-3">No channels joined</p>
+                  <button onClick={() => setActiveModal('explore')} className="text-xs text-[#FF5636] hover:underline">Explore Channels</button>
+                </div>
               )}
             </>
           )}
 
-
-          {/* Users View */}
           {viewType === "chats" && filteredUsers.map((user) => (
             <ListItem
               key={user._id}
@@ -206,32 +188,22 @@ const Sidebar = () => {
               icon={User}
               isSelected={selectedUser?._id === user._id}
               isOnline={onlineUsers.includes(user._id)}
-              isOpen={isSidebarOpen}
               onClick={() => setSelectedUser(user, 'user')}
               useAvatar
             />
           ))}
+
           {viewType === "archived" && filteredArchived.map((user) => (
             <ListItem
               key={user._id}
               user={user}
               icon={Archive}
               isSelected={selectedUser?._id === user._id}
-              isOpen={isSidebarOpen}
               onClick={() => setSelectedUser(user, 'user')}
               useAvatar
             />
           ))}
-
         </div>
-      </div>
-
-      {/* Footer Toggle */}
-      <div className="p-2 border-t border-gray-700">
-        <button onClick={toggleSidebar} className="w-full flex items-center gap-2 p-1.5 hover:bg-gray-800 rounded-md text-slate-400 transition-colors">
-          <Menu className="size-4" />
-          {isSidebarOpen && <span className="text-xs">Collapse</span>}
-        </button>
       </div>
 
       {/* Modals */}
@@ -244,38 +216,61 @@ const Sidebar = () => {
   );
 };
 
-// Sub-components for cleaner list rendering
-const SidebarItem = ({ icon: Icon, label, isActive, onClick, isOpen }) => (
+// --- Sub Components ---
+
+const NavIcon = ({ icon: Icon, isActive, onClick, title }) => (
   <button
     onClick={onClick}
-    className={`w-full flex items-center gap-2 px-2 py-1 rounded transition-colors ${isActive ? "bg-[#FF5636] text-white" : "text-slate-400 hover:bg-gray-800 hover:text-slate-200"
-      } ${!isOpen && "justify-center"}`}
+    title={title}
+    className={`relative p-3 rounded-2xl transition-all duration-200 group
+            ${isActive
+        ? "bg-[#FF5636] text-white shadow-lg shadow-orange-500/20"
+        : "text-gray-400 hover:text-white hover:bg-gray-800"
+      }
+        `}
   >
-    <Icon className="size-4 shrink-0" />
-    {isOpen && <span className="text-[14px] truncate">{label}</span>}
+    <Icon className="size-6" strokeWidth={1.5} />
+    {/* Active Indicator Dot (optional, maybe not needed with filled bg) */}
+    {/* Tooltip on right? */}
+    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-gray-800">
+      {title}
+    </div>
   </button>
 );
 
-const ListItem = ({ user, icon: Icon, isSelected, isOpen, isOnline, onClick, useAvatar }) => (
+
+const ListItem = ({ user, icon: Icon, isSelected, isOnline, onClick, useAvatar }) => (
   <button
     onClick={onClick}
-    className={`w-full flex items-center gap-2 px-2 py-1 rounded transition-colors group ${isSelected ? "bg-[#FF5636] text-white" : "text-slate-400 hover:bg-gray-800 hover:text-slate-200"
-      } ${!isOpen && "justify-center"}`}
+    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group border border-transparent
+        ${isSelected
+        ? "bg-gray-800 text-white border-gray-700 shadow-sm"
+        : "text-gray-400 hover:bg-gray-800/50 hover:text-gray-200"
+      }
+    `}
   >
     {useAvatar ? (
       <div className="relative shrink-0">
-        <img src={user.profilePic || "/avatar.png"} alt="" className="size-4 rounded-[4px] object-cover bg-gray-700" />
-        {isOnline && <span className="absolute -bottom-0.5 -right-0.5 size-1.5 bg-green-500 rounded-full border-2 border-gray-900" />}
+        <img src={user.profilePic || "/avatar.png"} alt="" className="size-10 rounded-full object-cover bg-gray-800 ring-2 ring-gray-950" />
+        {isOnline && <span className="absolute bottom-0 right-0 size-2.5 bg-green-500 rounded-full border-2 border-gray-900" />}
       </div>
     ) : (
-      <Icon className="size-4 shrink-0 opacity-70" />
+      <div className={`size-10 rounded-full flex items-center justify-center ${isSelected ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-500 group-hover:bg-gray-700 group-hover:text-gray-300'}`}>
+        <Icon className="size-5" />
+      </div>
     )}
 
-    {isOpen && (
-      <span className={`text-[14px] truncate ${isOnline && !isSelected ? "text-slate-300 font-medium opacity-100" : "opacity-90"}`}>
-        {user.fullName}
-      </span>
-    )}
+    <div className="flex-1 text-left min-w-0">
+      <div className="flex justify-between items-baseline">
+        <span className={`text-[14px] font-medium truncate heading-font ${isSelected || isOnline ? "text-gray-200" : "text-gray-400"}`}>
+          {user.fullName}
+        </span>
+        {/* Optional: Time snippet or Count */}
+      </div>
+      <div className="text-[12px] text-gray-500 truncate mt-0.5">
+        {user.lastMessage?.text ? user.lastMessage.text : (useAvatar ? "Click to chat" : "View messages")}
+      </div>
+    </div>
   </button>
 )
 

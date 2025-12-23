@@ -41,7 +41,6 @@ const App = () => {
       )}
 
       <main className="flex-1 flex flex-col h-full w-full relative min-w-0">
-        <Navbar />
         <div className="flex-1 flex overflow-hidden relative">
           <Routes>
             <Route path="/" element={authUser ? <HomePage /> : <Navigate to="/login" />} />

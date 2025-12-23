@@ -2,11 +2,11 @@ import { useState, useEffect } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { X, Search, CheckCircle2, Hash, Users } from "lucide-react";
 
-const CreateGroupModal = ({ onClose }) => {
+const CreateGroupModal = ({ onClose, initialType = "group" }) => {
     const { users, getUsers, createGroup } = useChatStore();
     const [groupName, setGroupName] = useState("");
     const [description, setDescription] = useState("");
-    const [type, setType] = useState("group"); // 'group' or 'channel'
+    const [type, setType] = useState(initialType); // 'group' or 'channel'
     const [selectedMembers, setSelectedMembers] = useState([]);
     const [isCreating, setIsCreating] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
@@ -29,7 +29,9 @@ const CreateGroupModal = ({ onClose }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!groupName.trim() || selectedMembers.length === 0) return;
+        // Validation: Group needs name and members. Channel needs name.
+        if (!groupName.trim()) return;
+        if (type === 'group' && selectedMembers.length === 0) return;
 
         setIsCreating(true);
         const success = await createGroup({
@@ -65,8 +67,8 @@ const CreateGroupModal = ({ onClose }) => {
                             type="button"
                             onClick={() => setType("group")}
                             className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${type === "group"
-                                    ? "border-[#FF5636] bg-[#FF5636]/5"
-                                    : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                                ? "border-[#FF5636] bg-[#FF5636]/5"
+                                : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                                 }`}
                         >
                             <Users className={`size-6 ${type === "group" ? "text-[#FF5636]" : "text-gray-400"}`} />
@@ -79,8 +81,8 @@ const CreateGroupModal = ({ onClose }) => {
                             type="button"
                             onClick={() => setType("channel")}
                             className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${type === "channel"
-                                    ? "border-[#FF5636] bg-[#FF5636]/5"
-                                    : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                                ? "border-[#FF5636] bg-[#FF5636]/5"
+                                : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                                 }`}
                         >
                             <Hash className={`size-6 ${type === "channel" ? "text-[#FF5636]" : "text-gray-400"}`} />
@@ -170,7 +172,7 @@ const CreateGroupModal = ({ onClose }) => {
                     <button
                         onClick={handleSubmit}
                         className="w-full py-2.5 bg-[#FF5636] hover:bg-[#E04529] text-white rounded-xl font-medium shadow-sm shadow-orange-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled={isCreating || !groupName.trim() || selectedMembers.length === 0}
+                        disabled={isCreating || !groupName.trim() || (type === 'group' && selectedMembers.length === 0)}
                     >
                         {isCreating ? "Creating..." : `Create ${type === 'group' ? 'Group' : 'Channel'}`}
                     </button>

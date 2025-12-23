@@ -99,6 +99,7 @@ const Sidebar = () => {
       </div>
 
       {/* Navigation / Sections */}
+      {/* Navigation / Sections */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden py-2 custom-scrollbar">
         {/* Top Actions */}
         <div className="px-2 mb-4 space-y-0.5">
@@ -110,10 +111,17 @@ const Sidebar = () => {
             isOpen={isSidebarOpen}
           />
           <SidebarItem
-            icon={Hash}
-            label="Channels"
+            icon={Lock}
+            label="Groups"
             isActive={viewType === "groups"}
             onClick={() => setViewType("groups")}
+            isOpen={isSidebarOpen}
+          />
+          <SidebarItem
+            icon={Hash}
+            label="Channels"
+            isActive={viewType === "channels"}
+            onClick={() => setViewType("channels")}
             isOpen={isSidebarOpen}
           />
           <SidebarItem
@@ -125,17 +133,19 @@ const Sidebar = () => {
           />
         </div>
 
-        {/* Section Header: Direct Messages / Channels */}
+        {/* Section Header */}
         {isSidebarOpen && (
           <div className="px-3 mb-1 flex items-center justify-between group text-slate-500">
             <span className="text-[11px] font-bold uppercase tracking-wider transition-colors">
-              {viewType === 'groups' ? 'Channels' : 'Direct Messages'}
+              {viewType === 'channels' ? 'Joined Channels' : viewType === 'groups' ? 'Your Groups' : 'Direct Messages'}
             </span>
             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              {viewType === 'groups' ? (
-                <button onClick={() => setActiveModal('createGroup')} className="p-0.5 hover:bg-gray-700 rounded"><CirclePlus className="size-3" /></button>
+              {viewType === 'channels' ? (
+                <button onClick={() => setActiveModal('explore')} className="p-0.5 hover:bg-gray-700 rounded" title="Explore Channels"><Compass className="size-3" /></button>
+              ) : viewType === 'groups' ? (
+                <button onClick={() => setActiveModal('createGroup')} className="p-0.5 hover:bg-gray-700 rounded" title="Create Group"><CirclePlus className="size-3" /></button>
               ) : (
-                <button onClick={() => setActiveModal('addFriend')} className="p-0.5 hover:bg-gray-700 rounded"><UserPlus className="size-3" /></button>
+                <button onClick={() => setActiveModal('addFriend')} className="p-0.5 hover:bg-gray-700 rounded" title="Add Friend"><UserPlus className="size-3" /></button>
               )}
             </div>
           </div>
@@ -144,19 +154,47 @@ const Sidebar = () => {
         {/* User/Group List */}
         <div className="space-y-0.5 px-2">
           {/* Groups View */}
-          {viewType === "groups" && filteredGroups.map((group, idx) => (
+          {viewType === "groups" && filteredGroups.filter(g => g.type !== 'channel').map((group) => (
             <ListItem
               key={group._id}
               user={{ ...group, fullName: group.name, profilePic: group.image }}
-              icon={group.type === 'channel' ? Hash : Lock}
+              icon={Lock}
               isSelected={selectedUser?._id === group._id}
               isOpen={isSidebarOpen}
               onClick={() => setSelectedUser(group, 'group')}
             />
           ))}
 
+          {/* Channels View */}
+          {viewType === "channels" && (
+            <>
+              {filteredGroups.filter(g => g.type === 'channel').map((channel) => (
+                <ListItem
+                  key={channel._id}
+                  user={{ ...channel, fullName: channel.name, profilePic: channel.image }}
+                  icon={Hash}
+                  isSelected={selectedUser?._id === channel._id}
+                  isOpen={isSidebarOpen}
+                  onClick={() => setSelectedUser(channel, 'channel')}
+                />
+              ))}
+
+              {/* Explore Button at bottom of list if open */}
+              {isSidebarOpen && (
+                <button
+                  onClick={() => setActiveModal('explore')}
+                  className="w-full text-left px-2 py-2 mt-2 text-xs text-slate-400 hover:text-slate-200 flex items-center gap-2 hover:bg-gray-800 rounded transition-colors"
+                >
+                  <Compass className="size-3.5" />
+                  Explore more channels
+                </button>
+              )}
+            </>
+          )}
+
+
           {/* Users View */}
-          {viewType === "chats" && filteredUsers.map((user, idx) => (
+          {viewType === "chats" && filteredUsers.map((user) => (
             <ListItem
               key={user._id}
               user={user}
@@ -168,7 +206,7 @@ const Sidebar = () => {
               useAvatar
             />
           ))}
-          {viewType === "archived" && filteredArchived.map((user, idx) => (
+          {viewType === "archived" && filteredArchived.map((user) => (
             <ListItem
               key={user._id}
               user={user}
@@ -194,7 +232,7 @@ const Sidebar = () => {
       {/* Modals */}
       {activeModal === 'addFriend' && <AddFriendModal onClose={() => setActiveModal(null)} />}
       {activeModal === 'requests' && <FriendRequestsModal onClose={() => setActiveModal(null)} />}
-      {activeModal === 'createGroup' && <CreateGroupModal onClose={() => setActiveModal(null)} />}
+      {activeModal === 'createGroup' && <CreateGroupModal onClose={() => setActiveModal(null)} initialType="group" />}
       {activeModal === 'explore' && <ExploreChannelsModal onClose={() => setActiveModal(null)} />}
     </aside>
   );

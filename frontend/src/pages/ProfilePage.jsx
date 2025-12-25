@@ -22,17 +22,17 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className="h-full w-full bg-gray-50 p-6 overflow-y-auto">
+    <div className="h-full w-full bg-gray-900 p-6 overflow-y-auto">
       <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="p-8 border-b border-gray-100 text-center relative">
+        <div className="bg-gray-800 rounded-lg shadow-sm border border-gray-700">
+          <div className="p-8 border-b border-gray-700 text-center relative">
             <div className="absolute left-8 top-8">
-              <button onClick={() => window.history.back()} className="text-gray-500 hover:text-gray-700 font-medium text-sm flex items-center gap-1">
+              <button onClick={() => window.history.back()} className="text-gray-400 hover:text-white font-medium text-sm flex items-center gap-1">
                 ← Back
               </button>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">Profile Settings</h1>
-            <p className="text-gray-500 text-sm mt-1">Manage your account information</p>
+            <h1 className="text-2xl font-bold text-white">Profile Settings</h1>
+            <p className="text-gray-400 text-sm mt-1">Manage your account information</p>
           </div>
 
           <div className="p-8">
@@ -42,15 +42,15 @@ const ProfilePage = () => {
                 <img
                   src={selectedImg || authUser.profilePic || "/avatar.png"}
                   alt="Profile"
-                  className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-sm bg-gray-200"
+                  className="w-32 h-32 rounded-full object-cover border-4 border-gray-700 shadow-sm bg-gray-200"
                 />
                 <label
                   htmlFor="avatar-upload"
                   className={`
                             absolute bottom-0 right-0 
-                            bg-white text-gray-700 border border-gray-300
+                            bg-gray-700 text-white border border-gray-600
                             p-2 rounded-full cursor-pointer 
-                            transition-all hover:bg-gray-50 shadow-sm
+                            transition-all hover:bg-gray-600 shadow-sm
                             ${isUpdatingProfile ? "animate-pulse pointer-events-none" : ""}
                             `}
                 >
@@ -65,7 +65,7 @@ const ProfilePage = () => {
                   />
                 </label>
               </div>
-              <p className="text-xs text-gray-500 mt-3">
+              <p className="text-xs text-gray-400 mt-3">
                 {isUpdatingProfile ? "Uploading..." : "Click camera icon to update"}
               </p>
             </div>
@@ -73,30 +73,30 @@ const ProfilePage = () => {
             {/* Fields */}
             <div className="space-y-6">
               <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-2">
+                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-2">
                   <User className="w-4 h-4" /> Full Name
                 </label>
-                <div className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 text-sm font-medium">
+                <div className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-lg text-gray-100 text-sm font-medium">
                   {authUser?.fullName}
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-2">
+                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-2">
                   <Mail className="w-4 h-4" /> Email Address
                 </label>
-                <div className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 text-sm font-medium">
+                <div className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-lg text-gray-100 text-sm font-medium">
                   {authUser?.email}
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="px-8 py-6 bg-gray-50 border-t border-gray-200 rounded-b-lg flex justify-between items-center text-sm">
+          <div className="px-8 py-6 bg-gray-800/50 border-t border-gray-700 rounded-b-lg flex justify-between items-center text-sm">
             <div>
-              <span className="text-gray-500 mr-2">Member Since</span>
-              <span className="font-medium text-gray-900">{authUser.createdAt?.split("T")[0]}</span>
+              <span className="text-gray-400 mr-2">Member Since</span>
+              <span className="font-medium text-gray-200">{authUser.createdAt?.split("T")[0]}</span>
             </div>
-            <div className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase tracking-wider">
+            <div className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-bold uppercase tracking-wider">
               Active Account
             </div>
           </div>

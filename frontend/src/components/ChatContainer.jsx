@@ -224,11 +224,12 @@ const ChatContainer = () => {
                 {/* Content Bubble */}
                 <div className={`flex flex-col max-w-[70%] ${isMe ? "items-end" : "items-start"}`}>
                   <div
-                    className={`relative px-4 py-2 text-[14px] leading-relaxed break-words shadow-sm
+                    className={`relative text-[14px] leading-relaxed break-words shadow-sm
                          ${isMe
                         ? `bg-gray-700 text-white border border-gray-600 ${borderRadiusClass}`
                         : `bg-[#111] text-gray-200 border border-gray-800 ${borderRadiusClass}`
                       }
+                      ${message.image ? "p-1" : "px-4 py-2"}
                        `}
                   >
                     {/* Reply Context */}
@@ -240,31 +241,31 @@ const ChatContainer = () => {
                     )}
 
                     {message.image && (
-                      <div className="mb-2">
+                      <div className="mb-1">
                         <img
                           src={message.image}
                           alt="Attachment"
-                          className="max-w-[200px] max-h-60 rounded-lg cursor-zoom-in hover:opacity-90 transition-opacity border border-white/5"
+                          className={`rounded-lg cursor-zoom-in hover:opacity-90 transition-opacity border border-white/5 w-full h-auto max-h-[300px] object-cover`}
                           onClick={(e) => { e.stopPropagation(); setSelectedImage(message.image); }}
                         />
                       </div>
                     )}
 
-                    <span className="align-middle">
-                      {message.text}
-                    </span>
+                    {message.text && (
+                      <span className={`align-middle ${message.image ? "block px-1" : ""}`}>
+                        {message.text}
+                      </span>
+                    )}
 
                     {/* Inline Timestamp */}
-                    <span className={`inline-flex items-center align-bottom ml-2 gap-1 text-[10px] float-right mt-1 ${isMe ? "text-gray-400" : "text-gray-500"}`}>
+                    <span className={`inline-flex items-center align-bottom ml-2 gap-1 text-[10px] float-right mt-1 ${isMe ? "text-gray-400" : "text-gray-500"} ${message.image && !message.text ? "absolute bottom-2 right-2 px-1.5 py-0.5 bg-black/40 rounded-full text-white backdrop-blur-sm" : ""}`}>
                       {formatMessageTime(message.createdAt)}
                       {isMe && (
                         selectedUser && onlineUsers.includes(selectedUser._id) ?
-                          <ListChecks className="size-3 text-blue-400" /> :
-                          <Check className="size-3 text-gray-400" />
+                          <ListChecks className={`size-3 ${message.image && !message.text ? "text-white" : "text-blue-400"}`} /> :
+                          <Check className={`size-3 ${message.image && !message.text ? "text-white" : "text-gray-400"}`} />
                       )}
                     </span>
-
-
                   </div>
                 </div>
 

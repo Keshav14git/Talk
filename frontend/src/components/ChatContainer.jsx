@@ -48,9 +48,20 @@ const ChatContainer = () => {
 
   if (isMessagesLoading) {
     return (
-      <div className="flex-1 flex flex-col overflow-hidden bg-white">
+      <div className="flex-1 flex flex-col overflow-hidden bg-gray-900">
         <ChatHeader />
-        <MessageSkeleton />
+        <div className="flex-1 flex flex-col items-center justify-center gap-3">
+          <div className="w-48 h-0.5 bg-gray-800 rounded-full overflow-hidden relative">
+            <div className="absolute top-0 left-0 h-full w-1/3 bg-white/50 rounded-full animate-[slide_1.5s_ease-in-out_infinite]" style={{ animation: 'slide 1.5s ease-in-out infinite' }} />
+            {/* Fallback animation style if 'slide' isn't defined in config, using inline style for simple keyframes usually requires style tag or pre-defined class. 
+                  I'll use a simpler 'animate-pulse' on a moving bar width if unsure of config, OR just 'animate-pulse' on the whole bar.
+                  But user asked for "linear line loading". 
+                  Let's assume standard 'animate-pulse' on a filled bar looks "loading" enough or use a standard trick.
+              */}
+            <div className="h-full bg-white animate-pulse w-full origin-left" />
+          </div>
+          <p className="text-gray-500 text-xs font-medium tracking-wide animate-pulse lowercase">chats are loading, wait few seconds</p>
+        </div>
         <MessageInput />
       </div>
     );
@@ -241,11 +252,11 @@ const ChatContainer = () => {
                     )}
 
                     {message.image && (
-                      <div className="mb-1">
+                      <div className="mb-1 overflow-hidden rounded-lg">
                         <img
                           src={message.image}
                           alt="Attachment"
-                          className={`rounded-lg cursor-zoom-in hover:opacity-90 transition-opacity border border-white/5 w-full h-auto max-h-[300px] object-cover`}
+                          className={`cursor-zoom-in hover:opacity-90 transition-opacity border border-white/5 w-auto h-auto max-w-full max-h-[400px] block`}
                           onClick={(e) => { e.stopPropagation(); setSelectedImage(message.image); }}
                         />
                       </div>

@@ -108,7 +108,7 @@ const Sidebar = () => {
             className="relative p-2.5 rounded-xl text-gray-500 hover:text-gray-100 hover:bg-gray-800 transition-colors flex items-center justify-center"
             title="Friend Requests"
           >
-            <img src="/bell.png" alt="Requests" className="size-6 object-contain opacity-60 hover:opacity-100 invert-0 brightness-200 transition-all" />
+            <img src="/bell.png" alt="Requests" className="size-6 object-contain opacity-60 hover:opacity-100 invert brightness-0 transition-all" />
             {friendRequests.length > 0 && <span className="absolute top-1.5 right-1.5 size-2 bg-red-500 rounded-full border-2 border-gray-900" />}
           </motion.button>
 
@@ -118,7 +118,7 @@ const Sidebar = () => {
               whileTap={{ scale: 0.95 }}
               className="p-2.5 rounded-xl text-gray-500 hover:text-gray-100 hover:bg-gray-800 transition-colors flex items-center justify-center"
             >
-              <img src="/setting.png" alt="Settings" className="size-6 object-contain opacity-60 hover:opacity-100 invert-0 brightness-200 transition-all" />
+              <img src="/setting.png" alt="Settings" className="size-6 object-contain opacity-60 hover:opacity-100 invert brightness-0 transition-all" />
             </motion.div>
           </Link>
 
@@ -129,7 +129,7 @@ const Sidebar = () => {
             className="p-2.5 rounded-xl text-gray-500 hover:text-red-400 hover:bg-rgba(255,0,0,0.1) transition-colors flex items-center justify-center"
             title="Logout"
           >
-            <img src="/logout.png" alt="Logout" className="size-6 object-contain opacity-60 hover:opacity-100 invert-0 brightness-200 transition-all" />
+            <img src="/logout.png" alt="Logout" className="size-6 object-contain opacity-60 hover:opacity-100 invert brightness-0 transition-all" />
           </motion.button>
 
           {/* Mini Profile Av */}

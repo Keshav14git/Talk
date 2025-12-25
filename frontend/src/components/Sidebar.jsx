@@ -343,10 +343,12 @@ const ListItem = ({ user, icon: Icon, isSelected, isOnline, onClick, useAvatar, 
   // 1. Sent (1 Gray Tick) -> User Offline
   // 2. Delivered (2 Gray Ticks) -> User Online
   const isActive = isSelected; // Renamed for clarity with the new styling
+  const isChannel = user.type === 'channel';
+  const authUser = useAuthStore.getState().authUser;
 
   return (
     <div
-      key={item._id}
+      key={user._id}
       onClick={onClick}
       className={`group w-full p-2.5 flex items-center gap-3 rounded-lg transition-all cursor-pointer relative
         ${isActive ? "bg-white/5" : "hover:bg-white/5"}
@@ -360,8 +362,8 @@ const ListItem = ({ user, icon: Icon, isSelected, isOnline, onClick, useAvatar, 
       {/* Avatar Container */}
       <div className="relative">
         <img
-          src={item.profilePic || "/avatar.png"}
-          alt={item.fullName}
+          src={user.profilePic || "/avatar.png"}
+          alt={user.fullName}
           className={`size-10 rounded-full object-cover border border-transparent transition-all
              ${isActive ? "border-gray-500" : "group-hover:border-gray-700"}
           `}
@@ -380,11 +382,39 @@ const ListItem = ({ user, icon: Icon, isSelected, isOnline, onClick, useAvatar, 
       <div className="flex-1 min-w-0 text-left">
         <div className="flex items-center justify-between mb-0.5">
           <span className={`text-[14px] truncate transition-colors ${isActive ? "font-semibold text-white" : "font-medium text-gray-400 group-hover:text-gray-200"}`}>
-            {item.fullName}
+            {user.fullName}
           </span>
-        </motion.button>
-        );
+          {/* Time */}
+          {user.lastMessage && (
+            <span className="text-[10px] text-gray-600">
+              {formatTime(user.lastMessage.createdAt)}
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-1">
+          {/* Message Status Icon (User Only) */}
+          {!isChannel && user.lastMessage && user.lastMessage.senderId === authUser._id && (
+            onlineUsers.includes(user._id) ?
+              <ListChecks className="size-3 text-white" /> :
+              <Check className="size-3 text-gray-500" />
+          )}
+
+          <div className={`text-[12px] truncate max-w-[140px] flex-1 ${isActive ? "text-gray-300" : "text-gray-600 group-hover:text-gray-500"}`}>
+            {user.lastMessage ? (
+              <>
+                {user.lastMessage.senderId === authUser._id ? "You: " : ""}
+                {user.lastMessage.text || (user.lastMessage.image ? "Sent an image" : "")}
+              </>
+            ) : (
+              <span className="italic opacity-50">No messages yet</span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
-        export default Sidebar;
+export default Sidebar;
 

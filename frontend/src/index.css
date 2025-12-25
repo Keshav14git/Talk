@@ -40,4 +40,10 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* Override DaisyUI Skeleton for a lighter, premium look */
+  .skeleton {
+    @apply bg-gray-100 animate-pulse rounded-md;
+    will-change: opacity, background-color;
+  }
 }

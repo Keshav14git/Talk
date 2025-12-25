@@ -256,7 +256,7 @@ const ChatContainer = () => {
                         <img
                           src={message.image}
                           alt="Attachment"
-                          className={`cursor-zoom-in hover:opacity-90 transition-opacity border border-white/5 w-auto h-auto max-w-full max-h-[400px] block`}
+                          className={`cursor-zoom-in hover:opacity-90 transition-opacity border border-white/5 w-auto h-auto max-w-full sm:max-w-[330px] max-h-[400px] block`}
                           onClick={(e) => { e.stopPropagation(); setSelectedImage(message.image); }}
                         />
                       </div>

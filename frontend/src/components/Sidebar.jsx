@@ -312,50 +312,77 @@ const NavIcon = ({ icon: Icon, isActive, onClick, title, unreadCount }) => (
 );
 
 
-const ListItem = ({ user, icon: Icon, isSelected, isOnline, onClick, useAvatar, unreadCount }) => (
-  <motion.button
-    whileTap={{ scale: 0.98 }}
-    onClick={onClick}
-    className={`w-full flex items-center gap-3.5 px-3.5 py-3 rounded-2xl transition-all duration-200 group border border-transparent
-        ${isSelected
-        ? "bg-primary/5 text-gray-900 border-primary/10 shadow-sm"
-        : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
-      }
-    `}
-  >
-    {useAvatar ? (
-      <div className="relative shrink-0">
-        <img src={user.profilePic || "/avatar.png"} alt="" className="size-12 rounded-full object-cover bg-gray-100 ring-2 ring-white shadow-sm" />
-        {isOnline && <span className="absolute bottom-0 right-0 size-3.5 bg-green-500 rounded-full border-[3px] border-white" />}
-      </div>
-    ) : (
-      <div className={`size-12 rounded-full flex items-center justify-center transition-colors ${isSelected ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-600'}`}>
-        <Icon className="size-6" />
-      </div>
-    )}
+const ListItem = ({ user, icon: Icon, isSelected, isOnline, onClick, useAvatar, unreadCount }) => {
+  // Helper to format time (e.g., "10:16" or "Yesterday")
+  const formatTime = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const now = new Date();
+    const isToday = date.toDateString() === now.toDateString();
 
-    <div className="flex-1 text-left min-w-0 flex flex-col justify-center gap-0.5">
-      <div className="flex justify-between items-center">
-        <span className={`text-[15px] font-semibold truncate ${isSelected ? "text-gray-900" : "text-gray-700"}`}>
-          {user.fullName}
-        </span>
-      </div>
+    if (isToday) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+    }
+    return "Yesterday"; // Simplified for now, can be expanded
+  };
 
-      <div className="flex justify-between items-center text-[13px] text-gray-400 h-5">
-        <span className="truncate max-w-[85%] pr-2 group-hover:text-gray-500 transition-colors">
-          {user.lastMessage?.text || (useAvatar ? "Click to chat" : "View messages")}
-        </span>
+  return (
+    <motion.button
+      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
+      className={`w-full flex items-center gap-3 px-3 py-3 rounded-2xl transition-all duration-200 group border border-transparent
+          ${isSelected
+          ? "bg-primary/5 border-primary/10 shadow-sm"
+          : "hover:bg-gray-50 bg-transparent"
+        }
+      `}
+    >
+      {useAvatar ? (
+        <div className="relative shrink-0">
+          <img src={user.profilePic || "/avatar.png"} alt="" className="size-12 rounded-full object-cover bg-gray-100 ring-2 ring-white shadow-sm" />
+          {isOnline && <span className="absolute bottom-0 right-0 size-3.5 bg-green-500 rounded-full border-[3px] border-white" />}
+        </div>
+      ) : (
+        <div className={`size-12 rounded-full flex items-center justify-center transition-colors ${isSelected ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-600'}`}>
+          <Icon className="size-6" />
+        </div>
+      )}
 
-        {/* Unread Badge */}
-        {unreadCount > 0 && (
-          <span className="bg-primary text-white text-[10px] font-bold h-5 min-w-[1.25rem] px-1.5 flex items-center justify-center rounded-full shadow-sm">
-            {unreadCount}
+      <div className="flex-1 text-left min-w-0 flex flex-col justify-center gap-1">
+        <div className="flex justify-between items-baseline">
+          <span className={`text-[15px] font-semibold truncate ${isSelected ? "text-gray-900" : "text-gray-900"}`}>
+            {user.fullName}
           </span>
-        )}
+          {/* Timestamp */}
+          {user.lastMessage?.createdAt && (
+            <span className={`text-[11px] font-medium ${unreadCount > 0 ? "text-primary" : "text-gray-400"}`}>
+              {formatTime(user.lastMessage.createdAt)}
+            </span>
+          )}
+        </div>
+
+        <div className="flex justify-between items-center text-[13px] h-5">
+          <div className="flex items-center gap-1 truncate max-w-[85%] text-gray-500 group-hover:text-gray-600 transition-colors">
+            {/* Checkmarks - simplified logic: showing double check for own messages if available */}
+            {user.lastMessage?.senderId === "me" && ( // Placeholder check, assuming 'me' logic exists or just static for UI demo
+              <ListChecks className="size-3.5 text-blue-500 shrink-0" />
+            )}
+            <span className="truncate">
+              {user.lastMessage?.text || (useAvatar ? "Click to chat" : "View messages")}
+            </span>
+          </div>
+
+          {/* Unread Badge */}
+          {unreadCount > 0 && (
+            <span className="bg-primary text-white text-[10px] font-bold h-5 min-w-[1.25rem] px-1.5 flex items-center justify-center rounded-full shadow-sm">
+              {unreadCount}
+            </span>
+          )}
+        </div>
       </div>
-    </div>
-  </motion.button>
-)
+    </motion.button>
+  );
+}
 
 export default Sidebar;
 

@@ -6,17 +6,18 @@
 
 @layer base {
   body {
-    @apply antialiased text-gray-900 bg-white;
+    @apply antialiased text-gray-100 bg-gray-900;
+    /* Dark background, Light text */
     font-feature-settings: "cv11", "ss01";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 }
 
-/* Minimalist Scrollbar */
+/* Linear-style Scrollbar - Subtle and Dark */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -24,11 +25,14 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-200 rounded-full transition-colors duration-200;
+  @apply bg-gray-700 rounded-full transition-colors duration-200;
+  border: 2px solid transparent;
+  /* Creates padding effect */
+  background-clip: content-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-400;
+  @apply bg-gray-600;
 }
 
 @layer utilities {
@@ -41,9 +45,9 @@
     scrollbar-width: none;
   }
 
-  /* Override DaisyUI Skeleton for a lighter, premium look */
+  /* Dark Skeleton */
   .skeleton {
-    @apply bg-gray-100 animate-pulse rounded-md;
+    @apply bg-gray-800 animate-pulse rounded-md;
     will-change: opacity, background-color;
   }
 }

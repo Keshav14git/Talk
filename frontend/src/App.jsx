@@ -36,11 +36,11 @@ const App = () => {
   );
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden font-sans">
+    <div className="flex h-screen bg-gray-900 overflow-hidden font-sans">
 
       {/* Sidebar - Global & Full Height */}
       {authUser && (
-        <div className={`h-full shrink-0 border-r border-gray-200 transition-all duration-300 ease-in-out
+        <div className={`h-full shrink-0 border-r border-gray-700 transition-all duration-300 ease-in-out
           ${selectedUser ? "hidden md:flex" : "flex"} 
         `}>
           <Sidebar />
@@ -61,11 +61,12 @@ const App = () => {
 
       <Toaster
         toastOptions={{
-          className: 'text-sm font-medium text-gray-900',
+          className: 'text-sm font-medium text-gray-100',
           style: {
-            background: 'white',
-            border: '1px solid #E5E7EB',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+            background: '#161920', // gray-800
+            border: '1px solid #22252a', // gray-700
+            color: '#e5e7eb',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5)',
           },
         }}
       />

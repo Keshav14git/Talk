@@ -9,26 +9,34 @@ export default {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
-        // Notion/Slack influenced palette
+        // Linear-inspired dark palette
         gray: {
-          50: '#F9FAFB',  // Main background
-          100: '#F3F4F6', // Secondary background (sidebar)
-          200: '#E5E7EB', // Borders
-          300: '#D1D5DB', // Disabled/Subtle borders
-          500: '#6B7280', // Secondary text
-          700: '#374151', // Primary text
-          900: '#111827', // Headings
+          900: '#0f1115', // Main background
+          800: '#161920', // Surface (Sidebar/Cards)
+          700: '#22252a', // Borders/Separators
+          600: '#2e333d', // Hover states
+          500: '#6b7280', // Text secondary
+          400: '#9ca3af', // Text tertiary
+          300: '#d1d5db',
+          100: '#e5e7eb', // Text primary (almost white)
+          50: '#f9fafb',
         },
         primary: {
           DEFAULT: '#FF5636', // Brand Orange
           hover: '#E04529',
+          glow: 'rgba(255, 86, 54, 0.15)'
         }
+      },
+      boxShadow: {
+        'glow': '0 0 20px rgba(255, 86, 54, 0.15)',
+        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.3)',
       }
     },
   },
   plugins: [daisyui],
   daisyui: {
-    themes: ["light"], // Fallback to standard light theme to avoid interference
+    themes: ["dark", "light"],
+    darkTheme: "dark",
     logs: false,
   },
 };

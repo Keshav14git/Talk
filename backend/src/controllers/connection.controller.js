@@ -113,13 +113,30 @@ export const getFriendsList = async (req, res) => {
       ]
     }).populate('user friend', 'fullName profilePic email');
 
-    // Transform connections to return friend details with archive status
-    const friends = connections.map(conn => {
+    // Transform connections to return friend details with archive status AND last message
+    const friends = await Promise.all(connections.map(async conn => {
       const friend = conn.user._id.toString() === userId.toString() ? conn.friend : conn.user;
+
+      // Fetch Last Message
+      const lastMessage = await Message.findOne({
+        $or: [
+          { senderId: userId, receiverId: friend._id },
+          { senderId: friend._id, receiverId: userId }
+        ]
+      }).sort({ createdAt: -1 });
+
       return {
         ...friend.toObject(),
-        isArchived: conn.archivedBy && conn.archivedBy.includes(userId)
+        isArchived: conn.archivedBy && conn.archivedBy.includes(userId),
+        lastMessage: lastMessage || null
       };
+    }));
+
+    // Sort friends by lastMessage date (descending) so active chats are on top
+    friends.sort((a, b) => {
+      const dateA = a.lastMessage ? new Date(a.lastMessage.createdAt) : new Date(0);
+      const dateB = b.lastMessage ? new Date(b.lastMessage.createdAt) : new Date(0);
+      return dateB - dateA;
     });
 
     res.json(friends);

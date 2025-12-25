@@ -5,11 +5,11 @@ import MessageInput from "./MessageInput";
 import MessageSkeleton from "./skeletons/MessageSkeleton";
 import { useAuthStore } from "../store/useAuthStore";
 import { formatMessageTime, isSameDay } from "../lib/utils";
-import { X, Trash2, Reply, ListChecks } from "lucide-react";
+import { X, Trash2, Reply, ListChecks, Check } from "lucide-react";
 
 const ChatContainer = () => {
   const { messages, getMessages, isMessagesLoading, subscribeToMessages, unsubscribeFromMessages, selectedUser, deleteMessage, setReplyMessage, messageSearchQuery } = useChatStore();
-  const { authUser } = useAuthStore();
+  const { authUser, onlineUsers } = useAuthStore();
   const messageEndRef = useRef(null);
 
   // Selection Mode State
@@ -262,7 +262,13 @@ const ChatContainer = () => {
 
                     <div className={`text-[10px] mt-1 text-right w-full flex items-center justify-end gap-1 ${isMe ? "text-gray-300" : "text-gray-400"}`}>
                       {formatMessageTime(message.createdAt)}
-                      {isMe && <ListChecks className="size-3 text-blue-400" />}
+                      {isMe && (
+                        // Logic: If selected user is online -> Delivered (Double Check), else Sent (Single Check)
+                        // Note: Ideally message.status from backend needs to drive this.
+                        selectedUser && onlineUsers.includes(selectedUser._id) ?
+                          <ListChecks className="size-3 text-gray-400" /> :
+                          <Check className="size-3 text-gray-400" />
+                      )}
                     </div>
 
                   </div>

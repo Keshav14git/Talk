@@ -4,7 +4,7 @@ import { useAuthStore } from "../store/useAuthStore";
 import SidebarSkeleton from "./skeletons/SidebarSkeleton";
 import {
   Users, UserPlus, CirclePlus, MessageSquare, Archive,
-  Search, Bell, Menu, ListChecks, Hash, User, Compass, Lock,
+  Search, Bell, Menu, ListChecks, Check, Hash, User, Compass, Lock,
   Settings, LogOut, ChevronsLeft, ChevronsRight
 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -323,58 +323,70 @@ const ListItem = ({ user, icon: Icon, isSelected, isOnline, onClick, useAvatar, 
     if (isToday) {
       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
     }
-    return "Yesterday"; // Simplified for now, can be expanded
+    return "Yesterday";
   };
+
+  const isMe = user.lastMessage?.senderId === "me" || user.lastMessage?.senderId === useAuthStore.getState().authUser?._id;
+
+  // Status Logic
+  // 1. Sent (1 Gray Tick) -> User Offline
+  // 2. Delivered (2 Gray Ticks) -> User Online
+  // 3. Read (2 Blue Ticks) -> (Not implemented fully on backend yet, but if unreadCount is 0 for us, maybe different logic? For now stick to delivery status).
+  // Actually, for *my* sent message, 'unreadCount' on *their* end matters, which I don't see.
+  // So: Offline = Check (Gray), Online = ListChecks (Gray).
+
+  const StatusIcon = isOnline ? ListChecks : Check;
+  const statusColor = "text-gray-400"; // Default to gray (sent/delivered)
 
   return (
     <motion.button
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className={`w-full flex items-center gap-3 px-3 py-3 rounded-2xl transition-all duration-200 group border border-transparent
+      className={`w-full flex items-center gap-3 px-2.5 py-2.5 rounded-xl transition-all duration-200 group border border-transparent
           ${isSelected
-          ? "bg-primary/5 border-primary/10 shadow-sm"
-          : "hover:bg-gray-50 bg-transparent"
+          ? "bg-gray-100 text-gray-900 shadow-sm ring-1 ring-gray-200"
+          : "hover:bg-gray-50 bg-transparent text-gray-600 hover:text-gray-900"
         }
       `}
     >
       {useAvatar ? (
         <div className="relative shrink-0">
-          <img src={user.profilePic || "/avatar.png"} alt="" className="size-12 rounded-full object-cover bg-gray-100 ring-2 ring-white shadow-sm" />
-          {isOnline && <span className="absolute bottom-0 right-0 size-3.5 bg-green-500 rounded-full border-[3px] border-white" />}
+          <img src={user.profilePic || "/avatar.png"} alt="" className="size-10 rounded-full object-cover bg-gray-200 ring-2 ring-white" />
+          {isOnline && <span className="absolute bottom-0 right-0 size-3 bg-green-500 rounded-full border-[2px] border-white" />}
         </div>
       ) : (
-        <div className={`size-12 rounded-full flex items-center justify-center transition-colors ${isSelected ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-600'}`}>
-          <Icon className="size-6" />
+        <div className={`size-10 rounded-full flex items-center justify-center transition-colors ${isSelected ? 'bg-white text-primary ring-1 ring-gray-200' : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-600'}`}>
+          <Icon className="size-5" />
         </div>
       )}
 
-      <div className="flex-1 text-left min-w-0 flex flex-col justify-center gap-1">
+      <div className="flex-1 text-left min-w-0 flex flex-col justify-center gap-0.5">
         <div className="flex justify-between items-baseline">
-          <span className={`text-[15px] font-semibold truncate ${isSelected ? "text-gray-900" : "text-gray-900"}`}>
+          <span className={`text-[14px] font-bold truncate ${isSelected ? "text-gray-900" : "text-gray-700"}`}>
             {user.fullName}
           </span>
-          {/* Timestamp */}
           {user.lastMessage?.createdAt && (
-            <span className={`text-[11px] font-medium ${unreadCount > 0 ? "text-primary" : "text-gray-400"}`}>
+            <span className={`text-[10px] font-medium ${unreadCount > 0 ? "text-primary" : "text-gray-400"}`}>
               {formatTime(user.lastMessage.createdAt)}
             </span>
           )}
         </div>
 
-        <div className="flex justify-between items-center text-[13px] h-5">
-          <div className="flex items-center gap-1 truncate max-w-[85%] text-gray-500 group-hover:text-gray-600 transition-colors">
-            {/* Checkmarks - simplified logic: showing double check for own messages if available */}
-            {user.lastMessage?.senderId === "me" && ( // Placeholder check, assuming 'me' logic exists or just static for UI demo
-              <ListChecks className="size-3.5 text-blue-500 shrink-0" />
+        <div className="flex justify-between items-center text-[12px] h-4">
+          <div className="flex items-center gap-1.5 truncate max-w-[85%] text-gray-500 group-hover:text-gray-600 transition-colors">
+            {isMe && (
+              <span className="flex items-center shrink-0">
+                <StatusIcon className={`size-3.5 ${statusColor}`} />
+              </span>
             )}
-            <span className="truncate">
+            <span className="truncate leading-tight">
+              {isMe && "You: "}
               {user.lastMessage?.text || (useAvatar ? "Click to chat" : "View messages")}
             </span>
           </div>
 
-          {/* Unread Badge */}
           {unreadCount > 0 && (
-            <span className="bg-primary text-white text-[10px] font-bold h-5 min-w-[1.25rem] px-1.5 flex items-center justify-center rounded-full shadow-sm">
+            <span className="bg-primary text-white text-[9px] font-bold h-4 min-w-[1rem] px-1 flex items-center justify-center rounded-full shadow-sm">
               {unreadCount}
             </span>
           )}

@@ -224,7 +224,7 @@ const ChatContainer = () => {
                 {/* Content Bubble */}
                 <div className={`flex flex-col max-w-[70%] ${isMe ? "items-end" : "items-start"}`}>
                   <div
-                    className={`relative px-4 py-3 text-[14px] leading-relaxed break-words shadow-sm
+                    className={`relative px-4 py-2 text-[14px] leading-relaxed break-words shadow-sm
                          ${isMe
                         ? `bg-gray-700 text-white border border-gray-600 ${borderRadiusClass}`
                         : `bg-[#111] text-gray-200 border border-gray-800 ${borderRadiusClass}`
@@ -249,18 +249,21 @@ const ChatContainer = () => {
                         />
                       </div>
                     )}
-                    {message.text}
 
-                    <div className={`text-[10px] mt-1.5 text-right w-full flex items-center justify-end gap-1 ${isMe ? "text-gray-400" : "text-gray-600"}`}>
+                    <span className="align-middle">
+                      {message.text}
+                    </span>
+
+                    {/* Inline Timestamp */}
+                    <span className={`inline-flex items-center align-bottom ml-2 gap-1 text-[10px] float-right mt-1 ${isMe ? "text-gray-400" : "text-gray-500"}`}>
                       {formatMessageTime(message.createdAt)}
                       {isMe && (
-                        // Logic: If selected user is online -> Delivered (Double Check), else Sent (Single Check)
-                        // Note: Ideally message.status from backend needs to drive this.
                         selectedUser && onlineUsers.includes(selectedUser._id) ?
                           <ListChecks className="size-3 text-blue-400" /> :
                           <Check className="size-3 text-gray-400" />
                       )}
-                    </div>
+                    </span>
+
 
                   </div>
                 </div>

@@ -1,95 +1,165 @@
 import { useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
-import { Link } from "react-router-dom";
-import { Eye, EyeOff, Loader2, Mail, Lock } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { MessageSquare, ArrowRight, Mail, Check } from "lucide-react";
+import Loader from "../components/Loader";
+import toast from "react-hot-toast";
 
 const LoginPage = () => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-  const { login, isLoggingIn } = useAuthStore();
+  const [step, setStep] = useState(1); // 1: Email, 2: OTP
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { login, signup } = useAuthStore(); // We'll update store later to handle OTP
+  const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  // Mock function to simulate sending OTP for now (backend connection comes next)
+  const handleSendOtp = async (e) => {
     e.preventDefault();
-    login(formData);
+    if (!email) return toast.error("Please enter your email");
+
+    setIsLoading(true);
+    // TODO: Call backend /auth/send-otp
+    setTimeout(() => {
+      setIsLoading(false);
+      setStep(2);
+      toast.success("Code sent to " + email);
+    }, 1500);
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    if (otp.length < 6) return toast.error("Please enter valid code");
+
+    setIsLoading(true);
+    // TODO: Call backend /auth/verify-otp
+    setTimeout(() => {
+      setIsLoading(false);
+      // Mock login success
+      toast.success("Detailed OTP logic will be wired to backend next");
+      // For now, let's just pretend we logged in to unblock UI testing
+      // login({ email, password: "mock_password_bypass" }); 
+    }, 1500);
+  };
+
+  const handleGoogleLogin = () => {
+    toast.loading("Redirecting to Google...");
+    // window.location.href = "http://localhost:5001/api/auth/google"; 
   };
 
   return (
-    <div className="h-full w-full bg-gray-50 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+    <div className="min-h-screen w-full bg-[#0A0A0A] flex items-center justify-center p-4">
+      <div className="w-full max-w-[400px] flex flex-col items-center">
 
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <div className="size-12 bg-[#FF5636]/10 rounded-xl flex items-center justify-center">
-              <img src="/talkw.svg" alt="logo" className="size-6" />
-            </div>
+        {/* Logo */}
+        <div className="mb-8 flex flex-col items-center gap-4">
+          <div className="size-12 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 shadow-xl">
+            <div className="text-white font-bold text-xl tracking-tighter">T</div>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
-          <p className="text-gray-500 text-sm mt-1">Enter your details to sign in</p>
+          <h1 className="text-2xl font-semibold text-white tracking-tight">Sign in to Talk</h1>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Email</label>
-            <div className="relative">
-              <input
-                type="email"
-                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-[#FF5636] focus:ring-1 focus:ring-[#FF5636] transition-colors placeholder:text-gray-400"
-                placeholder="you@example.com"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              />
-            </div>
-          </div>
+        {/* Card */}
+        <div className="w-full bg-[#111] rounded-2xl border border-[#222] p-8 shadow-2xl">
 
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Password</label>
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors placeholder:text-gray-400"
-                placeholder="••••••••"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              />
+          {step === 1 ? (
+            <div className="space-y-6">
+              {/* Google Button */}
               <button
-                type="button"
-                className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                onClick={() => setShowPassword(!showPassword)}
+                onClick={handleGoogleLogin}
+                className="w-full h-11 bg-white hover:bg-gray-200 text-black font-medium rounded-lg flex items-center justify-center gap-3 transition-colors"
+                disabled={isLoading}
               >
-                {showPassword ? (
-                  <EyeOff className="size-4 text-gray-400 hover:text-gray-600" />
-                ) : (
-                  <Eye className="size-4 text-gray-400 hover:text-gray-600" />
-                )}
+                <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="size-5" />
+                <span>Continue with Google</span>
               </button>
+
+              <div className="relative flex items-center justify-center">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-[#222]"></div>
+                </div>
+                <div className="relative bg-[#111] px-3 text-xs text-gray-500 uppercase tracking-widest">Or</div>
+              </div>
+
+              {/* Email Form */}
+              <form onSubmit={handleSendOtp} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-gray-400 ml-1">Email address</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@work-email.com"
+                    className="w-full h-11 bg-[#1A1A1A] border border-[#333] rounded-lg px-4 text-white placeholder-gray-600 focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20 transition-all font-mono text-sm"
+                    autoFocus
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full h-11 bg-[#222] hover:bg-[#333] text-white font-medium rounded-lg flex items-center justify-center gap-2 transition-all border border-[#333] hover:border-[#444]"
+                >
+                  {isLoading ? <span className="text-xs">Sending code...</span> : (
+                    <>
+                      <span>Continue with Email</span>
+                      <ArrowRight className="size-4 opacity-50" />
+                    </>
+                  )}
+                </button>
+              </form>
             </div>
-          </div>
+          ) : (
+            /* Step 2: OTP */
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+              <div className="text-center space-y-2">
+                <h3 className="text-white font-medium">Check your email</h3>
+                <p className="text-sm text-gray-500">We sent a verification code to <span className="text-gray-300">{email}</span></p>
+              </div>
 
-          <button
-            type="submit"
-            className="w-full py-2.5 bg-[#FF5636] hover:bg-[#E04529] text-white rounded-lg font-medium text-sm transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed mt-6"
-            disabled={isLoggingIn}
-          >
-            {isLoggingIn ? (
-              <>
-                <Loader2 className="size-4 animate-spin mr-2" />
-                Signing in...
-              </>
-            ) : (
-              "Sign in"
-            )}
-          </button>
-        </form>
+              <form onSubmit={handleVerifyOtp} className="space-y-4">
+                <div className="space-y-1.5">
+                  <input
+                    type="text"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    placeholder="Enter 6-digit code"
+                    className="w-full h-12 bg-[#1A1A1A] border border-[#333] rounded-lg px-4 text-center text-white text-lg tracking-[0.5em] placeholder-gray-700 focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20 transition-all font-mono"
+                    maxLength={6}
+                    autoFocus
+                  />
+                </div>
 
-        <div className="mt-6 text-center text-xs text-gray-500">
-          Don&apos;t have an account?{" "}
-          <Link to="/signup" className="text-[#FF5636] hover:text-[#E04529] font-medium hover:underline">
-            Create account
-          </Link>
+                {isLoading ? (
+                  <div className="py-4">
+                    <Loader text="verifying code..." />
+                  </div>
+                ) : (
+                  <button
+                    type="submit"
+                    className="w-full h-11 bg-white hover:bg-gray-200 text-black font-medium rounded-lg flex items-center justify-center gap-2 transition-colors"
+                  >
+                    Verify & Sign in
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="w-full text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                >
+                  Use a different email
+                </button>
+              </form>
+            </div>
+          )}
+
         </div>
+
+        {/* Footer */}
+        <p className="mt-8 text-xs text-gray-600">
+          By continuing, you agree to our <span className="text-gray-500 hover:text-gray-400 cursor-pointer">Terms</span> and <span className="text-gray-500 hover:text-gray-400 cursor-pointer">Privacy Policy</span>.
+        </p>
+
       </div>
     </div>
   );

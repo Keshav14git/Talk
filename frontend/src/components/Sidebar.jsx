@@ -279,26 +279,33 @@ const Sidebar = () => {
 
 const NavIcon = ({ icon: Icon, isActive, onClick, title, unreadCount }) => (
   <motion.button
-    whileHover={{ scale: 1.05 }}
-    whileTap={{ scale: 0.95 }}
+    whileHover={{ scale: 1.1 }}
+    whileTap={{ scale: 0.9 }}
     onClick={onClick}
-    title={title}
-    className={`relative p-3 rounded-xl transition-all duration-300 group
+    className={`relative p-3 rounded-xl transition-all duration-200 group
             ${isActive
-        ? "bg-gray-900 text-white shadow-lg shadow-gray-900/20"
-        : "text-gray-400 hover:text-gray-900 hover:bg-gray-100"
+        ? "text-primary bg-primary/5"
+        : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
       }
         `}
   >
-    <Icon className="size-5" strokeWidth={1.5} />
+    <Icon className={`size-6 transition-all ${isActive ? "fill-primary/20" : ""}`} strokeWidth={isActive ? 2 : 1.5} />
+
+    {/* Active Indicator (WhatsApp style - subtle left accent or just color) */}
+    {isActive && (
+      <motion.div
+        layoutId="activeNav"
+        className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary rounded-r-full"
+      />
+    )}
 
     {/* Unread Dot */}
     {unreadCount > 0 && (
-      <div className="absolute top-2 right-2 size-2 bg-primary rounded-full border-2 border-white" />
+      <div className="absolute top-2 right-2 size-2.5 bg-primary rounded-full border-2 border-white ring-1 ring-white" />
     )}
 
     {/* Tooltip */}
-    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-4 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 whitespace-nowrap z-50 shadow-xl translate-x-[-10px] group-hover:translate-x-0">
+    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-4 px-2.5 py-1.5 bg-gray-900/90 text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 whitespace-nowrap z-50 shadow-sm backdrop-blur-sm translate-x-[-5px] group-hover:translate-x-0">
       {title}
     </div>
   </motion.button>

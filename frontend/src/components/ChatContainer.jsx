@@ -112,19 +112,19 @@ const ChatContainer = () => {
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-gray-900 relative">
       <div className="relative z-10 border-b border-gray-800 bg-gray-900/50 backdrop-blur-md">
-        <ChatHeader />
+        <ChatHeader isSelectionMode={isSelectionMode} setIsSelectionMode={setIsSelectionMode} />
 
         {/* Selection Banner */}
         {isSelectionMode && (
           <div
-            className="absolute inset-x-0 top-[64px] bg-white z-10 flex items-center justify-between px-6 py-3 border-b border-gray-100 shadow-lg"
+            className="absolute inset-x-0 top-[64px] bg-gray-800 z-10 flex items-center justify-between px-6 py-3 border-b border-gray-700 shadow-lg"
           >
-            <span className="font-bold text-sm text-black tracking-wide">{selectedMessageIds.length} SELECTED</span>
+            <span className="font-bold text-sm text-white tracking-wide">{selectedMessageIds.length} SELECTED</span>
             <div className="flex gap-4">
-              <button onClick={() => { setIsSelectionMode(false); setSelectedMessageIds([]); }} className="text-xs text-gray-500 hover:text-black font-medium tracking-wide transition-colors uppercase">Cancel</button>
+              <button onClick={() => { setIsSelectionMode(false); setSelectedMessageIds([]); }} className="text-xs text-gray-400 hover:text-white font-medium tracking-wide transition-colors uppercase">Cancel</button>
               <button
                 onClick={handleBulkDelete}
-                className="text-xs text-red-600 hover:text-red-700 font-medium tracking-wide transition-colors uppercase"
+                className="text-xs text-red-500 hover:text-red-400 font-medium tracking-wide transition-colors uppercase"
                 disabled={selectedMessageIds.length === 0}
               >
                 Delete
@@ -133,15 +133,7 @@ const ChatContainer = () => {
           </div>
         )}
 
-        {!isSelectionMode && (
-          <button
-            onClick={() => setIsSelectionMode(true)}
-            className="absolute right-6 top-[76px] text-[10px] text-gray-600 hover:text-white uppercase tracking-wider font-semibold z-0 bg-transparent hover:bg-white/10 px-3 py-1 rounded-full border border-gray-800 transition-all"
-            title="Select Messages"
-          >
-            Select
-          </button>
-        )}
+
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 relative z-0 custom-scrollbar">

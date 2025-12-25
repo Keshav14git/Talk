@@ -255,6 +255,7 @@ const Sidebar = () => {
                 user={user}
                 icon={Archive}
                 isSelected={selectedUser?._id === user._id}
+                isOnline={onlineUsers.includes(user._id)}
                 onClick={() => setSelectedUser(user, 'user')}
                 useAvatar
                 unreadCount={user.unreadCount}
@@ -395,7 +396,7 @@ const ListItem = ({ user, icon: Icon, isSelected, isOnline, onClick, useAvatar, 
         <div className="flex items-center gap-1">
           {/* Message Status Icon (User Only) */}
           {!isChannel && user.lastMessage && user.lastMessage.senderId === authUser._id && (
-            onlineUsers.includes(user._id) ?
+            isOnline ?
               <ListChecks className="size-3 text-white" /> :
               <Check className="size-3 text-gray-500" />
           )}

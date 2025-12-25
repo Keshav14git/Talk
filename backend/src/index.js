@@ -35,21 +35,14 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/connections", connectionRoutes);
 app.use("/api/groups", groupRoutes);
 
-// Simple API status check
-app.get("/", (req, res) => {
-  res.send("API is running successfully");
+// Serve static files from the frontend build directory
+const frontendPath = path.join(__dirname, "../frontend/dist");
+app.use(express.static(frontendPath));
+
+// Handle React routing, return all requests to React app
+app.get("*", (req, res) => {
+  res.sendFile(path.join(frontendPath, "index.html"));
 });
-
-/* 
-// Disabled for Vercel deployment approach
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../frontend/dist")));
-
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
-  });
-} 
-*/
 
 server.listen(PORT, () => {
   console.log("server is running on PORT:" + PORT);

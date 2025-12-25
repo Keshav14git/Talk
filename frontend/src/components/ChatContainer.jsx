@@ -8,7 +8,7 @@ import { formatMessageTime, isSameDay } from "../lib/utils";
 import { X, Trash2, Reply, ListChecks, Check } from "lucide-react";
 
 const ChatContainer = () => {
-  const { messages, getMessages, isMessagesLoading, subscribeToMessages, unsubscribeFromMessages, selectedUser, deleteMessage, setReplyMessage, messageSearchQuery } = useChatStore();
+  const { messages, getMessages, isMessagesLoading, subscribeToMessages, unsubscribeFromMessages, selectedUser, selectedType, deleteMessage, setReplyMessage, messageSearchQuery } = useChatStore();
   const { authUser, onlineUsers } = useAuthStore();
   const messageEndRef = useRef(null);
 

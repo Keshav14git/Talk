@@ -5,7 +5,7 @@ import MessageInput from "./MessageInput";
 import MessageSkeleton from "./skeletons/MessageSkeleton";
 import { useAuthStore } from "../store/useAuthStore";
 import { formatMessageTime, isSameDay } from "../lib/utils";
-import { X, Trash2, Reply } from "lucide-react";
+import { X, Trash2, Reply, ListChecks } from "lucide-react";
 
 const ChatContainer = () => {
   const { messages, getMessages, isMessagesLoading, subscribeToMessages, unsubscribeFromMessages, selectedUser, deleteMessage, setReplyMessage, messageSearchQuery } = useChatStore();
@@ -260,8 +260,9 @@ const ChatContainer = () => {
                     )}
                     {message.text}
 
-                    <div className={`text-[10px] mt-1 text-right w-full ${isMe ? "text-gray-400" : "text-gray-400"}`}>
+                    <div className={`text-[10px] mt-1 text-right w-full flex items-center justify-end gap-1 ${isMe ? "text-gray-300" : "text-gray-400"}`}>
                       {formatMessageTime(message.createdAt)}
+                      {isMe && <ListChecks className="size-3 text-blue-400" />}
                     </div>
 
                   </div>

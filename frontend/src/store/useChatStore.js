@@ -179,7 +179,26 @@ export const useChatStore = create((set, get) => ({
       } else {
         res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, payload);
       }
-      set({ messages: [...messages, res.data], replyMessage: null });
+
+      const newMessage = res.data;
+      set({ messages: [...messages, newMessage], replyMessage: null });
+
+      // Update Sidebar List (Move to top + Update Snippet)
+      set(state => {
+        // Determine which list to update
+        const listKey = selectedType === "group" ? "groups" : "users";
+        const list = [...state[listKey]];
+        const index = list.findIndex(item => item._id === selectedUser._id);
+
+        if (index !== -1) {
+          const [item] = list.splice(index, 1);
+          item.lastMessage = newMessage;
+          list.unshift(item);
+          return { [listKey]: list };
+        }
+        return {};
+      });
+
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to send message");
     }

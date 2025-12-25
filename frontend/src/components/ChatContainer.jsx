@@ -226,14 +226,14 @@ const ChatContainer = () => {
                   <div
                     className={`relative px-4 py-3 text-[14px] leading-relaxed break-words shadow-sm
                          ${isMe
-                        ? `bg-white text-black border border-white ${borderRadiusClass}`
+                        ? `bg-gray-700 text-white border border-gray-600 ${borderRadiusClass}`
                         : `bg-[#111] text-gray-200 border border-gray-800 ${borderRadiusClass}`
                       }
                        `}
                   >
                     {/* Reply Context */}
                     {message.replyTo && (
-                      <div className={`mb-2 p-2 rounded text-xs border-l-2 ${isMe ? "bg-gray-100 border-gray-400 text-gray-600" : "bg-black border-gray-600 text-gray-400"}`}>
+                      <div className={`mb-2 p-2 rounded text-xs border-l-2 ${isMe ? "bg-gray-800/50 border-gray-500 text-gray-300" : "bg-black border-gray-600 text-gray-400"}`}>
                         <div className="font-semibold opacity-75 mb-0.5">Replying to</div>
                         <div className="truncate opacity-90">{message.replyTo.text || "Photo"}</div>
                       </div>
@@ -257,7 +257,7 @@ const ChatContainer = () => {
                         // Logic: If selected user is online -> Delivered (Double Check), else Sent (Single Check)
                         // Note: Ideally message.status from backend needs to drive this.
                         selectedUser && onlineUsers.includes(selectedUser._id) ?
-                          <ListChecks className="size-3 text-black" /> :
+                          <ListChecks className="size-3 text-blue-400" /> :
                           <Check className="size-3 text-gray-400" />
                       )}
                     </div>

@@ -169,6 +169,9 @@ const ChatContainer = () => {
           // Revised visual grouping logic
           const effectiveIsPrevSame = showDateSeparator ? false : isPrevSame;
           const isNextSame = idx < filteredMessages.length - 1 && filteredMessages[idx + 1].senderId === message.senderId;
+          const nextDate = idx < filteredMessages.length - 1 ? new Date(filteredMessages[idx + 1].createdAt).toDateString() : currentDate;
+          const willShowSeparatorNext = nextDate !== currentDate;
+          const effectiveIsNextSame = willShowSeparatorNext ? false : isNextSame;
 
           // Standard WhatsApp-like Bubbles: Sharp top-right for Sender, Sharp top-left for Receiver
           let borderRadiusClass = "rounded-lg";

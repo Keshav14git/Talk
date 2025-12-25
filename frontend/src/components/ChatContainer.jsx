@@ -110,21 +110,21 @@ const ChatContainer = () => {
   });
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-white relative">
-      <div className="relative z-10">
+    <div className="flex-1 flex flex-col overflow-hidden bg-gray-900 relative">
+      <div className="relative z-10 border-b border-gray-800 bg-gray-900/50 backdrop-blur-md">
         <ChatHeader />
 
         {/* Selection Banner */}
         {isSelectionMode && (
           <div
-            className="absolute inset-x-0 top-[64px] bg-[#FF5636]/5 z-10 flex items-center justify-between px-6 py-2 border-b border-[#FF5636]/20"
+            className="absolute inset-x-0 top-[64px] bg-primary/10 z-10 flex items-center justify-between px-6 py-2 border-b border-primary/20 backdrop-blur-md"
           >
-            <span className="font-bold text-sm text-[#FF5636]">{selectedMessageIds.length} selected</span>
+            <span className="font-bold text-sm text-primary drop-shadow-[0_0_5px_rgba(255,86,54,0.5)]">{selectedMessageIds.length} selected</span>
             <div className="flex gap-2">
-              <button onClick={() => { setIsSelectionMode(false); setSelectedMessageIds([]); }} className="text-xs text-[#FF5636] hover:underline px-2">Cancel</button>
+              <button onClick={() => { setIsSelectionMode(false); setSelectedMessageIds([]); }} className="text-xs text-primary hover:text-white px-2 transition-colors">Cancel</button>
               <button
                 onClick={handleBulkDelete}
-                className="text-xs text-red-600 hover:text-red-700 font-medium px-2"
+                className="text-xs text-red-500 hover:text-red-400 font-medium px-2 transition-colors"
                 disabled={selectedMessageIds.length === 0}
               >
                 Delete Selected
@@ -136,7 +136,7 @@ const ChatContainer = () => {
         {!isSelectionMode && (
           <button
             onClick={() => setIsSelectionMode(true)}
-            className="absolute right-4 top-[72px] text-xs text-gray-400 hover:text-gray-600 z-0 bg-white/50 px-2 rounded"
+            className="absolute right-4 top-[72px] text-xs text-gray-500 hover:text-gray-300 z-0 bg-gray-800/80 px-2 py-1 rounded-md border border-gray-700/50 transition-colors"
             title="Select Messages"
           >
             Select
@@ -147,7 +147,7 @@ const ChatContainer = () => {
       <div className="flex-1 overflow-y-auto p-4 relative z-0 custom-scrollbar">
         {filteredMessages.length === 0 && messageSearchQuery && (
           <div className="text-center mt-10 text-gray-500 text-sm">
-            No messages found for <span className="font-bold">"{messageSearchQuery}"</span>
+            No messages found for <span className="font-bold text-gray-300">"{messageSearchQuery}"</span>
           </div>
         )}
 
@@ -191,16 +191,16 @@ const ChatContainer = () => {
           return (
             <div key={message._id}>
               {showDateSeparator && (
-                <div className="flex justify-center my-4">
-                  <span className="bg-gray-100 text-gray-500 text-xs font-medium px-3 py-1 rounded-full shadow-sm border border-gray-200">
+                <div className="flex justify-center my-6">
+                  <span className="bg-gray-800/80 text-gray-400 text-[10px] font-bold tracking-wide uppercase px-3 py-1 rounded-full border border-gray-700/50 backdrop-blur-sm">
                     {formatDateSeparator(message.createdAt)}
                   </span>
                 </div>
               )}
 
               <div
-                className={`group flex ${isMe ? "flex-row-reverse" : "flex-row"} gap-3 px-4 hover:bg-gray-50/50 transition-colors relative
-                    ${isSelected ? "bg-[#FF5636]/5 hover:bg-[#FF5636]/10" : ""}
+                className={`group flex ${isMe ? "flex-row-reverse" : "flex-row"} gap-3 px-4 hover:bg-white/[0.02] transition-colors relative
+                    ${isSelected ? "bg-primary/5 hover:bg-primary/5" : ""}
                     ${isMe ? "justify-start" : ""} 
                     ${marginTopClass}
                   `}
@@ -213,7 +213,7 @@ const ChatContainer = () => {
                       type="checkbox"
                       checked={isSelected}
                       onChange={() => toggleSelection(message._id)}
-                      className="size-4 rounded border-gray-300 text-[#FF5636] focus:ring-[#FF5636]"
+                      className="size-4 rounded border-gray-600 bg-gray-800 text-primary focus:ring-primary focus:ring-offset-gray-900"
                     />
                   </div>
                 )}
@@ -224,7 +224,7 @@ const ChatContainer = () => {
                     <img
                       src={selectedUser.profilePic || "/avatar.png"}
                       alt="avatar"
-                      className="size-8 rounded-full object-cover shadow-sm"
+                      className="size-8 rounded-full object-cover shadow-sm bg-gray-800 ring-2 ring-gray-900"
                     />
                   )}
                 </div>
@@ -232,17 +232,16 @@ const ChatContainer = () => {
                 {/* Content Bubble */}
                 <div className={`flex flex-col max-w-[70%] ${isMe ? "items-end" : "items-start"}`}>
                   <div
-                    className={`relative px-4 py-2 shadow-sm text-[15px] leading-relaxed break-words border border-transparent
+                    className={`relative px-4 py-2 shadow-sm text-[15px] leading-relaxed break-words border
                          ${isMe
-                        ? `bg-gray-900 text-white ${borderRadiusClass}`
-                        : `bg-white text-gray-800 border-gray-100 ${borderRadiusClass}`
+                        ? `bg-primary text-white border-primary/50 shadow-[0_2px_8px_rgba(255,86,54,0.2)] ${borderRadiusClass}`
+                        : `bg-gray-800 text-gray-200 border-gray-700/50 ${borderRadiusClass}`
                       }
                        `}
                   >
-                    {/* Search Highlight?? For now just normal text */}
                     {/* Reply Context */}
                     {message.replyTo && (
-                      <div className={`mb-2 p-2 rounded text-xs border-l-2 ${isMe ? "bg-gray-800 border-gray-600 text-gray-300" : "bg-gray-50 border-[#FF5636] text-gray-500"}`}>
+                      <div className={`mb-2 p-2 rounded text-xs border-l-2 ${isMe ? "bg-black/20 border-white/30 text-white/80" : "bg-gray-700/50 border-gray-600 text-gray-400"}`}>
                         <div className="font-semibold opacity-75 mb-0.5">Replying to</div>
                         <div className="truncate opacity-90">{message.replyTo.text || "Photo"}</div>
                       </div>
@@ -253,21 +252,21 @@ const ChatContainer = () => {
                         <img
                           src={message.image}
                           alt="Attachment"
-                          className="max-w-[200px] max-h-60 rounded-lg cursor-zoom-in hover:opacity-90 transition-opacity"
+                          className="max-w-[200px] max-h-60 rounded-lg cursor-zoom-in hover:opacity-90 transition-opacity border border-white/10"
                           onClick={(e) => { e.stopPropagation(); setSelectedImage(message.image); }}
                         />
                       </div>
                     )}
                     {message.text}
 
-                    <div className={`text-[10px] mt-1 text-right w-full flex items-center justify-end gap-1 ${isMe ? "text-gray-300" : "text-gray-400"}`}>
+                    <div className={`text-[10px] mt-1 text-right w-full flex items-center justify-end gap-1 ${isMe ? "text-white/70" : "text-gray-500"}`}>
                       {formatMessageTime(message.createdAt)}
                       {isMe && (
                         // Logic: If selected user is online -> Delivered (Double Check), else Sent (Single Check)
                         // Note: Ideally message.status from backend needs to drive this.
                         selectedUser && onlineUsers.includes(selectedUser._id) ?
-                          <ListChecks className="size-3 text-gray-400" /> :
-                          <Check className="size-3 text-gray-400" />
+                          <ListChecks className="size-3 text-white/70" /> :
+                          <Check className="size-3 text-white/70" />
                       )}
                     </div>
 
@@ -279,7 +278,7 @@ const ChatContainer = () => {
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity self-center px-2">
                     <button
                       onClick={(e) => { e.stopPropagation(); handleReply(message); }}
-                      className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
+                      className="p-1.5 text-gray-500 hover:text-gray-300 hover:bg-gray-800 rounded bg-gray-900/50 border border-gray-800"
                       title="Reply"
                     >
                       <Reply size={14} />
@@ -288,7 +287,7 @@ const ChatContainer = () => {
                     {isMe && (
                       <button
                         onClick={(e) => { e.stopPropagation(); handleDelete(message._id); }}
-                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-gray-100 rounded"
+                        className="p-1.5 text-gray-500 hover:text-red-400 hover:bg-gray-800 rounded bg-gray-900/50 border border-gray-800"
                         title="Delete"
                       >
                         <Trash2 size={14} />
@@ -307,9 +306,10 @@ const ChatContainer = () => {
 
       {/* Image Modal */}
       {selectedImage && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-6" onClick={() => setSelectedImage(null)}>
+        <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-50 p-6 backdrop-blur-sm" onClick={() => setSelectedImage(null)}>
           <div className="relative max-w-5xl max-h-full">
-            <img src={selectedImage} alt="Full View" className="max-w-full max-h-[90vh] rounded-md shadow-2xl" />
+            <button className="absolute -top-10 right-0 p-2 text-white/60 hover:text-white"><X /></button>
+            <img src={selectedImage} alt="Full View" className="max-w-full max-h-[90vh] rounded-lg shadow-2xl ring-1 ring-white/10" />
           </div>
         </div>
       )}

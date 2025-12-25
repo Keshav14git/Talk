@@ -296,7 +296,8 @@ const NavIcon = ({ icon: Icon, imgSrc, isActive, onClick, title, unreadCount }) 
       <img
         src={imgSrc}
         alt={title}
-        className={`size-6 object-contain transition-all ${isActive ? "brightness-100 drop-shadow-[0_0_5px_rgba(255,86,54,0.5)]" : "opacity-50 brightness-200 hover:brightness-100 hover:opacity-100"}`}
+        className={`size-6 object-contain transition-all invert brightness-0 ${isActive ? "invert brightness-0 filter-none opacity-100 drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]" : "opacity-70 hover:opacity-100 invert brightness-0 hover:drop-shadow-[0_0_2px_rgba(255,255,255,0.8)]"}`}
+        style={{ filter: isActive ? 'invert(1) brightness(2)' : 'invert(1)' }}
       />
     ) : (
       <Icon className={`size-6 transition-all ${isActive ? "text-primary fill-primary/20" : ""}`} strokeWidth={isActive ? 2 : 1.5} />

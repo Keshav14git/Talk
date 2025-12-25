@@ -119,7 +119,7 @@ const Sidebar = () => {
             {friendRequests.length > 0 && <span className="absolute top-1.5 right-1.5 size-2 bg-red-500 rounded-full border-2 border-gray-900" />}
           </motion.button>
 
-          <Link to="/settings" title="Settings">
+          <Link to="/settings" title="Settings" onClick={() => isMobile && setSidebarOpen(false)}>
             <motion.div
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
@@ -140,7 +140,7 @@ const Sidebar = () => {
           </motion.button>
 
           {/* Mini Profile Av */}
-          <Link to="/profile" className="mt-1">
+          <Link to="/profile" className="mt-1" onClick={() => isMobile && setSidebarOpen(false)}>
             <img
               src={authUser?.profilePic || "/avatar.png"}
               alt="Profile"

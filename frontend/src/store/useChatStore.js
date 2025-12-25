@@ -366,8 +366,37 @@ export const useChatStore = create((set, get) => ({
   deleteMessage: async (messageId) => {
     try {
       await axiosInstance.delete(`/messages/${messageId}`);
-      // Optimistic update
-      set({ messages: get().messages.filter(m => m._id !== messageId) });
+
+      const { messages, selectedUser, selectedType } = get();
+      const updatedMessages = messages.filter(m => m._id !== messageId);
+
+      // Optimistic update for chat view
+      set({ messages: updatedMessages });
+
+      // Update Sidebar Preview (last message sync)
+      if (selectedUser) {
+        set(state => {
+          const listKey = selectedType === "group" ? "groups" : "users";
+          const list = [...state[listKey]];
+          const index = list.findIndex(item => item._id === selectedUser._id);
+
+          if (index !== -1) {
+            const item = { ...list[index] };
+            // If the deleted message was the one showing in sidebar...
+            if (item.lastMessage?._id === messageId) {
+              // ...update it to the new last message (or null)
+              item.lastMessage = updatedMessages.length > 0
+                ? updatedMessages[updatedMessages.length - 1]
+                : null;
+
+              list[index] = item;
+              return { [listKey]: list };
+            }
+          }
+          return {};
+        });
+      }
+
       toast.success("Message deleted");
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to delete message");

@@ -62,16 +62,16 @@ const Sidebar = () => {
   return (
     <aside className="h-full flex overflow-hidden">
       {/* 1. Navigation Rail (Leftmost strip) */}
-      <div className="w-18 flex flex-col items-center py-6 bg-gray-50 border-r border-gray-100 h-full flex-shrink-0 z-20">
+      <div className="w-[70px] flex flex-col items-center py-4 bg-gray-50 border-r border-gray-100 h-full flex-shrink-0 z-20">
         {/* Top: Brand/Logo */}
-        <div className="mb-8 flex justify-center cursor-pointer" onClick={() => setSidebarOpen(!isSidebarOpen)}>
-          <div className="size-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-bold text-xl">
+        <div className="mb-6 flex justify-center cursor-pointer" onClick={() => setSidebarOpen(!isSidebarOpen)}>
+          <div className="size-9 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-bold text-lg">
             T
           </div>
         </div>
 
         {/* Nav Items */}
-        <div className="flex-1 flex flex-col gap-3 w-full items-center px-2">
+        <div className="flex-1 flex flex-col gap-1.5 w-full items-center px-2">
           <NavIcon
             icon={MessageSquare}
             isActive={viewType === "chats" && isSidebarOpen}
@@ -100,12 +100,12 @@ const Sidebar = () => {
         </div>
 
         {/* Bottom: Settings & User */}
-        <div className="mt-auto flex flex-col gap-4 w-full items-center mb-2">
+        <div className="mt-auto flex flex-col gap-2 w-full items-center mb-4">
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setActiveModal('requests')}
-            className="relative p-2.5 rounded-full text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+            className="relative p-2 rounded-xl text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors"
             title="Friend Requests"
           >
             <Bell className="size-5" />
@@ -116,7 +116,7 @@ const Sidebar = () => {
             <motion.div
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
-              className="p-2.5 rounded-full text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+              className="p-2 rounded-xl text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors"
             >
               <Settings className="size-5" />
             </motion.div>
@@ -126,7 +126,7 @@ const Sidebar = () => {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             onClick={logout}
-            className="p-2.5 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+            className="p-2 rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
             title="Logout"
           >
             <LogOut className="size-5" />
@@ -134,7 +134,7 @@ const Sidebar = () => {
 
           {/* Mini Profile Av */}
           <Link to="/profile" className="mt-2">
-            <div className="size-9 rounded-full bg-gradient-to-tr from-[#FF5636] to-orange-400 flex items-center justify-center text-white font-bold text-xs ring-2 ring-white shadow-md">
+            <div className="size-8 rounded-full bg-gradient-to-tr from-[#FF5636] to-orange-400 flex items-center justify-center text-white font-bold text-xs ring-2 ring-white shadow-md">
               U
             </div>
           </Link>
@@ -283,18 +283,18 @@ const NavIcon = ({ icon: Icon, isActive, onClick, title, unreadCount }) => (
     whileTap={{ scale: 0.95 }}
     onClick={onClick}
     title={title}
-    className={`relative p-3.5 rounded-2xl transition-all duration-300 group
+    className={`relative p-3 rounded-xl transition-all duration-300 group
             ${isActive
         ? "bg-gray-900 text-white shadow-lg shadow-gray-900/20"
         : "text-gray-400 hover:text-gray-900 hover:bg-gray-100"
       }
         `}
   >
-    <Icon className="size-6" strokeWidth={1.5} />
+    <Icon className="size-5" strokeWidth={1.5} />
 
     {/* Unread Dot */}
     {unreadCount > 0 && (
-      <div className="absolute top-3 right-3 size-2 bg-primary rounded-full border-2 border-white" />
+      <div className="absolute top-2 right-2 size-2 bg-primary rounded-full border-2 border-white" />
     )}
 
     {/* Tooltip */}

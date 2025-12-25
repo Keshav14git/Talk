@@ -27,7 +27,7 @@ const Sidebar = () => {
     isSidebarOpen, toggleSidebar, setSidebarOpen
   } = useChatStore();
 
-  const { logout, onlineUsers } = useAuthStore();
+  const { logout, onlineUsers, authUser } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeModal, setActiveModal] = useState(null);
 
@@ -100,15 +100,15 @@ const Sidebar = () => {
         </div>
 
         {/* Bottom: Settings & User - Condensed */}
-        <div className="mt-auto flex flex-col gap-1.5 w-full items-center mb-3">
+        <div className="mt-auto flex flex-col gap-1 w-full items-center mb-3">
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setActiveModal('requests')}
-            className="relative p-2 rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+            className="relative p-2.5 rounded-xl text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors flex items-center justify-center"
             title="Friend Requests"
           >
-            <Bell className="size-5" strokeWidth={1.5} />
+            <img src="/bell.png" alt="Requests" className="size-6 object-contain opacity-60 hover:opacity-100 transition-opacity" />
             {friendRequests.length > 0 && <span className="absolute top-1.5 right-1.5 size-2 bg-red-500 rounded-full border-2 border-white" />}
           </motion.button>
 
@@ -116,9 +116,9 @@ const Sidebar = () => {
             <motion.div
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
-              className="p-2 rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+              className="p-2.5 rounded-xl text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors flex items-center justify-center"
             >
-              <Settings className="size-5" strokeWidth={1.5} />
+              <img src="/setting.png" alt="Settings" className="size-6 object-contain opacity-60 hover:opacity-100 transition-opacity" />
             </motion.div>
           </Link>
 
@@ -126,17 +126,19 @@ const Sidebar = () => {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             onClick={logout}
-            className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+            className="p-2.5 rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors flex items-center justify-center"
             title="Logout"
           >
-            <LogOut className="size-5" strokeWidth={1.5} />
+            <img src="/logout.png" alt="Logout" className="size-6 object-contain opacity-60 hover:opacity-100 transition-opacity" />
           </motion.button>
 
           {/* Mini Profile Av */}
           <Link to="/profile" className="mt-1">
-            <div className="size-7 rounded-full bg-gradient-to-tr from-[#FF5636] to-orange-400 flex items-center justify-center text-white font-bold text-[10px] ring-2 ring-white shadow-md">
-              U
-            </div>
+            <img
+              src={authUser?.profilePic || "/avatar.png"}
+              alt="Profile"
+              className="size-8 rounded-full object-cover ring-2 ring-white shadow-md bg-gray-200"
+            />
           </Link>
         </div>
       </div>

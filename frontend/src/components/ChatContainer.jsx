@@ -166,30 +166,19 @@ const ChatContainer = () => {
 
           // Note: When filtering, gaps might appear that make "NextSame" logic weird visually, but acceptable.
 
-          // Revised Logic for Grouping
+          // Revised visual grouping logic
           const effectiveIsPrevSame = showDateSeparator ? false : isPrevSame;
-
           const isNextSame = idx < filteredMessages.length - 1 && filteredMessages[idx + 1].senderId === message.senderId;
-          const nextDate = idx < filteredMessages.length - 1 ? new Date(filteredMessages[idx + 1].createdAt).toDateString() : currentDate;
-          const willShowSeparatorNext = nextDate !== currentDate;
-          const effectiveIsNextSame = willShowSeparatorNext ? false : isNextSame;
 
-
-          let borderRadiusClass = "rounded-2xl";
+          // Standard WhatsApp-like Bubbles: Sharp top-right for Sender, Sharp top-left for Receiver
+          let borderRadiusClass = "rounded-lg";
           if (isMe) {
-            if (effectiveIsPrevSame && effectiveIsNextSame) borderRadiusClass = "rounded-r-sm rounded-l-2xl"; // Middle
-            else if (effectiveIsPrevSame && !effectiveIsNextSame) borderRadiusClass = "rounded-tr-sm rounded-br-2xl rounded-l-2xl"; // Last
-            else if (!effectiveIsPrevSame && effectiveIsNextSame) borderRadiusClass = "rounded-br-sm rounded-tr-2xl rounded-l-2xl"; // First
-            else borderRadiusClass = "rounded-2xl rounded-tr-sm"; // Single
+            borderRadiusClass = "rounded-lg rounded-tr-none";
           } else {
-            if (effectiveIsPrevSame && effectiveIsNextSame) borderRadiusClass = "rounded-l-sm rounded-r-2xl";
-            else if (effectiveIsPrevSame && !effectiveIsNextSame) borderRadiusClass = "rounded-tl-sm rounded-bl-2xl rounded-r-2xl";
-            else if (!effectiveIsPrevSame && effectiveIsNextSame) borderRadiusClass = "rounded-bl-sm rounded-tl-2xl rounded-r-2xl";
-            else borderRadiusClass = "rounded-2xl rounded-tl-sm";
+            borderRadiusClass = "rounded-lg rounded-tl-none";
           }
 
-          const marginTopClass = effectiveIsPrevSame ? "mt-[2px]" : "mt-4";
-
+          const marginTopClass = effectiveIsPrevSame ? "mt-1.5" : "mt-3";
 
           return (
             <div key={message._id}>
@@ -202,7 +191,7 @@ const ChatContainer = () => {
               )}
 
               <div
-                className={`group flex ${isMe ? "flex-row-reverse" : "flex-row"} gap-3 px-4 hover:bg-white/[0.02] transition-colors relative
+                className={`group flex ${isMe ? "flex-row-reverse" : "flex-row"} gap-2 px-2 md:px-4 hover:bg-white/[0.02] transition-colors relative
                     ${isSelected ? "bg-primary/5 hover:bg-primary/5" : ""}
                     ${isMe ? "justify-start" : ""} 
                     ${marginTopClass}
@@ -221,16 +210,20 @@ const ChatContainer = () => {
                   </div>
                 )}
 
-                {/* Avatar */}
-                <div className="w-8 flex-shrink-0 flex flex-col items-end justify-end pb-1">
-                  {!isMe && !effectiveIsNextSame && (
-                    <img
-                      src={selectedUser.profilePic || "/avatar.png"}
-                      alt="avatar"
-                      className="size-8 rounded-full object-cover shadow-sm bg-gray-800 ring-2 ring-gray-900"
-                    />
-                  )}
-                </div>
+                {/* Avatar - Only for Groups/Channels or if explicitly desired. WhatsApp DMs hide it. */}
+                {/* Logic: IF not me AND is group/channel AND (is last of group OR forcing for variety) -> Show */}
+                {/* For strict WhatsApp mobile DMs: No avatar. */}
+                {(selectedType === "group" || selectedType === "channel") && (
+                  <div className="w-8 flex-shrink-0 flex flex-col items-end justify-end pb-1">
+                    {!isMe && !effectiveIsNextSame && (
+                      <img
+                        src={selectedUser.profilePic || "/avatar.png"}
+                        alt="avatar"
+                        className="size-8 rounded-full object-cover shadow-sm bg-gray-800 ring-2 ring-gray-900"
+                      />
+                    )}
+                  </div>
+                )}
 
                 {/* Content Bubble */}
                 <div className={`flex flex-col max-w-[85%] md:max-w-[70%] ${isMe ? "items-end" : "items-start"}`}>

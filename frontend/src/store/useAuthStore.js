@@ -57,6 +57,36 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+  sendOtp: async (email) => {
+    set({ isLoggingIn: true }); // Reuse loading state or add specific one if needed
+    try {
+      const res = await axiosInstance.post("/auth/send-otp", { email });
+      toast.success(res.data.message || "OTP sent successfully");
+      return true; // Indicate success to component
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to send OTP");
+      return false;
+    } finally {
+      set({ isLoggingIn: false });
+    }
+  },
+
+  verifyOtp: async (data) => {
+    set({ isLoggingIn: true });
+    try {
+      const res = await axiosInstance.post("/auth/verify-otp", data);
+      set({ authUser: res.data });
+      toast.success("Logged in successfully");
+      get().connectSocket();
+      return true;
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Invalid OTP");
+      return false;
+    } finally {
+      set({ isLoggingIn: false });
+    }
+  },
+
   logout: async () => {
     try {
       await axiosInstance.post("/auth/logout");

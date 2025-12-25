@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import { Link, useNavigate } from "react-router-dom";
 import { MessageSquare, ArrowRight, Mail, Check } from "lucide-react";
@@ -10,21 +10,39 @@ const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { login, signup } = useAuthStore(); // We'll update store later to handle OTP
+  const [timer, setTimer] = useState(30); // 30 second timer
+  const [canResend, setCanResend] = useState(false);
+
+  const { sendOtp, verifyOtp, login, signup } = useAuthStore();
   const navigate = useNavigate();
 
-  // Mock function to simulate sending OTP for now (backend connection comes next)
+  // Timer logic
+  useEffect(() => {
+    let interval;
+    if (step === 2 && timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    } else if (timer === 0) {
+      setCanResend(true);
+    }
+    return () => clearInterval(interval);
+  }, [step, timer]);
+
   const handleSendOtp = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!email) return toast.error("Please enter your email");
 
     setIsLoading(true);
-    // TODO: Call backend /auth/send-otp
-    setTimeout(() => {
-      setIsLoading(false);
+    // Use the real sendOtp action
+    const success = await sendOtp(email);
+    setIsLoading(false);
+
+    if (success) {
       setStep(2);
-      toast.success("Code sent to " + email);
-    }, 1500);
+      setTimer(30); // Reset timer on new send
+      setCanResend(false);
+    }
   };
 
   const handleVerifyOtp = async (e) => {
@@ -32,14 +50,14 @@ const LoginPage = () => {
     if (otp.length < 6) return toast.error("Please enter valid code");
 
     setIsLoading(true);
-    // TODO: Call backend /auth/verify-otp
-    setTimeout(() => {
-      setIsLoading(false);
-      // Mock login success
-      toast.success("Detailed OTP logic will be wired to backend next");
-      // For now, let's just pretend we logged in to unblock UI testing
-      // login({ email, password: "mock_password_bypass" }); 
-    }, 1500);
+    // Use the real verifyOtp action
+    const success = await verifyOtp({ email, otp });
+    setIsLoading(false);
+
+    if (success) {
+      // Login successful, authUser is updated in store
+      // navigate("/"); // Optional, usually handled by App.jsx auth listener
+    }
   };
 
   const handleGoogleLogin = () => {
@@ -142,13 +160,29 @@ const LoginPage = () => {
                   </button>
                 )}
 
-                <button
-                  type="button"
-                  onClick={() => setStep(1)}
-                  className="w-full text-xs text-gray-500 hover:text-gray-300 transition-colors"
-                >
-                  Use a different email
-                </button>
+                <div className="flex flex-col items-center gap-2 mt-4">
+                  {canResend ? (
+                    <button
+                      type="button"
+                      onClick={handleSendOtp}
+                      className="text-white hover:text-gray-300 transition-colors uppercase tracking-wider font-medium text-xs"
+                    >
+                      Resend Code
+                    </button>
+                  ) : (
+                    <p className="text-gray-600 font-mono text-xs">
+                      Resend code in 00:{timer.toString().padStart(2, '0')}
+                    </p>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => setStep(1)}
+                    className="text-gray-500 hover:text-gray-400 transition-colors text-xs"
+                  >
+                    Use a different email
+                  </button>
+                </div>
               </form>
             </div>
           )}

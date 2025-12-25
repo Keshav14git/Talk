@@ -61,64 +61,64 @@ const Sidebar = () => {
 
   return (
     <aside className="h-full flex overflow-hidden">
-      {/* 1. Navigation Rail (Leftmost strip) */}
-      <div className="w-[70px] flex flex-col items-center py-4 bg-gray-50 border-r border-gray-100 h-full flex-shrink-0 z-20">
+      {/* 1. Navigation Rail (Leftmost strip) - Condensed */}
+      <div className="w-[64px] flex flex-col items-center py-3 bg-gray-50 border-r border-gray-100 h-full flex-shrink-0 z-20">
         {/* Top: Brand/Logo */}
-        <div className="mb-6 flex justify-center cursor-pointer" onClick={() => setSidebarOpen(!isSidebarOpen)}>
-          <div className="size-9 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-bold text-lg">
+        <div className="mb-4 flex justify-center cursor-pointer" onClick={() => setSidebarOpen(!isSidebarOpen)}>
+          <div className="size-8 bg-primary/10 rounded-lg flex items-center justify-center text-primary font-bold text-base">
             T
           </div>
         </div>
 
-        {/* Nav Items */}
-        <div className="flex-1 flex flex-col gap-1.5 w-full items-center px-2">
+        {/* Nav Items - Condensed Gaps */}
+        <div className="flex-1 flex flex-col gap-1 w-full items-center px-1.5">
           <NavIcon
-            icon={MessageSquare}
+            imgSrc="/chat.png"
             isActive={viewType === "chats" && isSidebarOpen}
             onClick={() => handleNavClick("chats")}
             title="Chats"
           />
           <NavIcon
-            icon={Lock}
+            imgSrc="/group.png"
             isActive={viewType === "groups" && isSidebarOpen}
             onClick={() => handleNavClick("groups")}
             title="Groups"
           />
           <NavIcon
-            icon={Hash}
+            imgSrc="/channel.png"
             isActive={viewType === "channels" && isSidebarOpen}
             onClick={() => handleNavClick("channels")}
             title="Channels"
           />
-          <div className="h-px w-8 bg-gray-200 my-2" />
+          <div className="h-px w-6 bg-gray-200 my-1.5" />
           <NavIcon
-            icon={Archive}
+            imgSrc="/unarchieve.png"
             isActive={viewType === "archived" && isSidebarOpen}
             onClick={() => handleNavClick("archived")}
             title="Archived"
           />
         </div>
 
-        {/* Bottom: Settings & User */}
-        <div className="mt-auto flex flex-col gap-2 w-full items-center mb-4">
+        {/* Bottom: Settings & User - Condensed */}
+        <div className="mt-auto flex flex-col gap-1.5 w-full items-center mb-3">
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setActiveModal('requests')}
-            className="relative p-2 rounded-xl text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+            className="relative p-2 rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors"
             title="Friend Requests"
           >
-            <Bell className="size-5" />
-            {friendRequests.length > 0 && <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white" />}
+            <Bell className="size-5" strokeWidth={1.5} />
+            {friendRequests.length > 0 && <span className="absolute top-1.5 right-1.5 size-2 bg-red-500 rounded-full border-2 border-white" />}
           </motion.button>
 
           <Link to="/settings" title="Settings">
             <motion.div
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
-              className="p-2 rounded-xl text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+              className="p-2 rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors"
             >
-              <Settings className="size-5" />
+              <Settings className="size-5" strokeWidth={1.5} />
             </motion.div>
           </Link>
 
@@ -126,15 +126,15 @@ const Sidebar = () => {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             onClick={logout}
-            className="p-2 rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+            className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
             title="Logout"
           >
-            <LogOut className="size-5" />
+            <LogOut className="size-5" strokeWidth={1.5} />
           </motion.button>
 
           {/* Mini Profile Av */}
-          <Link to="/profile" className="mt-2">
-            <div className="size-8 rounded-full bg-gradient-to-tr from-[#FF5636] to-orange-400 flex items-center justify-center text-white font-bold text-xs ring-2 ring-white shadow-md">
+          <Link to="/profile" className="mt-1">
+            <div className="size-7 rounded-full bg-gradient-to-tr from-[#FF5636] to-orange-400 flex items-center justify-center text-white font-bold text-[10px] ring-2 ring-white shadow-md">
               U
             </div>
           </Link>
@@ -145,46 +145,46 @@ const Sidebar = () => {
       <motion.div
         initial={false}
         animate={{
-          width: isSidebarOpen ? 320 : 0,
+          width: isSidebarOpen ? 300 : 0, // Reduced width slightly
           opacity: isSidebarOpen ? 1 : 0
         }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className="flex flex-col bg-white h-full border-r border-gray-100 overflow-hidden relative shadow-xl shadow-gray-200/50 z-10"
       >
-        <div className="w-[320px] flex flex-col h-full"> {/* Inner wrapper to prevent content squishing */}
+        <div className="w-[300px] flex flex-col h-full"> {/* Inner wrapper to prevent content squishing */}
           {/* Header */}
-          <div className="h-20 flex items-center justify-between px-6 shrink-0">
-            <h2 className="text-gray-900 font-bold text-2xl tracking-tight">
+          <div className="h-16 flex items-center justify-between px-5 shrink-0">
+            <h2 className="text-gray-900 font-bold text-xl tracking-tight">
               {viewType === 'chats' && 'Messages'}
               {viewType === 'groups' && 'Groups'}
               {viewType === 'channels' && 'Channels'}
               {viewType === 'archived' && 'Archived'}
             </h2>
 
-            <div className="flex gap-2 items-center">
+            <div className="flex gap-1 items-center">
               {/* Action Buttons */}
-              <div className="flex gap-1">
+              <div className="flex gap-0.5">
                 {viewType === 'channels' ? (
                   <>
-                    <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setActiveModal('createChannel')} className="p-2 bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-primary rounded-xl transition-colors"><CirclePlus className="size-5" /></motion.button>
-                    <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setActiveModal('explore')} className="p-2 bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-primary rounded-xl transition-colors"><Compass className="size-5" /></motion.button>
+                    <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setActiveModal('createChannel')} className="p-1.5 bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-primary rounded-lg transition-colors"><CirclePlus className="size-5" /></motion.button>
+                    <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setActiveModal('explore')} className="p-1.5 bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-primary rounded-lg transition-colors"><Compass className="size-5" /></motion.button>
                   </>
                 ) : viewType === 'groups' ? (
-                  <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setActiveModal('createGroup')} className="p-2 bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-primary rounded-xl transition-colors"><CirclePlus className="size-5" /></motion.button>
+                  <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setActiveModal('createGroup')} className="p-1.5 bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-primary rounded-lg transition-colors"><CirclePlus className="size-5" /></motion.button>
                 ) : (
-                  <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setActiveModal('addFriend')} className="p-2 bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-primary rounded-xl transition-colors"><UserPlus className="size-5" /></motion.button>
+                  <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setActiveModal('addFriend')} className="p-1.5 bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-primary rounded-lg transition-colors"><UserPlus className="size-5" /></motion.button>
                 )}
               </div>
 
               {/* Collapse Button */}
-              <button onClick={toggleSidebar} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-all ml-1">
+              <button onClick={toggleSidebar} className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-all ml-0.5">
                 <ChevronsLeft className="size-5" />
               </button>
             </div>
           </div>
 
           {/* Search */}
-          <div className="px-6 pb-4 shrink-0">
+          <div className="px-5 pb-3 shrink-0">
             <div className="relative group">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-gray-400 group-focus-within:text-primary transition-colors" />
               <input
@@ -192,13 +192,13 @@ const Sidebar = () => {
                 placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-gray-50 text-gray-800 placeholder-gray-400 pl-10 pr-4 py-3 rounded-2xl text-sm border-none ring-1 ring-gray-100 focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all shadow-sm"
+                className="w-full bg-gray-50 text-gray-800 placeholder-gray-400 pl-10 pr-4 py-2.5 rounded-xl text-sm border-none ring-1 ring-gray-100 focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all shadow-sm"
               />
             </div>
           </div>
 
           {/* List Content */}
-          <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-1.5 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-1 custom-scrollbar">
             {viewType === "groups" && filteredGroups.filter(g => g.type !== 'channel').map((group) => (
               <ListItem
                 key={group._id}
@@ -223,12 +223,12 @@ const Sidebar = () => {
                   />
                 ))}
                 {filteredGroups.filter(g => g.type === 'channel').length === 0 && (
-                  <div className="flex flex-col items-center justify-center p-8 text-center bg-gray-50 rounded-3xl mt-4 mx-2">
-                    <div className="size-12 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 mb-3">
-                      <Compass className="size-6" />
+                  <div className="flex flex-col items-center justify-center p-6 text-center bg-gray-50 rounded-2xl mt-4 mx-2">
+                    <div className="size-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 mb-2">
+                      <Compass className="size-5" />
                     </div>
-                    <p className="text-sm text-gray-500 font-medium mb-1">No channels yet</p>
-                    <button onClick={() => setActiveModal('explore')} className="text-xs text-primary font-semibold hover:underline">Explore Public Channels</button>
+                    <p className="text-xs text-gray-500 font-medium mb-1">No channels yet</p>
+                    <button onClick={() => setActiveModal('explore')} className="text-[10px] text-primary font-semibold hover:underline">Explore Public Channels</button>
                   </div>
                 )}
               </>
@@ -277,21 +277,30 @@ const Sidebar = () => {
 
 // --- Sub Components ---
 
-const NavIcon = ({ icon: Icon, isActive, onClick, title, unreadCount }) => (
+const NavIcon = ({ icon: Icon, imgSrc, isActive, onClick, title, unreadCount }) => (
   <motion.button
     whileHover={{ scale: 1.1 }}
     whileTap={{ scale: 0.9 }}
     onClick={onClick}
-    className={`relative p-3 rounded-xl transition-all duration-200 group
+    className={`relative p-2.5 rounded-xl transition-all duration-200 group flex items-center justify-center
             ${isActive
-        ? "text-primary bg-primary/5"
+        ? "bg-primary/5 shadow-sm"
         : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
       }
         `}
+    title={title}
   >
-    <Icon className={`size-6 transition-all ${isActive ? "fill-primary/20" : ""}`} strokeWidth={isActive ? 2 : 1.5} />
+    {imgSrc ? (
+      <img
+        src={imgSrc}
+        alt={title}
+        className={`size-6 object-contain transition-all ${isActive ? "" : "opacity-60 grayscale hover:grayscale-0 hover:opacity-100"}`}
+      />
+    ) : (
+      <Icon className={`size-6 transition-all ${isActive ? "text-primary fill-primary/20" : ""}`} strokeWidth={isActive ? 2 : 1.5} />
+    )}
 
-    {/* Active Indicator (WhatsApp style - subtle left accent or just color) */}
+    {/* Active Indicator - Left Bar */}
     {isActive && (
       <motion.div
         layoutId="activeNav"
@@ -301,9 +310,8 @@ const NavIcon = ({ icon: Icon, isActive, onClick, title, unreadCount }) => (
 
     {/* Unread Dot */}
     {unreadCount > 0 && (
-      <div className="absolute top-2 right-2 size-2.5 bg-primary rounded-full border-2 border-white ring-1 ring-white" />
+      <div className="absolute top-1.5 right-1.5 size-2.5 bg-primary rounded-full border-2 border-white ring-1 ring-white" />
     )}
-
     {/* Tooltip */}
     <div className="absolute left-full top-1/2 -translate-y-1/2 ml-4 px-2.5 py-1.5 bg-gray-900/90 text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 whitespace-nowrap z-50 shadow-sm backdrop-blur-sm translate-x-[-5px] group-hover:translate-x-0">
       {title}

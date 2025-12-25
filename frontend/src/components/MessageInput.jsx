@@ -88,18 +88,18 @@ const MessageInput = () => {
     <div className="p-3 w-full bg-gray-900 border-t border-gray-800">
       {/* Reply Banner */}
       {replyMessage && (
-        <div className="flex items-center justify-between bg-gray-800/80 p-3 mb-2 rounded-xl border-l-[3px] border-primary backdrop-blur-sm">
+        <div className="flex items-center justify-between bg-black p-3 mb-2 rounded-xl border-l-[3px] border-white backdrop-blur-sm border border-gray-800">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 text-xs font-bold text-primary mb-1">
+            <div className="flex items-center gap-2 text-xs font-bold text-white mb-1">
               <Reply className="size-3.5" />
               <span>Replying to {replyMessage.senderId === authUser._id ? 'yourself' : 'sender'}</span>
             </div>
-            <div className="text-sm text-gray-300 truncate font-medium">
+            <div className="text-sm text-gray-400 truncate font-medium">
               {replyMessage.image && <span className="italic mr-1 text-gray-500 font-normal">[Image]</span>}
               {replyMessage.text}
             </div>
           </div>
-          <button onClick={() => setReplyMessage(null)} className="p-1.5 hover:bg-gray-700 rounded-lg text-gray-400 transition-colors">
+          <button onClick={() => setReplyMessage(null)} className="p-1.5 hover:bg-gray-800 rounded-lg text-gray-400 transition-colors">
             <X size={16} />
           </button>
         </div>
@@ -147,8 +147,8 @@ const MessageInput = () => {
           onClick={handleSendMessage}
           className={`p-2.5 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 h-[44px] w-[44px]
                         ${!text.trim() && !imagePreview
-              ? "bg-gray-700 text-gray-500 cursor-not-allowed"
-              : "bg-primary text-white hover:bg-[#E04529] shadow-lg shadow-[#FF5636]/20 active:scale-95"}
+              ? "bg-gray-800 text-gray-500 cursor-not-allowed"
+              : "bg-white text-black hover:bg-gray-200 shadow-md shadow-white/10 active:scale-95"}
                     `}
           disabled={!text.trim() && !imagePreview}
         >

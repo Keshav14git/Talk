@@ -2,22 +2,23 @@ import { MessageSquare } from "lucide-react";
 
 const NoChatSelected = () => {
   return (
-    <div className="w-full flex flex-1 flex-col items-center justify-center p-16 bg-gray-900/50 backdrop-blur-3xl">
-      <div className="max-w-md text-center space-y-6">
-        <div className="flex justify-center mb-4">
-          <div className="relative">
-            <div className="w-24 h-24 bg-primary/10 rounded-3xl flex items-center justify-center animate-bounce shadow-[0_0_30px_rgba(255,86,54,0.2)]">
-              <MessageSquare className="size-12 text-primary drop-shadow-[0_0_10px_rgba(255,86,54,0.5)]" />
+    <div className="w-full flex flex-1 flex-col items-center justify-center p-16 bg-black">
+      <div className="max-w-md text-center space-y-8 animate-fade-in">
+        <div className="flex justify-center mb-6">
+          <div className="relative group">
+            <div className="absolute inset-0 bg-white/5 rounded-full blur-xl group-hover:bg-white/10 transition-all duration-700"></div>
+            <div className="w-20 h-20 bg-gray-900/50 rounded-2xl flex items-center justify-center border border-gray-800 shadow-2xl backdrop-blur-sm relative z-10 group-hover:scale-105 transition-transform duration-500">
+              <MessageSquare className="size-8 text-white stroke-[1.5]" />
             </div>
           </div>
         </div>
 
-        <div>
-          <h2 className="text-3xl font-bold text-gray-100 tracking-tight">
-            Welcome to Talk Project
+        <div className="space-y-4">
+          <h2 className="text-2xl font-medium text-white tracking-widest uppercase">
+            Talk Project
           </h2>
-          <p className="text-gray-400 mt-3 text-lg font-medium">
-            Select a conversation from the sidebar to start chatting.
+          <p className="text-gray-500 text-sm font-light tracking-wide">
+            Select a conversation to begin.
           </p>
         </div>
       </div>

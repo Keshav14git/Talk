@@ -342,70 +342,49 @@ const ListItem = ({ user, icon: Icon, isSelected, isOnline, onClick, useAvatar, 
   // Status Logic
   // 1. Sent (1 Gray Tick) -> User Offline
   // 2. Delivered (2 Gray Ticks) -> User Online
-  // 3. Read (2 Blue Ticks) -> (Not implemented fully on backend yet, but if unreadCount is 0 for us, maybe different logic? For now stick to delivery status).
-  // Actually, for *my* sent message, 'unreadCount' on *their* end matters, which I don't see.
-  // So: Offline = Check (Gray), Online = ListChecks (Gray).
-
-  const StatusIcon = isOnline ? ListChecks : Check;
-  const statusColor = "text-gray-500"; // Default to gray (sent/delivered)
+  const isActive = isSelected; // Renamed for clarity with the new styling
 
   return (
-    <motion.button
-      whileTap={{ scale: 0.98 }}
+    <div
+      key={item._id}
       onClick={onClick}
-      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group border border-transparent
-          ${isSelected
-          ? "bg-primary/10 border-primary/5 shadow-sm ring-1 ring-primary/20" // Dark mode selected: subtle orange glow
-          : "hover:bg-gray-700/50 bg-transparent text-gray-400 hover:text-gray-200"
-        }
+      className={`group w-full p-2.5 flex items-center gap-3 rounded-lg transition-all cursor-pointer relative
+        ${isActive ? "bg-white/5" : "hover:bg-white/5"}
       `}
     >
-      {useAvatar ? (
-        <div className="relative shrink-0">
-          <img src={user.profilePic || "/avatar.png"} alt="" className="size-10 rounded-full object-cover bg-gray-700 ring-2 ring-transparent group-hover:ring-gray-600 transition-all" />
-          {isOnline && <span className="absolute bottom-0 right-0 size-3 bg-green-500 rounded-full border-[2px] border-gray-800" />}
-        </div>
-      ) : (
-        <div className={`size-10 rounded-full flex items-center justify-center transition-colors ${isSelected ? 'bg-primary/20 text-primary ring-1 ring-primary/30' : 'bg-gray-700 text-gray-400 group-hover:bg-gray-600 group-hover:text-gray-200'}`}>
-          <Icon className="size-5" />
-        </div>
+      {/* Active Indicator Line */}
+      {isActive && (
+        <div className="absolute left-0 top-3 bottom-3 w-[3px] bg-white rounded-r-full shadow-[0_0_10px_rgba(255,255,255,0.3)]" />
       )}
 
-      <div className="flex-1 text-left min-w-0 flex flex-col justify-center gap-0.5">
-        <div className="flex justify-between items-baseline">
-          <span className={`text-[14px] font-medium truncate ${isSelected ? "text-gray-100 font-semibold" : "text-gray-300 group-hover:text-gray-100"}`}>
-            {user.fullName}
-          </span>
-          {user.lastMessage?.createdAt && (
-            <span className={`text-[10px] font-medium ${unreadCount > 0 ? "text-primary drop-shadow-[0_0_8px_rgba(255,86,54,0.4)]" : "text-gray-500 group-hover:text-gray-400"}`}>
-              {formatTime(user.lastMessage.createdAt)}
-            </span>
-          )}
-        </div>
-
-        <div className="flex justify-between items-center text-[12px] h-4">
-          <div className="flex items-center gap-1.5 truncate max-w-[85%] text-gray-500 group-hover:text-gray-400 transition-colors">
-            {isMe && (
-              <span className="flex items-center shrink-0">
-                <StatusIcon className={`size-3.5 ${statusColor}`} />
-              </span>
-            )}
-            <span className="truncate leading-tight opacity-90">
-              {isMe && "You: "}
-              {user.lastMessage?.text || (useAvatar ? "Click to chat" : "View messages")}
-            </span>
-          </div>
-
-          {unreadCount > 0 && (
-            <span className="bg-primary text-white text-[9px] font-bold h-4 min-w-[1rem] px-1 flex items-center justify-center rounded-full shadow-[0_0_10px_rgba(255,86,54,0.5)]">
-              {unreadCount}
-            </span>
-          )}
-        </div>
+      {/* Avatar Container */}
+      <div className="relative">
+        <img
+          src={item.profilePic || "/avatar.png"}
+          alt={item.fullName}
+          className={`size-10 rounded-full object-cover border border-transparent transition-all
+             ${isActive ? "border-gray-500" : "group-hover:border-gray-700"}
+          `}
+        />
+        {/* Status Indicator (User Only) */}
+        {!isChannel && (
+          <span
+            className={`absolute bottom-0 right-0 size-3 rounded-full border-2 border-black
+              ${isOnline ? "bg-green-500" : "bg-gray-600"}
+            `}
+          />
+        )}
       </div>
-    </motion.button>
-  );
+
+      {/* Info */}
+      <div className="flex-1 min-w-0 text-left">
+        <div className="flex items-center justify-between mb-0.5">
+          <span className={`text-[14px] truncate transition-colors ${isActive ? "font-semibold text-white" : "font-medium text-gray-400 group-hover:text-gray-200"}`}>
+            {item.fullName}
+          </span>
+        </motion.button>
+        );
 }
 
-export default Sidebar;
+        export default Sidebar;
 

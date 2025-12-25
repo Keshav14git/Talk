@@ -9,27 +9,27 @@ export default {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
-        // Linear-inspired dark palette
+        // Pure Black / Monochrome Palette
         gray: {
-          900: '#0f1115', // Main background
-          800: '#161920', // Surface (Sidebar/Cards)
-          700: '#22252a', // Borders/Separators
-          600: '#2e333d', // Hover states
-          500: '#6b7280', // Text secondary
-          400: '#9ca3af', // Text tertiary
-          300: '#d1d5db',
-          100: '#e5e7eb', // Text primary (almost white)
-          50: '#f9fafb',
+          900: '#000000', // Pure Black
+          800: '#0a0a0a', // Almost Black (Surface)
+          700: '#1a1a1a', // Subtle Border
+          600: '#262626', // Hover
+          500: '#525252', // Text secondary
+          400: '#a3a3a3', // Text tertiary
+          300: '#d4d4d4',
+          100: '#ffffff', // Pure White Text
+          50: '#fafafa',
         },
         primary: {
-          DEFAULT: '#FF5636', // Brand Orange
-          hover: '#E04529',
-          glow: 'rgba(255, 86, 54, 0.15)'
+          DEFAULT: '#ffffff', // White is the new "Primary"
+          hover: '#e5e5e5', // Light Gray hover
+          glow: 'rgba(255, 255, 255, 0.1)' // White glow
         }
       },
       boxShadow: {
-        'glow': '0 0 20px rgba(255, 86, 54, 0.15)',
-        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.3)',
+        'glow': '0 0 20px rgba(255, 255, 255, 0.1)', // White glow
+        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.5)',
       }
     },
   },

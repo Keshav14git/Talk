@@ -117,17 +117,17 @@ const ChatContainer = () => {
         {/* Selection Banner */}
         {isSelectionMode && (
           <div
-            className="absolute inset-x-0 top-[64px] bg-primary/10 z-10 flex items-center justify-between px-6 py-2 border-b border-primary/20 backdrop-blur-md"
+            className="absolute inset-x-0 top-[64px] bg-white z-10 flex items-center justify-between px-6 py-3 border-b border-gray-100 shadow-lg"
           >
-            <span className="font-bold text-sm text-primary drop-shadow-[0_0_5px_rgba(255,86,54,0.5)]">{selectedMessageIds.length} selected</span>
-            <div className="flex gap-2">
-              <button onClick={() => { setIsSelectionMode(false); setSelectedMessageIds([]); }} className="text-xs text-primary hover:text-white px-2 transition-colors">Cancel</button>
+            <span className="font-bold text-sm text-black tracking-wide">{selectedMessageIds.length} SELECTED</span>
+            <div className="flex gap-4">
+              <button onClick={() => { setIsSelectionMode(false); setSelectedMessageIds([]); }} className="text-xs text-gray-500 hover:text-black font-medium tracking-wide transition-colors uppercase">Cancel</button>
               <button
                 onClick={handleBulkDelete}
-                className="text-xs text-red-500 hover:text-red-400 font-medium px-2 transition-colors"
+                className="text-xs text-red-600 hover:text-red-700 font-medium tracking-wide transition-colors uppercase"
                 disabled={selectedMessageIds.length === 0}
               >
-                Delete Selected
+                Delete
               </button>
             </div>
           </div>
@@ -136,7 +136,7 @@ const ChatContainer = () => {
         {!isSelectionMode && (
           <button
             onClick={() => setIsSelectionMode(true)}
-            className="absolute right-4 top-[72px] text-xs text-gray-500 hover:text-gray-300 z-0 bg-gray-800/80 px-2 py-1 rounded-md border border-gray-700/50 transition-colors"
+            className="absolute right-6 top-[76px] text-[10px] text-gray-600 hover:text-white uppercase tracking-wider font-semibold z-0 bg-transparent hover:bg-white/10 px-3 py-1 rounded-full border border-gray-800 transition-all"
             title="Select Messages"
           >
             Select
@@ -213,7 +213,7 @@ const ChatContainer = () => {
                       type="checkbox"
                       checked={isSelected}
                       onChange={() => toggleSelection(message._id)}
-                      className="size-4 rounded border-gray-600 bg-gray-800 text-primary focus:ring-primary focus:ring-offset-gray-900"
+                      className="size-4 rounded border-gray-600 bg-black text-white focus:ring-white focus:ring-offset-black"
                     />
                   </div>
                 )}
@@ -232,16 +232,16 @@ const ChatContainer = () => {
                 {/* Content Bubble */}
                 <div className={`flex flex-col max-w-[70%] ${isMe ? "items-end" : "items-start"}`}>
                   <div
-                    className={`relative px-4 py-2 shadow-sm text-[15px] leading-relaxed break-words border
+                    className={`relative px-4 py-3 text-[14px] leading-relaxed break-words shadow-sm
                          ${isMe
-                        ? `bg-primary text-white border-primary/50 shadow-[0_2px_8px_rgba(255,86,54,0.2)] ${borderRadiusClass}`
-                        : `bg-gray-800 text-gray-200 border-gray-700/50 ${borderRadiusClass}`
+                        ? `bg-white text-black border border-white ${borderRadiusClass}`
+                        : `bg-[#111] text-gray-200 border border-gray-800 ${borderRadiusClass}`
                       }
                        `}
                   >
                     {/* Reply Context */}
                     {message.replyTo && (
-                      <div className={`mb-2 p-2 rounded text-xs border-l-2 ${isMe ? "bg-black/20 border-white/30 text-white/80" : "bg-gray-700/50 border-gray-600 text-gray-400"}`}>
+                      <div className={`mb-2 p-2 rounded text-xs border-l-2 ${isMe ? "bg-gray-100 border-gray-400 text-gray-600" : "bg-black border-gray-600 text-gray-400"}`}>
                         <div className="font-semibold opacity-75 mb-0.5">Replying to</div>
                         <div className="truncate opacity-90">{message.replyTo.text || "Photo"}</div>
                       </div>
@@ -252,21 +252,21 @@ const ChatContainer = () => {
                         <img
                           src={message.image}
                           alt="Attachment"
-                          className="max-w-[200px] max-h-60 rounded-lg cursor-zoom-in hover:opacity-90 transition-opacity border border-white/10"
+                          className="max-w-[200px] max-h-60 rounded-lg cursor-zoom-in hover:opacity-90 transition-opacity border border-white/5"
                           onClick={(e) => { e.stopPropagation(); setSelectedImage(message.image); }}
                         />
                       </div>
                     )}
                     {message.text}
 
-                    <div className={`text-[10px] mt-1 text-right w-full flex items-center justify-end gap-1 ${isMe ? "text-white/70" : "text-gray-500"}`}>
+                    <div className={`text-[10px] mt-1.5 text-right w-full flex items-center justify-end gap-1 ${isMe ? "text-gray-400" : "text-gray-600"}`}>
                       {formatMessageTime(message.createdAt)}
                       {isMe && (
                         // Logic: If selected user is online -> Delivered (Double Check), else Sent (Single Check)
                         // Note: Ideally message.status from backend needs to drive this.
                         selectedUser && onlineUsers.includes(selectedUser._id) ?
-                          <ListChecks className="size-3 text-white/70" /> :
-                          <Check className="size-3 text-white/70" />
+                          <ListChecks className="size-3 text-black" /> :
+                          <Check className="size-3 text-gray-400" />
                       )}
                     </div>
 

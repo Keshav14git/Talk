@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import { User, MessageSquare, Lock, HelpCircle, LogOut, Send, ArrowLeft, ChevronRight, Globe, Bell, Moon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +12,7 @@ const SettingsPage = () => {
   const { authUser, logout } = useAuthStore();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("profile");
+  const [showMobileContent, setShowMobileContent] = useState(false);
 
   const tabs = [
     { id: "profile", label: "Profile", icon: User, desc: "Manage your personal info" },
@@ -26,20 +27,37 @@ const SettingsPage = () => {
     }
   };
 
+  const handleTabClick = (tabId) => {
+    setActiveTab(tabId);
+    setShowMobileContent(true);
+  };
+
   return (
     <div className="h-full w-full bg-gray-900 flex flex-col">
-      {/* Header (Mobile only mainly, or global breadcrumb) */}
-      <div className="p-4 border-b border-gray-800 bg-gray-900/50 backdrop-blur-md sticky top-0 z-10 md:hidden flex items-center gap-3">
-        <button onClick={() => navigate('/')} className="p-2 -ml-2 text-gray-400 hover:text-white rounded-full transition-colors">
-          <ArrowLeft className="size-5" />
-        </button>
-        <h1 className="text-lg font-bold text-white">Settings</h1>
-      </div>
+      {/* Mobile Header - List View */}
+      {!showMobileContent && (
+        <div className="p-4 border-b border-gray-800 bg-gray-900/50 backdrop-blur-md sticky top-0 z-10 md:hidden flex items-center gap-3">
+          <button onClick={() => navigate('/')} className="p-2 -ml-2 text-gray-400 hover:text-white rounded-full transition-colors">
+            <ArrowLeft className="size-5" />
+          </button>
+          <h1 className="text-lg font-bold text-white">Settings</h1>
+        </div>
+      )}
+
+      {/* Mobile Header - Content View */}
+      {showMobileContent && (
+        <div className="p-4 border-b border-gray-800 bg-gray-900/50 backdrop-blur-md sticky top-0 z-10 md:hidden flex items-center gap-3">
+          <button onClick={() => setShowMobileContent(false)} className="p-2 -ml-2 text-gray-400 hover:text-white rounded-full transition-colors">
+            <ArrowLeft className="size-5" />
+          </button>
+          <h1 className="text-lg font-bold text-white">{tabs.find(t => t.id === activeTab)?.label}</h1>
+        </div>
+      )}
 
       <div className="flex-1 overflow-hidden flex max-w-7xl mx-auto w-full">
 
-        {/* Sidebar Navigation */}
-        <div className="w-full md:w-80 border-r border-gray-800 bg-gray-900 flex flex-col overflow-y-auto">
+        {/* Sidebar Navigation - Hidden on mobile if viewing content */}
+        <div className={`w-full md:w-80 border-r border-gray-800 bg-gray-900 flex-col overflow-y-auto ${showMobileContent ? 'hidden md:flex' : 'flex'}`}>
           <div className="p-6 hidden md:block">
             <div className="flex items-center gap-3 mb-8 cursor-pointer group" onClick={() => navigate('/')}>
               <div className="p-2 bg-gray-800 rounded-xl group-hover:bg-gray-700 transition-colors">
@@ -53,7 +71,7 @@ const SettingsPage = () => {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabClick(tab.id)}
                 className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all duration-200 group text-left
                   ${activeTab === tab.id
                     ? "bg-gray-800 border border-gray-700 shadow-sm"
@@ -85,13 +103,13 @@ const SettingsPage = () => {
           </div>
         </div>
 
-        {/* Main Content Area */}
-        <div className="flex-1 bg-gray-900 overflow-y-auto custom-scrollbar p-4 md:p-8 lg:p-12">
+        {/* Main Content Area - Hidden on mobile if NOT viewing content */}
+        <div className={`flex-1 bg-gray-900 overflow-y-auto custom-scrollbar p-4 md:p-8 lg:p-12 ${!showMobileContent ? 'hidden md:block' : 'block'}`}>
 
           {/* Profile Section */}
           {activeTab === 'profile' && (
             <div className="max-w-2xl space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
-              <div>
+              <div className="hidden md:block">
                 <h2 className="text-2xl font-bold text-white mb-2">Profile Information</h2>
                 <p className="text-gray-400">Manage your public profile details</p>
               </div>
@@ -130,7 +148,7 @@ const SettingsPage = () => {
           {/* Chat Settings / Theme */}
           {activeTab === 'chat' && (
             <div className="max-w-2xl space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
-              <div>
+              <div className="hidden md:block">
                 <h2 className="text-2xl font-bold text-white mb-2">Chat Settings</h2>
                 <p className="text-gray-400">Customize your chat experience and themes</p>
               </div>
@@ -184,7 +202,7 @@ const SettingsPage = () => {
           {/* Privacy Section (Mock) */}
           {activeTab === 'privacy' && (
             <div className="max-w-2xl space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
-              <div>
+              <div className="hidden md:block">
                 <h2 className="text-2xl font-bold text-white mb-2">Privacy & Security</h2>
                 <p className="text-gray-400">Control who can see you and your info</p>
               </div>
@@ -211,7 +229,7 @@ const SettingsPage = () => {
           {/* Help Section (Mock) */}
           {activeTab === 'help' && (
             <div className="max-w-2xl space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
-              <div>
+              <div className="hidden md:block">
                 <h2 className="text-2xl font-bold text-white mb-2">Help & Support</h2>
                 <p className="text-gray-400">Get help with the application</p>
               </div>

@@ -233,7 +233,7 @@ const ChatContainer = () => {
                 </div>
 
                 {/* Content Bubble */}
-                <div className={`flex flex-col max-w-[70%] ${isMe ? "items-end" : "items-start"}`}>
+                <div className={`flex flex-col max-w-[85%] md:max-w-[70%] ${isMe ? "items-end" : "items-start"}`}>
                   <div
                     className={`relative text-[14px] leading-relaxed break-words shadow-sm
                          ${isMe

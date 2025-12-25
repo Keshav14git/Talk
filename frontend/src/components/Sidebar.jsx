@@ -30,6 +30,13 @@ const Sidebar = () => {
   const { logout, onlineUsers, authUser } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeModal, setActiveModal] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     getUsers();
@@ -60,7 +67,7 @@ const Sidebar = () => {
   if (isUsersLoading) return <SidebarSkeleton />;
 
   return (
-    <aside className="h-full flex overflow-hidden bg-gray-800">
+    <aside className="h-full flex overflow-hidden bg-gray-800 w-full md:w-auto transition-all">
       {/* 1. Navigation Rail (Leftmost strip) - Condensed & Dark */}
       <div className="w-[64px] flex flex-col items-center py-3 bg-gray-900 border-r border-gray-700 h-full flex-shrink-0 z-20">
         {/* Top: Brand/Logo */}
@@ -147,13 +154,13 @@ const Sidebar = () => {
       <motion.div
         initial={false}
         animate={{
-          width: isSidebarOpen ? 300 : 0,
+          width: isSidebarOpen ? (isMobile ? "calc(100vw - 64px)" : 300) : 0,
           opacity: isSidebarOpen ? 1 : 0
         }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className="flex flex-col bg-gray-800 h-full border-r border-gray-700 overflow-hidden relative shadow-xl shadow-black/20 z-10"
       >
-        <div className="w-[300px] flex flex-col h-full"> {/* Inner wrapper to prevent content squishing */}
+        <div className="w-full md:w-[300px] flex flex-col h-full"> {/* Inner wrapper */}
           {/* Header */}
           <div className="h-16 flex items-center justify-between px-5 shrink-0 border-b border-gray-700/50">
             <h2 className="text-gray-100 font-bold text-xl tracking-tight">

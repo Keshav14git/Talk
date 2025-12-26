@@ -6,6 +6,7 @@ import SignUpPage from './pages/SignUpPage';
 import LoginPage from './pages/LoginPage';
 import SettingsPage from './pages/SettingsPage';
 import ProfilePage from './pages/ProfilePage';
+import OnboardingPage from './pages/OnboardingPage';
 import Navbar from './components/Navbar.jsx'
 import Sidebar from './components/Sidebar.jsx';
 import { useAuthStore } from './store/useAuthStore.js';
@@ -55,6 +56,7 @@ const App = () => {
             <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to="/" />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login" />} />
+            <Route path="/onboarding" element={authUser ? <OnboardingPage /> : <Navigate to="/login" />} />
           </Routes>
         </div>
       </main>

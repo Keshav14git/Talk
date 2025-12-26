@@ -81,7 +81,7 @@ export const useAuthStore = create((set, get) => ({
       set({ authUser: res.data });
       toast.success("Logged in successfully");
       get().connectSocket();
-      return true;
+      return res.data; // Return full user object (including isNewUser flag)
     } catch (error) {
       toast.error(error.response?.data?.message || "Invalid OTP");
       return false;
@@ -98,6 +98,35 @@ export const useAuthStore = create((set, get) => ({
       get().disconnectSocket();
     } catch (error) {
       toast.error(error.response?.data?.message || "An error occurred");
+    }
+  },
+
+  requestEmailChange: async (newEmail) => {
+    try {
+      set({ isUpdatingProfile: true }); // Reuse updating state
+      const res = await axiosInstance.post("/auth/request-email-change", { newEmail });
+      toast.success(res.data.message);
+      return true;
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to request email change");
+      return false;
+    } finally {
+      set({ isUpdatingProfile: false });
+    }
+  },
+
+  verifyEmailChange: async (otp) => {
+    try {
+      set({ isUpdatingProfile: true });
+      const res = await axiosInstance.post("/auth/verify-email-change", { otp });
+      set({ authUser: res.data }); // Update user with new email
+      toast.success("Email updated successfully");
+      return true;
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to verify email change");
+      return false;
+    } finally {
+      set({ isUpdatingProfile: false });
     }
   },
 

@@ -26,6 +26,16 @@ const userSchema = new mongoose.Schema(
         otpExpires: {
             type: Date,
         },
+        // For Email Change Process
+        tempEmail: {
+            type: String,
+        },
+        emailChangeOtp: {
+            type: String,
+        },
+        emailChangeOtpExpires: {
+            type: Date,
+        },
 
     },
     {

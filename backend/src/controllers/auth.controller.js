@@ -106,7 +106,8 @@ export const verifyOtp = async (req, res) => {
             _id: user._id,
             email: user.email,
             fullName: user.fullName,
-            profilePic: user.profilePic
+            profilePic: user.profilePic,
+            isNewUser: user.fullName === "New User" // Flag for frontend redirection
         });
 
     } catch (error) {
@@ -138,15 +139,19 @@ export const logout = (req, res) => {
 
 export const updateProfile = async (req, res) => {
     try {
-        const { profilePic } = req.body;
+        const { profilePic, fullName } = req.body;
         const userId = req.user._id;
 
-        if (!profilePic) {
-            return res.status(400).json({ message: "Profile Pic is required" });
+        const updateData = {};
+        if (fullName) updateData.fullName = fullName;
+
+        if (profilePic) {
+            const uploadResponse = await cloudinary.uploader.upload(profilePic);
+            updateData.profilePic = uploadResponse.secure_url;
         }
-        const uploadResponse = await cloudinary.uploader.upload(profilePic);
-        const updatedUser = await User.findByIdAndUpdate(userId, { profilePic: uploadResponse.secure_url }, { new: true });
-        res.status(200).json(updatedUser)
+
+        const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true });
+        res.status(200).json(updatedUser);
 
     } catch (error) {
         console.log("error in update profile controller", error.message);
@@ -176,4 +181,81 @@ export const checkAuth = async (req, res) => {
         console.log("error in checkAuth controller", error.message);
         res.status(500).json({ message: "Internal Server Error" });
     }
-}
+};
+
+export const requestEmailChange = async (req, res) => {
+    const { newEmail } = req.body;
+    const userId = req.user._id;
+
+    if (!newEmail) return res.status(400).json({ message: "New Email is required" });
+
+    try {
+        const existingUser = await User.findOne({ email: newEmail });
+        if (existingUser) return res.status(400).json({ message: "Email is already in use" });
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+
+        const user = await User.findById(userId);
+        user.tempEmail = newEmail;
+        user.emailChangeOtp = otp;
+        user.emailChangeOtpExpires = otpExpires;
+        await user.save();
+
+        // Send Email to NEW address
+        try {
+            if (process.env.GMAIL_USER) {
+                await transporter.sendMail({
+                    from: '"Talk App" <' + process.env.GMAIL_USER + '>',
+                    to: newEmail,
+                    subject: "Verify Email Change",
+                    text: `Your verification code for email change is: ${otp}`,
+                    html: `<b>Your verification code is: ${otp}</b>`
+                });
+                console.log(`Email change OTP sent to ${newEmail}`);
+            } else {
+                console.log(`[MOCK] Email Change OTP for ${newEmail}: ${otp}`);
+            }
+        } catch (emailError) {
+            console.log(`EMERGENCY OTP (Email Change) for ${newEmail}: ${otp}`);
+        }
+
+        res.status(200).json({ message: "OTP sent to new email" });
+
+    } catch (error) {
+        console.log("Error requesting email change:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+export const verifyEmailChange = async (req, res) => {
+    const { otp } = req.body;
+    const userId = req.user._id;
+
+    try {
+        const user = await User.findById(userId);
+        if (!user.tempEmail || !user.emailChangeOtp) {
+            return res.status(400).json({ message: "No email change request found" });
+        }
+
+        if (user.emailChangeOtp !== otp) {
+            return res.status(400).json({ message: "Invalid OTP" });
+        }
+        if (user.emailChangeOtpExpires < Date.now()) {
+            return res.status(400).json({ message: "OTP Expired" });
+        }
+
+        // Commit Change
+        user.email = user.tempEmail;
+        user.tempEmail = undefined;
+        user.emailChangeOtp = undefined;
+        user.emailChangeOtpExpires = undefined;
+        await user.save();
+
+        res.status(200).json(user);
+
+    } catch (error) {
+        console.log("Error verifying email change:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};

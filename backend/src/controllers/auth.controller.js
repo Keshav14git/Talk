@@ -8,10 +8,12 @@ import { OAuth2Client } from "google-auth-library";
 
 // Configure Nodemailer (mock for now, or real if env vars exist)
 const transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false, // true for 465, false for other ports
     auth: {
         user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_PASS, // App Password
+        pass: process.env.GMAIL_PASS?.replace(/\s+/g, ''), // Remove spaces from App Password
     },
 });
 

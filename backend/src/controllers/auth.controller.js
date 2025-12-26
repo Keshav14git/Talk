@@ -28,19 +28,22 @@ export const sendOtp = async (req, res) => {
         // Better Linear approach: Just separate OTP store or store on User.
         // If user doesn't exist, we can create them now OR wait for verify.
         // Let's create/update the user record with the OTP.
+        // ... existing code ...
+        console.log("Preparing to send OTP to:", email);
+
+        // Upsert user
         let user = await User.findOne({ email });
-
         if (!user) {
-            // Create a new user record with just email for now
-            user = new User({ email, fullName: "New User" }); // Placeholder name
+            user = new User({ email, fullName: "New User" });
         }
-
         user.otp = otp;
         user.otpExpires = otpExpires;
         await user.save();
+        console.log("User updated in DB with OTP.");
 
         // Send Email
         if (process.env.GMAIL_USER) {
+            console.log("Attempting to send email via Nodemailer...");
             await transporter.sendMail({
                 from: '"Talk App" <' + process.env.GMAIL_USER + '>',
                 to: email,
@@ -56,7 +59,7 @@ export const sendOtp = async (req, res) => {
         res.status(200).json({ message: "OTP sent successfully" });
 
     } catch (error) {
-        console.error("Error in sendOtp:", error.message);
+        console.error("Error in sendOtp details:", error);
         res.status(500).json({ message: "Failed to send OTP: " + error.message });
     }
 };

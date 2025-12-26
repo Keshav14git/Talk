@@ -15,6 +15,9 @@ const transporter = nodemailer.createTransport({
         user: process.env.GMAIL_USER,
         pass: process.env.GMAIL_PASS?.replace(/\s+/g, ''), // Remove spaces from App Password
     },
+    logger: true, // Log to console
+    debug: true, // Include SMTP traffic in logs
+    connectionTimeout: 10000, // Fail after 10 seconds if hanging
 });
 
 export const sendOtp = async (req, res) => {

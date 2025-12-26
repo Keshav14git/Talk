@@ -15,6 +15,6 @@ router.post("/google", googleAuth);
 
 router.put("/update-profile", protectRoute, updateProfile);
 
-router.get("/check", protectRoute, checkAuth);
+router.get("/check", checkAuth);
 
 export default router;

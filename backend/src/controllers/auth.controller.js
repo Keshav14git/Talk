@@ -1,4 +1,5 @@
 import User from "../models/user.model.js";
+import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../lib/utils.js";
 import cloudinary from "../lib/cloudinary.js";
@@ -127,9 +128,24 @@ export const updateProfile = async (req, res) => {
     }
 };
 
-export const checkAuth = (req, res) => {
+export const checkAuth = async (req, res) => {
     try {
-        res.status(200).json(req.user);
+        const token = req.cookies.jwt;
+        if (!token) {
+            return res.status(200).json(null);
+        }
+
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const user = await User.findById(decoded.userId).select("-password");
+            if (!user) {
+                return res.status(200).json(null);
+            }
+            res.status(200).json(user);
+        } catch (error) {
+            // Token invalid or expired
+            return res.status(200).json(null);
+        }
     } catch (error) {
         console.log("error in checkAuth controller", error.message);
         res.status(500).json({ message: "Internal Server Error" });

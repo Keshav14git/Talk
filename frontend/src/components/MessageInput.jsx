@@ -2,6 +2,8 @@ import { useRef, useState, useEffect } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
 import { Send, X, Paperclip, Reply, Smile, Image as ImageIcon, Gift } from "lucide-react";
+import toast from "react-hot-toast";
+import EmojiPicker from "emoji-picker-react";
 // Categories for quick search
 const GIF_CATEGORIES = ["Trending", "Happy", "Sad", "Love", "Reaction", "Work", "Code"];
 

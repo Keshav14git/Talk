@@ -2,30 +2,8 @@ import { useRef, useState, useEffect } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
 import { Send, X, Paperclip, Reply, Smile, Image as ImageIcon, Gift } from "lucide-react";
-import toast from "react-hot-toast";
-import EmojiPicker from "emoji-picker-react";
-
-// Categorized GIF Library (Mocking a real API)
-const GIF_CATEGORIES = {
-  trending: [
-    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbW5lenZyZHI5OXM2eW95b3pmMG40Nqs1Mzdmb3VlbnR3M2Z3OSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/L2QlXq3zftZSg/giphy.gif", // Cat typing
-    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3R6eW55b3pmMG40Nqs1Mzdmb3VlbnR3M2Z3OSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3oKIPnAiaMCws8nOsE/giphy.gif", // Thumbs up
-    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbW5lenZyZHI5OXM2eW95b3pmMG40Nqs1Mzdmb3VlbnR3M2Z3OSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/IsfrRWzbVtiEw/giphy.gif", // Dog hello
-  ],
-  happy: [
-    "https://media.giphy.com/media/11sBLVxNs7v6WA/giphy.gif", // Minions cheering
-    "https://media.giphy.com/media/chzz1FQgqhytWRWbp3/giphy.gif", // Excited
-    "https://media.giphy.com/media/TdfyKrN7HGTIY/giphy.gif", // Success kid
-  ],
-  sad: [
-    "https://media.giphy.com/media/OPU6wzx8JrHna/giphy.gif", // Crying cat
-    "https://media.giphy.com/media/zoaKdD17n4aR2/giphy.gif", // Sad pikachu
-  ],
-  work: [
-    "https://media.giphy.com/media/ule4vhcY1xEKQ/giphy.gif", // Typing fast
-    "https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif", // Coding cat
-  ]
-};
+// Categories for quick search
+const GIF_CATEGORIES = ["Trending", "Happy", "Sad", "Love", "Reaction", "Work", "Code"];
 
 const MessageInput = () => {
   const [text, setText] = useState("");
@@ -37,14 +15,44 @@ const MessageInput = () => {
   const [showEmoji, setShowEmoji] = useState(false);
   const [showGifs, setShowGifs] = useState(false);
   const [gifSearch, setGifSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState("trending");
+  const [gifs, setGifs] = useState([]);
+  const [isLoadingGifs, setIsLoadingGifs] = useState(false);
 
-  // Filter GIFs
-  const displayGifs = gifSearch
-    ? Object.values(GIF_CATEGORIES).flat().filter(() => true) // In a real app we'd search, here we just show all matches.
-      // Actually let's just show 'trending' if no search, or match category names if search matches
-      .filter((_, i) => i < 10) // Limit results
-    : GIF_CATEGORIES[activeCategory] || GIF_CATEGORIES.trending;
+  // Fetch GIFs
+  useEffect(() => {
+    if (!showGifs) return;
+
+    const fetchGifs = async () => {
+      setIsLoadingGifs(true);
+      try {
+        const apiKey = import.meta.env.VITE_GIPHY_API_KEY;
+        if (!apiKey) {
+          toast.error("Giphy API Key missing");
+          setGifs([]);
+          return;
+        }
+
+        const endpoint = gifSearch
+          ? `https://api.giphy.com/v1/gifs/search?api_key=${apiKey}&q=${gifSearch}&limit=20&rating=g`
+          : `https://api.giphy.com/v1/gifs/trending?api_key=${apiKey}&limit=20&rating=g`;
+
+        const res = await fetch(endpoint);
+        const data = await res.json();
+
+        if (data.data) {
+          setGifs(data.data.map(g => g.images.fixed_height.url));
+        }
+      } catch (error) {
+        console.error("Failed to fetch GIFs", error);
+        toast.error("Failed to load GIFs");
+      } finally {
+        setIsLoadingGifs(false);
+      }
+    };
+
+    const timeoutId = setTimeout(fetchGifs, 500); // Debounce
+    return () => clearTimeout(timeoutId);
+  }, [showGifs, gifSearch]);
 
 
   const { sendMessage, selectedUser, replyMessage, setReplyMessage } = useChatStore();
@@ -183,13 +191,7 @@ const MessageInput = () => {
                   placeholder="Search GIFs..."
                   className="w-full bg-transparent text-sm text-gray-200 px-3 py-1.5 focus:outline-none placeholder:text-gray-600"
                   value={gifSearch}
-                  onChange={(e) => {
-                    setGifSearch(e.target.value);
-                    // Simple mock "Search" logic: match Text to Category keys
-                    const term = e.target.value.toLowerCase();
-                    const foundCat = Object.keys(GIF_CATEGORIES).find(c => c.includes(term));
-                    if (foundCat) setActiveCategory(foundCat);
-                  }}
+                  onChange={(e) => setGifSearch(e.target.value)}
                 />
               </div>
               <button onClick={() => setShowGifs(false)} className="p-1.5 hover:bg-gray-800 rounded-full text-gray-400"><X size={14} /></button>
@@ -198,13 +200,11 @@ const MessageInput = () => {
             {/* Categories Tags */}
             {!gifSearch && (
               <div className="flex gap-1.5 overflow-x-auto custom-scrollbar pb-2 mb-1">
-                {Object.keys(GIF_CATEGORIES).map(cat => (
+                {GIF_CATEGORIES.map(cat => (
                   <button
                     key={cat}
-                    onClick={() => setActiveCategory(cat)}
-                    className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide transition-colors whitespace-nowrap
-                       ${activeCategory === cat ? 'bg-white text-black' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}
-                     `}
+                    onClick={() => setGifSearch(cat)}
+                    className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide transition-colors whitespace-nowrap bg-gray-800 text-gray-400 hover:bg-gray-700`}
                   >
                     {cat}
                   </button>
@@ -214,15 +214,21 @@ const MessageInput = () => {
 
             {/* Grid */}
             <div className="grid grid-cols-3 gap-2 max-h-[250px] overflow-y-auto custom-scrollbar p-1">
-              {displayGifs.map((gif, i) => (
-                <button
-                  key={i}
-                  onClick={() => handleGifSelect(gif)}
-                  className="rounded-lg overflow-hidden hover:ring-2 ring-primary transition-all aspect-square relative group bg-gray-800"
-                >
-                  <img src={gif} alt="GIF" className="w-full h-full object-cover" loading="lazy" />
-                </button>
-              ))}
+              {isLoadingGifs ? (
+                <div className="col-span-3 flex justify-center py-10"><div className="size-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div></div>
+              ) : gifs.length > 0 ? (
+                gifs.map((gif, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleGifSelect(gif)}
+                    className="rounded-lg overflow-hidden hover:ring-2 ring-primary transition-all aspect-square relative group bg-gray-800"
+                  >
+                    <img src={gif} alt="GIF" className="w-full h-full object-cover" loading="lazy" />
+                  </button>
+                ))
+              ) : (
+                <div className="col-span-3 text-center text-gray-500 py-4 text-xs">No GIFs found</div>
+              )}
             </div>
           </div>
         </div>

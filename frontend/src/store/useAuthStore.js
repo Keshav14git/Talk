@@ -60,6 +60,22 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+  googleLogin: async (token) => {
+    set({ isLoggingIn: true });
+    try {
+      const res = await axiosInstance.post("/auth/google", { token });
+      set({ authUser: res.data });
+      toast.success("Logged in successfully");
+      get().connectSocket();
+      return true;
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Google Login failed");
+      return false;
+    } finally {
+      set({ isLoggingIn: false });
+    }
+  },
+
   sendOtp: async (email) => {
     set({ isLoggingIn: true }); // Reuse loading state or add specific one if needed
     try {

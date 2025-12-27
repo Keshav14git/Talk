@@ -116,11 +116,53 @@ export const verifyOtp = async (req, res) => {
     }
 };
 
+import axios from "axios";
+
 export const googleAuth = async (req, res) => {
-    // Placeholder for Google Auth logic
-    // const { token } = req.body;
-    // ... verification logic ...
-    res.status(501).json({ message: "Google Auth Not Implemented Yet" });
+    try {
+        const { token } = req.body; // Access Token from frontend
+        if (!token) {
+            return res.status(400).json({ message: "Token is required" });
+        }
+
+        // Fetch user info from Google
+        const response = await axios.get(`https://www.googleapis.com/oauth2/v3/userinfo?access_token=${token}`);
+        const { sub, name, email, picture } = response.data;
+
+        // Check if user exists
+        let user = await User.findOne({ email });
+
+        if (user) {
+            // If user exists but doesn't have googleId, update it
+            if (!user.googleId) {
+                user.googleId = sub;
+                // user.profilePic = picture; // Optional: update pic? maybe not to overwrite custom one
+                await user.save();
+            }
+        } else {
+            // Create new user
+            user = new User({
+                email,
+                fullName: name,
+                profilePic: picture,
+                googleId: sub,
+                password: "", // No password for Google users
+            });
+            await user.save();
+        }
+
+        generateToken(user._id, res);
+        res.status(200).json({
+            _id: user._id,
+            email: user.email,
+            fullName: user.fullName,
+            profilePic: user.profilePic,
+        });
+
+    } catch (error) {
+        console.log("Error in googleAuth:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
 };
 
 // Keep existing methods for backward compatibility or profile updates

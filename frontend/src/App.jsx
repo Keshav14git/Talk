@@ -13,6 +13,8 @@ import { useAuthStore } from './store/useAuthStore.js';
 import { useChatStore } from './store/useChatStore.js';
 import { Loader } from "lucide-react"
 import { Toaster } from "react-hot-toast"
+import { GoogleOAuthProvider } from '@react-oauth/google';
+
 const App = () => {
   const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
   const { selectedUser, subscribeToMessages, unsubscribeFromMessages } = useChatStore();
@@ -37,42 +39,44 @@ const App = () => {
   );
 
   return (
-    <div className="flex h-screen bg-gray-900 overflow-hidden font-sans">
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+      <div className="flex h-screen bg-gray-900 overflow-hidden font-sans">
 
-      {/* Sidebar - Global & Full Height */}
-      {authUser && (
-        <div className={`h-full shrink-0 border-r border-gray-700 transition-all duration-300 ease-in-out
-          ${selectedUser ? "hidden md:flex" : "flex"} 
-        `}>
-          <Sidebar />
-        </div>
-      )}
+        {/* Sidebar - Global & Full Height */}
+        {authUser && (
+          <div className={`h-full shrink-0 border-r border-gray-700 transition-all duration-300 ease-in-out
+            ${selectedUser ? "hidden md:flex" : "flex"} 
+          `}>
+            <Sidebar />
+          </div>
+        )}
 
-      <main className="flex-1 flex flex-col h-full w-full relative min-w-0">
-        <div className="flex-1 flex overflow-hidden relative">
-          <Routes>
-            <Route path="/" element={authUser ? <HomePage /> : <Navigate to="/login" />} />
-            <Route path="/signup" element={!authUser ? <SignUpPage /> : <Navigate to="/" />} />
-            <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to="/" />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login" />} />
-            <Route path="/onboarding" element={authUser ? <OnboardingPage /> : <Navigate to="/login" />} />
-          </Routes>
-        </div>
-      </main>
+        <main className="flex-1 flex flex-col h-full w-full relative min-w-0">
+          <div className="flex-1 flex overflow-hidden relative">
+            <Routes>
+              <Route path="/" element={authUser ? <HomePage /> : <Navigate to="/login" />} />
+              <Route path="/signup" element={!authUser ? <SignUpPage /> : <Navigate to="/" />} />
+              <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to="/" />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login" />} />
+              <Route path="/onboarding" element={authUser ? <OnboardingPage /> : <Navigate to="/login" />} />
+            </Routes>
+          </div>
+        </main>
 
-      <Toaster
-        toastOptions={{
-          className: 'text-sm font-medium text-gray-100',
-          style: {
-            background: '#161920', // gray-800
-            border: '1px solid #22252a', // gray-700
-            color: '#e5e7eb',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5)',
-          },
-        }}
-      />
-    </div>
+        <Toaster
+          toastOptions={{
+            className: 'text-sm font-medium text-gray-100',
+            style: {
+              background: '#161920', // gray-800
+              border: '1px solid #22252a', // gray-700
+              color: '#e5e7eb',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5)',
+            },
+          }}
+        />
+      </div>
+    </GoogleOAuthProvider>
   );
 };
 

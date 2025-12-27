@@ -5,6 +5,8 @@ import { MessageSquare, ArrowRight, Mail, Check } from "lucide-react";
 import Loader from "../components/Loader";
 import toast from "react-hot-toast";
 
+import { useGoogleLogin } from "@react-oauth/google";
+
 const LoginPage = () => {
   const [step, setStep] = useState(1); // 1: Email, 2: OTP
   const [email, setEmail] = useState("");
@@ -13,7 +15,7 @@ const LoginPage = () => {
   const [timer, setTimer] = useState(30); // 30 second timer
   const [canResend, setCanResend] = useState(false);
 
-  const { sendOtp, verifyOtp, login, signup } = useAuthStore();
+  const { sendOtp, verifyOtp, login, signup, googleLogin } = useAuthStore();
   const navigate = useNavigate();
 
   // Timer logic
@@ -60,9 +62,17 @@ const LoginPage = () => {
     }
   };
 
+  const loginGoogle = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      await googleLogin(tokenResponse.access_token);
+    },
+    onError: () => {
+      toast.error("Google Login Cancelled");
+    }
+  });
+
   const handleGoogleLogin = () => {
-    toast.loading("Redirecting to Google...");
-    // window.location.href = "http://localhost:5001/api/auth/google"; 
+    loginGoogle();
   };
 
   return (

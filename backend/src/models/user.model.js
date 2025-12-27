@@ -36,6 +36,15 @@ const userSchema = new mongoose.Schema(
         emailChangeOtpExpires: {
             type: Date,
         },
+        emailChangeOtp: {
+            type: String,
+        },
+        emailChangeOtpExpires: {
+            type: Date,
+        },
+        googleId: {
+            type: String,
+        },
 
     },
     {

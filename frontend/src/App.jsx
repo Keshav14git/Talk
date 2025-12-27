@@ -66,13 +66,31 @@ const App = () => {
 
         <Toaster
           toastOptions={{
-            className: 'text-sm font-medium text-gray-100',
+            className: 'font-sans !rounded-lg',
             style: {
-              background: '#161920', // gray-800
-              border: '1px solid #22252a', // gray-700
-              color: '#e5e7eb',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5)',
+              background: '#18181b', // zinc-900
+              border: '1px solid #27272a', // zinc-800
+              color: '#fff',
+              padding: '12px 16px',
             },
+            success: {
+              iconTheme: {
+                primary: '#22c55e', // green-500
+                secondary: '#18181b',
+              },
+            },
+            error: {
+              iconTheme: {
+                primary: '#ef4444', // red-500
+                secondary: '#18181b',
+              },
+            },
+            loading: {
+              style: {
+                background: '#18181b',
+                color: '#fff',
+              }
+            }
           }}
         />
       </div>

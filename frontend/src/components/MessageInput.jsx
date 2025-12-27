@@ -1,14 +1,30 @@
 import { useRef, useState, useEffect } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
-import { Send, X, Paperclip, Reply } from "lucide-react";
+import { Send, X, Paperclip, Reply, Smile, Image as ImageIcon, Gift } from "lucide-react";
 import toast from "react-hot-toast";
+import EmojiPicker from "emoji-picker-react";
+
+// Curated GIF List (Demo)
+const DEMO_GIFS = [
+  "https://media.tenor.com/_MJOq_W2z9YAAAAM/cat-typing.gif",
+  "https://media.tenor.com/F02C4pBN2KUAAAAM/coding.gif",
+  "https://media.tenor.com/bCpvvJ5p0W8AAAAM/ok-hand.gif",
+  "https://media.tenor.com/qRsh_sX8sB4AAAAM/thumbs-up.gif",
+  "https://media.tenor.com/QW6gPqR8wW4AAAAM/laughing.gif",
+  "https://media.tenor.com/pC98e0W1k78AAAAM/crying.gif",
+];
 
 const MessageInput = () => {
   const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
+
+  // Feature Toggles
+  const [showEmoji, setShowEmoji] = useState(false);
+  const [showGifs, setShowGifs] = useState(false);
+  // Share menu is just the file input for now, but could be a dropdown
 
   const { sendMessage, selectedUser, replyMessage, setReplyMessage } = useChatStore();
   const { authUser } = useAuthStore();
@@ -18,7 +34,7 @@ const MessageInput = () => {
   const isAdmin = adminId === authUser?._id;
   const isReadOnly = isChannel && !isAdmin;
 
-  // Auto-resize textarea
+  // Auto-resize textarea logic
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -26,8 +42,10 @@ const MessageInput = () => {
     }
   }, [text]);
 
+  // Image Handling
   const handleImageChange = (e) => {
     const file = e.target.files[0];
+    if (!file) return;
     if (!file.type.startsWith("image/")) {
       toast.error("Please select an image file");
       return;
@@ -44,6 +62,23 @@ const MessageInput = () => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  // GIF Handling
+  const handleGifSelect = async (url) => {
+    try {
+      setShowGifs(false);
+      // Fetch the GIF and convert to Base64 to treat it like an uploaded image
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(blob);
+    } catch (error) {
+      toast.error("Failed to load GIF");
+    }
+  };
+
   const handleSendMessage = async (e) => {
     e?.preventDefault();
     if (!text.trim() && !imagePreview) return;
@@ -58,6 +93,8 @@ const MessageInput = () => {
       setText("");
       setImagePreview(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
+      setShowEmoji(false);
+      setShowGifs(false);
 
       // Reset height
       if (textareaRef.current) textareaRef.current.style.height = 'auto';
@@ -74,6 +111,11 @@ const MessageInput = () => {
     }
   };
 
+  const onEmojiClick = (emojiData) => {
+    setText((prev) => prev + emojiData.emoji);
+    // Don't close picker for multiple emojis
+  };
+
   if (isReadOnly) {
     return (
       <div className="p-4 w-full bg-gray-900 border-t border-gray-800 text-center">
@@ -85,7 +127,52 @@ const MessageInput = () => {
   }
 
   return (
-    <div className="p-3 w-full bg-gray-900 border-t border-gray-800">
+    <div className="p-3 w-full bg-gray-900 border-t border-gray-800 relative z-20">
+
+      {/* Popups Layer - Absolute positioned above input */}
+      {showEmoji && (
+        <div className="absolute bottom-[80px] left-4 z-50 animate-in fade-in slide-in-from-bottom-2">
+          <div className="bg-[#111] border border-gray-800 rounded-2xl shadow-2xl overflow-hidden relative">
+            {/* Close Button Mobile Friendly */}
+            <div className="flex items-center justify-between p-2 bg-[#18181b] border-b border-gray-800">
+              <span className="text-xs text-gray-400 font-medium ml-2">Emojis</span>
+              <button onClick={() => setShowEmoji(false)} className="p-1 hover:bg-gray-800 rounded-full text-gray-400"><X size={14} /></button>
+            </div>
+            <EmojiPicker
+              theme="dark"
+              onEmojiClick={onEmojiClick}
+              width={320}
+              height={400}
+              searchDisabled
+              skinTonesDisabled
+              previewConfig={{ showPreview: false }}
+            />
+          </div>
+        </div>
+      )}
+
+      {showGifs && (
+        <div className="absolute bottom-[80px] left-16 z-50 animate-in fade-in slide-in-from-bottom-2">
+          <div className="bg-[#111] border border-gray-800 rounded-2xl shadow-2xl p-3 w-[320px]">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">Trending GIFs</span>
+              <button onClick={() => setShowGifs(false)} className="p-1 hover:bg-gray-800 rounded-full text-gray-400"><X size={14} /></button>
+            </div>
+            <div className="grid grid-cols-3 gap-2 max-h-[300px] overflow-y-auto custom-scrollbar p-1">
+              {DEMO_GIFS.map((gif, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleGifSelect(gif)}
+                  className="rounded-lg overflow-hidden hover:ring-2 ring-primary transition-all aspect-square relative group"
+                >
+                  <img src={gif} alt="GIF" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Reply Banner */}
       {replyMessage && (
         <div className="flex items-center justify-between bg-black p-3 mb-2 rounded-xl border-l-[3px] border-white backdrop-blur-sm border border-gray-800">
@@ -105,6 +192,7 @@ const MessageInput = () => {
         </div>
       )}
 
+      {/* Image Preview */}
       {imagePreview && (
         <div className="mb-3 relative w-fit ml-4 group">
           <div className="relative">
@@ -115,15 +203,38 @@ const MessageInput = () => {
         </div>
       )}
 
+      {/* Input Bar */}
       <div className="flex items-end gap-2 bg-gray-800 p-2 rounded-2xl border border-gray-700/50 focus-within:ring-1 focus-within:ring-primary/30 focus-within:border-primary/30 transition-all shadow-lg shadow-black/5">
-        <button
-          type="button"
-          className="p-2.5 text-gray-400 hover:text-primary hover:bg-gray-700/50 rounded-xl transition-all shrink-0 h-[44px] flex items-center justify-center"
-          onClick={() => fileInputRef.current?.click()}
-          title="Attach file"
-        >
-          <Paperclip size={20} className="stroke-[1.5]" />
-        </button>
+
+        {/* Actions Group */}
+        <div className="flex items-center gap-0.5 self-end mb-0.5">
+          <button
+            type="button"
+            className={`p-2 rounded-xl transition-all shrink-0 flex items-center justify-center hover:bg-gray-700/50 ${showEmoji ? 'text-primary' : 'text-gray-400'}`}
+            onClick={() => { setShowEmoji(!showEmoji); setShowGifs(false); }}
+            title="Emoji"
+          >
+            <Smile size={20} className="stroke-[1.5]" />
+          </button>
+
+          <button
+            type="button"
+            className={`p-2 rounded-xl transition-all shrink-0 flex items-center justify-center hover:bg-gray-700/50 ${showGifs ? 'text-primary' : 'text-gray-400'}`}
+            onClick={() => { setShowGifs(!showGifs); setShowEmoji(false); }}
+            title="GIFs"
+          >
+            <Gift size={20} className="stroke-[1.5]" />
+          </button>
+
+          <button
+            type="button"
+            className="p-2 text-gray-400 hover:text-primary hover:bg-gray-700/50 rounded-xl transition-all shrink-0 flex items-center justify-center"
+            onClick={() => fileInputRef.current?.click()}
+            title="Attach Image"
+          >
+            <Paperclip size={20} className="stroke-[1.5]" />
+          </button>
+        </div>
 
         <textarea
           ref={textareaRef}
@@ -132,6 +243,7 @@ const MessageInput = () => {
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
+          onClick={() => { setShowEmoji(false); setShowGifs(false); }} // Close popovers when typing
           rows={1}
         />
 
@@ -155,8 +267,9 @@ const MessageInput = () => {
           <Send size={18} className={(!text.trim() && !imagePreview) ? "" : "ml-0.5"} />
         </button>
       </div>
+
       <div className="text-[10px] text-gray-500 mt-2 text-center font-medium tracking-wide">
-        <strong className="text-gray-400">Enter</strong> to send, <strong className="text-gray-400">Shift + Enter</strong> for new line
+        <strong className="text-gray-400">Enter</strong> to send
       </div>
     </div>
   );

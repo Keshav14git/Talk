@@ -69,25 +69,25 @@ const App = () => {
             className: '!bg-[#111] !border !border-[#333] !text-white font-sans !rounded-xl !shadow-xl',
             style: {
               background: '#111', // Card background Match
-              border: '1px solid #333', // Input/Card border Match
-              color: '#fff',
+              border: '0px solid #000000ff', // Input/Card border Match
+              color: '#ffffffff',
               padding: '12px 16px',
             },
             success: {
               iconTheme: {
-                primary: '#22c55e', // green-500
+                primary: '#006015ff', // green-500
                 secondary: '#111', // Match background
               },
             },
             error: {
               iconTheme: {
-                primary: '#ef4444', // red-500
+                primary: '#830202ff', // red-500
                 secondary: '#111', // Match background
               },
             },
             loading: {
               style: {
-                background: '#111',
+                background: '#171717ff',
                 color: '#fff',
               }
             }

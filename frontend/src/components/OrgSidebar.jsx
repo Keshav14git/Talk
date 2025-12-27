@@ -4,12 +4,8 @@ import { Plus, Settings } from "lucide-react";
 import { Link, useNavigate } from 'react-router-dom';
 
 const OrgSidebar = () => {
-    const { orgs, currentOrg, fetchOrgs, setCurrentOrg, createOrg } = useOrgStore();
+    const { orgs, currentOrg, setCurrentOrg, createOrg } = useOrgStore();
     const navigate = useNavigate();
-
-    useEffect(() => {
-        fetchOrgs();
-    }, [fetchOrgs]);
 
     const handleOrgClick = (org) => {
         setCurrentOrg(org);

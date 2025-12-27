@@ -66,28 +66,28 @@ const App = () => {
 
         <Toaster
           toastOptions={{
-            className: 'font-sans !rounded-lg',
+            className: '!bg-[#111] !border !border-[#333] !text-white font-sans !rounded-xl !shadow-xl',
             style: {
-              background: '#18181b', // zinc-900
-              border: '1px solid #27272a', // zinc-800
+              background: '#111', // Card background Match
+              border: '1px solid #333', // Input/Card border Match
               color: '#fff',
               padding: '12px 16px',
             },
             success: {
               iconTheme: {
                 primary: '#22c55e', // green-500
-                secondary: '#18181b',
+                secondary: '#111', // Match background
               },
             },
             error: {
               iconTheme: {
                 primary: '#ef4444', // red-500
-                secondary: '#18181b',
+                secondary: '#111', // Match background
               },
             },
             loading: {
               style: {
-                background: '#18181b',
+                background: '#111',
                 color: '#fff',
               }
             }

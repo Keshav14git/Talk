@@ -12,6 +12,7 @@ import { useChatStore } from './store/useChatStore';
 import { Loader } from "lucide-react";
 import { Toaster } from "react-hot-toast";
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import CalendarPage from './pages/CalendarPage';
 
 const App = () => {
   const { authUser, checkAuth, isCheckingAuth } = useAuthStore();

@@ -1,5 +1,4 @@
-import React from 'react'
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
 import HomePage from './pages/HomePage';
 import SignUpPage from './pages/SignUpPage';
@@ -7,17 +6,16 @@ import LoginPage from './pages/LoginPage';
 import SettingsPage from './pages/SettingsPage';
 import ProfilePage from './pages/ProfilePage';
 import OnboardingPage from './pages/OnboardingPage';
-import Navbar from './components/Navbar.jsx'
-import Sidebar from './components/Sidebar.jsx';
-import { useAuthStore } from './store/useAuthStore.js';
-import { useChatStore } from './store/useChatStore.js';
-import { Loader } from "lucide-react"
-import { Toaster } from "react-hot-toast"
+import WorkspaceLayout from './components/WorkspaceLayout';
+import { useAuthStore } from './store/useAuthStore';
+import { useChatStore } from './store/useChatStore';
+import { Loader } from "lucide-react";
+import { Toaster } from "react-hot-toast";
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
 const App = () => {
   const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
-  const { selectedUser, subscribeToMessages, unsubscribeFromMessages } = useChatStore();
+  const { subscribeToMessages, unsubscribeFromMessages } = useChatStore();
 
   useEffect(() => {
     checkAuth();
@@ -30,8 +28,6 @@ const App = () => {
     }
   }, [authUser, subscribeToMessages, unsubscribeFromMessages]);
 
-  console.log({ authUser });
-
   if (isCheckingAuth && !authUser) return (
     <div className="flex items-center justify-center h-screen bg-gray-50">
       <Loader className="size-10 animate-spin text-gray-400" />
@@ -40,60 +36,56 @@ const App = () => {
 
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-      <div className="flex h-screen bg-gray-900 overflow-hidden font-sans">
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to="/" />} />
+        <Route path="/signup" element={!authUser ? <SignUpPage /> : <Navigate to="/" />} />
 
-        {/* Sidebar - Global & Full Height */}
-        {authUser && (
-          <div className={`h-full shrink-0 border-r border-gray-700 transition-all duration-300 ease-in-out
-            ${selectedUser ? "hidden md:flex" : "flex"} 
-          `}>
-            <Sidebar />
-          </div>
-        )}
+        {/* Protected Workspace Layout */}
+        <Route path="/" element={authUser ? <WorkspaceLayout /> : <Navigate to="/login" />}>
+          {/* Default Redirect to Workspace - Logic handled in Layout useEffect, but we need a placeholder index */}
+          <Route index element={<div className="flex-1 bg-black flex items-center justify-center text-gray-500">Loading Workspace...</div>} />
 
-        <main className="flex-1 flex flex-col h-full w-full relative min-w-0">
-          <div className="flex-1 flex overflow-hidden relative">
-            <Routes>
-              <Route path="/" element={authUser ? <HomePage /> : <Navigate to="/login" />} />
-              <Route path="/signup" element={!authUser ? <SignUpPage /> : <Navigate to="/" />} />
-              <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to="/" />} />
-              <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login" />} />
-              <Route path="/onboarding" element={authUser ? <OnboardingPage /> : <Navigate to="/login" />} />
-            </Routes>
-          </div>
-        </main>
+          <Route path="workspace/:orgId/chat" element={<HomePage />} />
+          {/* Calendar Route Placeholder */}
+          <Route path="workspace/:orgId/calendar" element={<CalendarPage />} />
 
-        <Toaster
-          toastOptions={{
-            className: '!bg-[#111] !border !border-[#333] !text-white font-sans !rounded-xl !shadow-xl',
+          <Route path="profile" element={<ProfilePage />} />
+          <Route path="settings" element={<SettingsPage />} />
+        </Route>
+
+        <Route path="/onboarding" element={authUser ? <OnboardingPage /> : <Navigate to="/login" />} />
+      </Routes>
+
+      <Toaster
+        toastOptions={{
+          className: '!bg-[#111] !border !border-[#333] !text-white font-sans !rounded-xl !shadow-xl',
+          style: {
+            background: '#111',
+            border: '0px solid #000000ff',
+            color: '#ffffffff',
+            padding: '12px 16px',
+          },
+          success: {
+            iconTheme: {
+              primary: '#006015ff',
+              secondary: '#111',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#830202ff',
+              secondary: '#111',
+            },
+          },
+          loading: {
             style: {
-              background: '#111', // Card background Match
-              border: '0px solid #000000ff', // Input/Card border Match
-              color: '#ffffffff',
-              padding: '12px 16px',
-            },
-            success: {
-              iconTheme: {
-                primary: '#006015ff', // green-500
-                secondary: '#111', // Match background
-              },
-            },
-            error: {
-              iconTheme: {
-                primary: '#830202ff', // red-500
-                secondary: '#111', // Match background
-              },
-            },
-            loading: {
-              style: {
-                background: '#171717ff',
-                color: '#fff',
-              }
+              background: '#171717ff',
+              color: '#fff',
             }
-          }}
-        />
-      </div>
+          }
+        }}
+      />
     </GoogleOAuthProvider>
   );
 };

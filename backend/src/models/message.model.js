@@ -23,6 +23,16 @@ const messageSchema = new mongoose.Schema(
         image: {
             type: String,
         },
+        orgId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Organization',
+            required: true, // Enterprise Strictness
+        },
+        channelId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Channel',
+            required: false, // If null, it's a DM
+        },
         replyTo: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Message',

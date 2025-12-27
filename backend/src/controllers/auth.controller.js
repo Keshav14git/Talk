@@ -101,13 +101,45 @@ export const verifyOtp = async (req, res) => {
         user.otpExpires = undefined;
         await user.save();
 
+        // Enterprise: Provision Default Org if needed
+        let activeOrgId = user.lastActiveOrgId;
+        if (!activeOrgId) {
+            // Check if they have any orgs
+            const existingMember = await import("../models/orgMember.model.js").then(m => m.default.findOne({ userId: user._id }));
+
+            if (existingMember) {
+                user.lastActiveOrgId = existingMember.orgId;
+                activeOrgId = existingMember.orgId;
+                await user.save();
+            } else {
+                // Determine Org Name
+                const orgName = (user.fullName || user.email.split('@')[0]) + "'s Workspace";
+                const slug = orgName.toLowerCase().replace(/[^a-z0-9]/g, "-") + "-" + Date.now().toString().slice(-4);
+
+                const Organization = (await import("../models/organization.model.js")).default;
+                const OrgMember = (await import("../models/orgMember.model.js")).default;
+                const Channel = (await import("../models/channel.model.js")).default;
+
+                const newOrg = new Organization({ name: orgName, slug, ownerId: user._id });
+                await newOrg.save();
+
+                await new OrgMember({ userId: user._id, orgId: newOrg._id, role: "owner" }).save();
+                await new Channel({ orgId: newOrg._id, name: "General", slug: "general", createdBy: user._id }).save();
+
+                user.lastActiveOrgId = newOrg._id;
+                activeOrgId = newOrg._id;
+                await user.save();
+            }
+        }
+
         generateToken(user._id, res);
         res.status(200).json({
             _id: user._id,
             email: user.email,
             fullName: user.fullName,
             profilePic: user.profilePic,
-            isNewUser: user.fullName === "New User" // Flag for frontend redirection
+            lastActiveOrgId: activeOrgId, // Send this to frontend
+            isNewUser: user.fullName === "New User"
         });
 
     } catch (error) {
@@ -150,12 +182,42 @@ export const googleAuth = async (req, res) => {
             await user.save();
         }
 
+        // Enterprise: Provision Default Org if needed
+        let activeOrgId = user.lastActiveOrgId;
+        if (!activeOrgId) {
+            const existingMember = await import("../models/orgMember.model.js").then(m => m.default.findOne({ userId: user._id }));
+
+            if (existingMember) {
+                user.lastActiveOrgId = existingMember.orgId;
+                activeOrgId = existingMember.orgId;
+                await user.save();
+            } else {
+                const orgName = (user.fullName || "My") + " Workspace";
+                const slug = orgName.toLowerCase().replace(/[^a-z0-9]/g, "-") + "-" + Date.now().toString().slice(-4);
+
+                const Organization = (await import("../models/organization.model.js")).default;
+                const OrgMember = (await import("../models/orgMember.model.js")).default;
+                const Channel = (await import("../models/channel.model.js")).default;
+
+                const newOrg = new Organization({ name: orgName, slug, ownerId: user._id });
+                await newOrg.save();
+
+                await new OrgMember({ userId: user._id, orgId: newOrg._id, role: "owner" }).save();
+                await new Channel({ orgId: newOrg._id, name: "General", slug: "general", createdBy: user._id }).save();
+
+                user.lastActiveOrgId = newOrg._id;
+                activeOrgId = newOrg._id;
+                await user.save();
+            }
+        }
+
         generateToken(user._id, res);
         res.status(200).json({
             _id: user._id,
             email: user.email,
             fullName: user.fullName,
             profilePic: user.profilePic,
+            lastActiveOrgId: activeOrgId,
         });
 
     } catch (error) {

@@ -45,6 +45,11 @@ const userSchema = new mongoose.Schema(
         googleId: {
             type: String,
         },
+        // Enterprise Context
+        lastActiveOrgId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Organization"
+        }
 
     },
     {

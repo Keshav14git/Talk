@@ -11,6 +11,8 @@ import authRoutes from "./routes/auth.route.js";
 import messageRoutes from "./routes/message.route.js";
 import connectionRoutes from './routes/connection.route.js';
 import groupRoutes from './routes/group.route.js';
+import organizationRoutes from "./routes/organization.route.js";
+import calendarRoutes from "./routes/calendar.route.js";
 import { app, server } from "./lib/socket.js";
 
 dotenv.config();

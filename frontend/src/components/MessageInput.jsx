@@ -5,15 +5,27 @@ import { Send, X, Paperclip, Reply, Smile, Image as ImageIcon, Gift } from "luci
 import toast from "react-hot-toast";
 import EmojiPicker from "emoji-picker-react";
 
-// Curated GIF List (Demo)
-const DEMO_GIFS = [
-  "https://media.tenor.com/_MJOq_W2z9YAAAAM/cat-typing.gif",
-  "https://media.tenor.com/F02C4pBN2KUAAAAM/coding.gif",
-  "https://media.tenor.com/bCpvvJ5p0W8AAAAM/ok-hand.gif",
-  "https://media.tenor.com/qRsh_sX8sB4AAAAM/thumbs-up.gif",
-  "https://media.tenor.com/QW6gPqR8wW4AAAAM/laughing.gif",
-  "https://media.tenor.com/pC98e0W1k78AAAAM/crying.gif",
-];
+// Categorized GIF Library (Mocking a real API)
+const GIF_CATEGORIES = {
+  trending: [
+    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbW5lenZyZHI5OXM2eW95b3pmMG40Nqs1Mzdmb3VlbnR3M2Z3OSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/L2QlXq3zftZSg/giphy.gif", // Cat typing
+    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3R6eW55b3pmMG40Nqs1Mzdmb3VlbnR3M2Z3OSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3oKIPnAiaMCws8nOsE/giphy.gif", // Thumbs up
+    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbW5lenZyZHI5OXM2eW95b3pmMG40Nqs1Mzdmb3VlbnR3M2Z3OSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/IsfrRWzbVtiEw/giphy.gif", // Dog hello
+  ],
+  happy: [
+    "https://media.giphy.com/media/11sBLVxNs7v6WA/giphy.gif", // Minions cheering
+    "https://media.giphy.com/media/chzz1FQgqhytWRWbp3/giphy.gif", // Excited
+    "https://media.giphy.com/media/TdfyKrN7HGTIY/giphy.gif", // Success kid
+  ],
+  sad: [
+    "https://media.giphy.com/media/OPU6wzx8JrHna/giphy.gif", // Crying cat
+    "https://media.giphy.com/media/zoaKdD17n4aR2/giphy.gif", // Sad pikachu
+  ],
+  work: [
+    "https://media.giphy.com/media/ule4vhcY1xEKQ/giphy.gif", // Typing fast
+    "https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif", // Coding cat
+  ]
+};
 
 const MessageInput = () => {
   const [text, setText] = useState("");
@@ -24,7 +36,16 @@ const MessageInput = () => {
   // Feature Toggles
   const [showEmoji, setShowEmoji] = useState(false);
   const [showGifs, setShowGifs] = useState(false);
-  // Share menu is just the file input for now, but could be a dropdown
+  const [gifSearch, setGifSearch] = useState("");
+  const [activeCategory, setActiveCategory] = useState("trending");
+
+  // Filter GIFs
+  const displayGifs = gifSearch
+    ? Object.values(GIF_CATEGORIES).flat().filter(() => true) // In a real app we'd search, here we just show all matches.
+      // Actually let's just show 'trending' if no search, or match category names if search matches
+      .filter((_, i) => i < 10) // Limit results
+    : GIF_CATEGORIES[activeCategory] || GIF_CATEGORIES.trending;
+
 
   const { sendMessage, selectedUser, replyMessage, setReplyMessage } = useChatStore();
   const { authUser } = useAuthStore();
@@ -154,18 +175,52 @@ const MessageInput = () => {
       {showGifs && (
         <div className="absolute bottom-[80px] left-16 z-50 animate-in fade-in slide-in-from-bottom-2">
           <div className="bg-[#111] border border-gray-800 rounded-2xl shadow-2xl p-3 w-[320px]">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">Trending GIFs</span>
-              <button onClick={() => setShowGifs(false)} className="p-1 hover:bg-gray-800 rounded-full text-gray-400"><X size={14} /></button>
+            {/* Header & Search */}
+            <div className="flex items-center gap-2 mb-3">
+              <div className="relative flex-1 bg-gray-900 rounded-lg overflow-hidden border border-gray-800 focus-within:border-gray-600 transition-colors">
+                <input
+                  type="text"
+                  placeholder="Search GIFs..."
+                  className="w-full bg-transparent text-sm text-gray-200 px-3 py-1.5 focus:outline-none placeholder:text-gray-600"
+                  value={gifSearch}
+                  onChange={(e) => {
+                    setGifSearch(e.target.value);
+                    // Simple mock "Search" logic: match Text to Category keys
+                    const term = e.target.value.toLowerCase();
+                    const foundCat = Object.keys(GIF_CATEGORIES).find(c => c.includes(term));
+                    if (foundCat) setActiveCategory(foundCat);
+                  }}
+                />
+              </div>
+              <button onClick={() => setShowGifs(false)} className="p-1.5 hover:bg-gray-800 rounded-full text-gray-400"><X size={14} /></button>
             </div>
-            <div className="grid grid-cols-3 gap-2 max-h-[300px] overflow-y-auto custom-scrollbar p-1">
-              {DEMO_GIFS.map((gif, i) => (
+
+            {/* Categories Tags */}
+            {!gifSearch && (
+              <div className="flex gap-1.5 overflow-x-auto custom-scrollbar pb-2 mb-1">
+                {Object.keys(GIF_CATEGORIES).map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => setActiveCategory(cat)}
+                    className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide transition-colors whitespace-nowrap
+                       ${activeCategory === cat ? 'bg-white text-black' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}
+                     `}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Grid */}
+            <div className="grid grid-cols-3 gap-2 max-h-[250px] overflow-y-auto custom-scrollbar p-1">
+              {displayGifs.map((gif, i) => (
                 <button
                   key={i}
                   onClick={() => handleGifSelect(gif)}
-                  className="rounded-lg overflow-hidden hover:ring-2 ring-primary transition-all aspect-square relative group"
+                  className="rounded-lg overflow-hidden hover:ring-2 ring-primary transition-all aspect-square relative group bg-gray-800"
                 >
-                  <img src={gif} alt="GIF" className="w-full h-full object-cover" />
+                  <img src={gif} alt="GIF" className="w-full h-full object-cover" loading="lazy" />
                 </button>
               ))}
             </div>

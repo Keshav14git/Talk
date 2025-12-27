@@ -36,6 +36,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/connections", connectionRoutes);
 app.use("/api/groups", groupRoutes);
+app.use("/api/orgs", organizationRoutes);
+app.use("/api/calendar", calendarRoutes);
 
 // Serve static files from the frontend build directory
 const frontendPath = path.join(__dirname, "../frontend/dist");

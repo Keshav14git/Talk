@@ -141,28 +141,26 @@ export const googleAuth = async (req, res) => {
             }
         } else {
             // Create new user
-            user = new User({
-                email,
+            email,
                 fullName: name,
-                profilePic: picture,
-                googleId: sub,
-                password: "", // No password for Google users
+                    profilePic: picture,
+                        googleId: sub,
             });
-            await user.save();
-        }
+        await user.save();
+    }
 
         generateToken(user._id, res);
-        res.status(200).json({
-            _id: user._id,
-            email: user.email,
-            fullName: user.fullName,
-            profilePic: user.profilePic,
-        });
+    res.status(200).json({
+        _id: user._id,
+        email: user.email,
+        fullName: user.fullName,
+        profilePic: user.profilePic,
+    });
 
-    } catch (error) {
-        console.log("Error in googleAuth:", error);
-        res.status(500).json({ message: error.message });
-    }
+} catch (error) {
+    console.log("Error in googleAuth:", error);
+    res.status(500).json({ message: error.message });
+}
 };
 
 // Keep existing methods for backward compatibility or profile updates

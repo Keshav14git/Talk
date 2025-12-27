@@ -161,7 +161,7 @@ export const googleAuth = async (req, res) => {
 
     } catch (error) {
         console.log("Error in googleAuth:", error);
-        res.status(500).json({ message: "Internal Server Error" });
+        res.status(500).json({ message: error.message });
     }
 };
 

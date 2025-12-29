@@ -3,9 +3,8 @@ import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
 import SidebarSkeleton from "./skeletons/SidebarSkeleton";
 import {
-  Users, UserPlus, CirclePlus, MessageSquare, Archive,
-  Search, Bell, Menu, ListChecks, Check, Hash, User, Compass, Lock,
-  Settings, LogOut, ChevronsLeft, ChevronsRight, Briefcase
+  Users, CirclePlus, MessageSquare, Archive,
+  Search, Bell, Settings, LogOut, Briefcase, Hash, ChevronDown, ChevronRight, Lock
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import AddFriendModal from "./AddFriendModal";
@@ -19,20 +18,29 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const Sidebar = () => {
   const {
-    getUsers, users,
-    getGroups, groups,
     selectedUser, setSelectedUser,
     isUsersLoading,
-    viewType, setViewType,
-    friendRequests, getFriendRequests,
-    unfriendUser, deleteConversation,
+    deleteConversation,
     isSidebarOpen, toggleSidebar, setSidebarOpen
   } = useChatStore();
 
   const { logout, onlineUsers, authUser } = useAuthStore();
+  const { orgMembers, orgProjects, currentOrg, fetchOrgData } = useOrgStore();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [activeModal, setActiveModal] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  // Section Toggle States
+  const [sections, setSections] = useState({
+    projects: true,
+    channels: true,
+    directMessages: true
+  });
+
+  const toggleSection = (section) => {
+    setSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -40,268 +48,203 @@ const Sidebar = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const { orgProjects } = useOrgStore(); // Import projects
-
+  // Ensure org data is loaded (redundant if Layout does it, but safe)
   useEffect(() => {
-    getUsers();
-    getGroups();
-    getFriendRequests();
-  }, [getUsers, getGroups, getFriendRequests]);
+    if (currentOrg && orgMembers.length === 0) {
+      fetchOrgData();
+    }
+  }, [currentOrg, fetchOrgData, orgMembers.length]);
+
 
   const filterList = (list) => {
+    if (!list) return [];
     return list.filter(item => {
-      const name = item.fullName || item.name;
+      const name = item.fullName || item.name || "";
       return name.toLowerCase().includes(searchQuery.toLowerCase());
     });
   };
 
-  const filteredUsers = filterList(users.filter(u => !u.isArchived));
-  const filteredGroups = filterList(groups);
-  const filteredArchived = filterList(users.filter(u => u.isArchived));
+  // Derived Lists
+  const filteredProjects = filterList(orgProjects);
+  // Separate Channels (public/private) from general groups if needed. 
+  // For now assuming orgProjects covers projects. 
+  // We need a specific call for Channels if they are stored in `groups` or separate.
+  // The backend supports `getOrgChannels`. We need to use `useChatStore` or `useOrgStore` to fetch them.
+  // Actually, currently `useChatStore` fetches `groups`. We should probably migrate Channels to `useOrgStore` or filter `groups`.
+  // Let's use `groups` from `useChatStore` for now but filter by type='channel'.
+  const { groups, getGroups } = useChatStore();
+  useEffect(() => { getGroups(); }, [getGroups]);
 
-  const handleNavClick = (type) => {
-    if (viewType === type && isSidebarOpen) {
-      // Optional toggle logic if desired
-    } else {
-      setViewType(type);
-      setSidebarOpen(true);
-    }
-  };
+  const filteredChannels = filterList(groups.filter(g => g.type === 'channel'));
+  const filteredMembers = filterList(orgMembers.filter(m => m._id !== authUser?._id)); // Exclude self
 
   if (isUsersLoading) return <SidebarSkeleton />;
 
   return (
-    <aside className="h-full flex overflow-hidden bg-gray-800 w-full md:w-auto transition-all">
-      {/* 1. Navigation Rail (Leftmost strip) - Condensed & Dark */}
-      <div className="w-[64px] flex flex-col items-center py-3 bg-gray-900 border-r border-gray-700 h-full flex-shrink-0 z-20">
-        {/* Top: Brand/Logo */}
-        <div className="mb-4 flex justify-center cursor-pointer" onClick={() => setSidebarOpen(!isSidebarOpen)}>
-          <div className="size-8 bg-primary/10 rounded-lg flex items-center justify-center text-primary font-bold text-base hover:bg-primary/20 transition-colors">
-            T
+    <aside className="h-full flex flex-col w-full md:w-[300px] border-r border-gray-800 bg-[#0a0a0a] flex-shrink-0 relative z-20">
+      {/* Workspace Header */}
+      <div className="h-16 flex items-center justify-between px-4 border-b border-gray-800 shrink-0">
+        <div className="flex items-center gap-3 overflow-hidden">
+          <div className="size-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-lg shrink-0">
+            {currentOrg?.name?.substring(0, 2).toUpperCase() || "W"}
+          </div>
+          <div className="flex flex-col min-w-0">
+            <h1 className="font-bold text-gray-200 truncate leading-tight">{currentOrg?.name || "Workspace"}</h1>
+            <span className="text-[10px] text-gray-500 truncate">{authUser?.email}</span>
           </div>
         </div>
-
-        {/* Nav Items - Condensed Gaps */}
-        <div className="flex-1 flex flex-col gap-1 w-full items-center px-1.5">
-          <NavIcon
-            imgSrc="/chat.png"
-            isActive={viewType === "chats" && isSidebarOpen}
-            onClick={() => handleNavClick("chats")}
-            title="Overview" // Chats = Direct Messages = Team Members
-          />
-          <NavIcon
-            imgSrc="/group.png" // Using group icon for Projects for now or find better
-            isActive={viewType === "projects" && isSidebarOpen}
-            onClick={() => handleNavClick("projects")}
-            title="Projects"
-            icon={Briefcase} // Fallback
-          />
-          <NavIcon
-            imgSrc="/channel.png"
-            isActive={viewType === "channels" && isSidebarOpen}
-            onClick={() => handleNavClick("channels")}
-            title="Channels"
-          />
-          <NavIcon
-            imgSrc="/group.png" // Legacy Groups
-            isActive={viewType === "groups" && isSidebarOpen}
-            onClick={() => handleNavClick("groups")}
-            title="Groups"
-          />
-          <div className="h-px w-6 bg-gray-700 my-1.5" />
-          <NavIcon
-            imgSrc="/unarchieve.png"
-            isActive={viewType === "archived" && isSidebarOpen}
-            onClick={() => handleNavClick("archived")}
-            title="Archived"
-          />
-        </div>
-
-        {/* Bottom: Settings & User - Condensed */}
-        <div className="mt-auto flex flex-col gap-1 w-full items-center mb-3">
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setActiveModal('requests')}
-            className="relative p-2.5 rounded-xl text-gray-500 hover:text-gray-100 hover:bg-gray-800 transition-colors flex items-center justify-center"
-            title="Friend Requests"
-          >
-            <img src="/bell.png" alt="Requests" className="size-6 object-contain opacity-60 hover:opacity-100 invert brightness-0 transition-all" />
-            {friendRequests.length > 0 && <span className="absolute top-1.5 right-1.5 size-2 bg-red-500 rounded-full border-2 border-gray-900" />}
-          </motion.button>
-
-          <Link to="/settings" title="Settings" onClick={() => isMobile && setSidebarOpen(false)}>
-            <motion.div
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              className="p-2.5 rounded-xl text-gray-500 hover:text-gray-100 hover:bg-gray-800 transition-colors flex items-center justify-center"
-            >
-              <img src="/setting.png" alt="Settings" className="size-6 object-contain opacity-60 hover:opacity-100 invert brightness-0 transition-all" />
-            </motion.div>
-          </Link>
-
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={logout}
-            className="p-2.5 rounded-xl text-gray-500 hover:text-red-400 hover:bg-rgba(255,0,0,0.1) transition-colors flex items-center justify-center"
-            title="Logout"
-          >
-            <img src="/logout.png" alt="Logout" className="size-6 object-contain opacity-60 hover:opacity-100 invert brightness-0 transition-all" />
-          </motion.button>
-
-          {/* Mini Profile Av */}
-          <Link to="/profile" className="mt-1" onClick={() => isMobile && setSidebarOpen(false)}>
-            <img
-              src={authUser?.profilePic || "/avatar.png"}
-              alt="Profile"
-              className="size-8 rounded-full object-cover ring-2 ring-gray-700 shadow-md bg-gray-700"
-            />
-          </Link>
+        {/* Settings / Menu */}
+        <div className="flex items-center">
+          <button onClick={() => setActiveModal('requests')} title="Invites" className="p-2 text-gray-400 hover:text-white transition-colors">
+            <Bell className="size-4" />
+          </button>
         </div>
       </div>
 
-      {/* 2. Side Panel (List) - Collapsible with Framer Motion */}
-      <motion.div
-        initial={false}
-        animate={{
-          width: isSidebarOpen ? (isMobile ? "calc(100vw - 64px)" : 300) : 0,
-          opacity: isSidebarOpen ? 1 : 0
-        }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="flex flex-col bg-gray-800 h-full border-r border-gray-700 overflow-hidden relative shadow-xl shadow-black/20 z-10"
-      >
-        <div className="w-full md:w-[300px] flex flex-col h-full"> {/* Inner wrapper */}
-          {/* Header */}
-          <div className="h-16 flex items-center justify-between px-5 shrink-0 border-b border-gray-700/50">
-            <h2 className="text-gray-100 font-bold text-xl tracking-tight">
-              {viewType === 'chats' && 'Team Members'}
-              {viewType === 'projects' && 'Projects'}
-              {viewType === 'groups' && 'Groups'}
-              {viewType === 'channels' && 'Channels'}
-              {viewType === 'archived' && 'Archived'}
-            </h2>
+      {/* Search */}
+      <div className="px-3 py-2">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-gray-500" />
+          <input
+            type="text"
+            placeholder="Jump to..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-[#1A1A1A] border border-gray-800/50 text-gray-300 text-sm rounded-md pl-9 pr-3 py-1.5 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all placeholder-gray-600"
+          />
+        </div>
+      </div>
 
-            <div className="flex gap-1 items-center">
-              {/* Action Buttons */}
-              <div className="flex gap-0.5">
-                {viewType === 'channels' ? (
-                  <>
-                    <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setActiveModal('createChannel')} className="p-1.5 bg-gray-700/50 hover:bg-gray-700 text-gray-400 hover:text-primary rounded-lg transition-colors"><CirclePlus className="size-5" /></motion.button>
-                    <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setActiveModal('explore')} className="p-1.5 bg-gray-700/50 hover:bg-gray-700 text-gray-400 hover:text-primary rounded-lg transition-colors"><Compass className="size-5" /></motion.button>
-                  </>
-                ) : viewType === 'projects' ? (
-                  <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setActiveModal('createProject')} className="p-1.5 bg-gray-700/50 hover:bg-gray-700 text-gray-400 hover:text-primary rounded-lg transition-colors"><CirclePlus className="size-5" /></motion.button>
-                ) : viewType === 'groups' ? (
-                  <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setActiveModal('createGroup')} className="p-1.5 bg-gray-700/50 hover:bg-gray-700 text-gray-400 hover:text-primary rounded-lg transition-colors"><CirclePlus className="size-5" /></motion.button>
-                ) : (
-                  // Chats / Members
-                  null // No add button for team members here yet, handled via invite
-                )}
-              </div>
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto px-2 custom-scrollbar space-y-6 py-2">
 
-              {/* Collapse Button */}
-              <button onClick={toggleSidebar} className="p-1.5 text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 rounded-lg transition-all ml-0.5">
-                <ChevronsLeft className="size-5" />
+        {/* PROJECTS SECTION */}
+        <div className="space-y-0.5">
+          <div className="group flex items-center justify-between px-2 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-300 cursor-pointer" onClick={() => toggleSection('projects')}>
+            <div className="flex items-center gap-1">
+              {sections.projects ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+              Projects
+            </div>
+            <button onClick={(e) => { e.stopPropagation(); setActiveModal('createProject'); }} className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-gray-800 rounded text-gray-400 hover:text-white transition-all">
+              <CirclePlus className="size-3.5" />
+            </button>
+          </div>
+
+          {sections.projects && (
+            <div className="space-y-0.5">
+              {filteredProjects.map(project => (
+                <ListItem
+                  key={project._id}
+                  item={project}
+                  type="project"
+                  icon={Briefcase}
+                  isSelected={selectedUser?._id === project._id}
+                  onClick={() => setSelectedUser(project, 'project')}
+                />
+              ))}
+              {filteredProjects.length === 0 && (
+                <div className="px-4 py-2 text-xs text-gray-600 italic">No projects yet</div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* CHANNELS SECTION */}
+        <div className="space-y-0.5">
+          <div className="group flex items-center justify-between px-2 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-300 cursor-pointer" onClick={() => toggleSection('channels')}>
+            <div className="flex items-center gap-1">
+              {sections.channels ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+              Channels
+            </div>
+            <div className="flex gap-1 opacity-0 group-hover:opacity-100">
+              <button onClick={(e) => { e.stopPropagation(); setActiveModal('explore'); }} className="p-0.5 hover:bg-gray-800 rounded text-gray-400 hover:text-white transition-all" title="Browse">
+                <Search className="size-3.5" />
+              </button>
+              <button onClick={(e) => { e.stopPropagation(); setActiveModal('createChannel'); }} className="p-0.5 hover:bg-gray-800 rounded text-gray-400 hover:text-white transition-all" title="Create">
+                <CirclePlus className="size-3.5" />
               </button>
             </div>
           </div>
 
-          {/* Search */}
-          <div className="px-5 pb-3 pt-3 shrink-0">
-            <div className="relative group">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-gray-500 group-focus-within:text-primary transition-colors" />
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-gray-900/50 text-gray-200 placeholder-gray-500 pl-10 pr-4 py-2.5 rounded-xl text-sm border border-gray-700/50 ring-0 focus:ring-1 focus:ring-primary/50 focus:border-primary/50 focus:bg-gray-900 transition-all shadow-sm"
-              />
+          {sections.channels && (
+            <div className="space-y-0.5">
+              {filteredChannels.map(channel => (
+                <ListItem
+                  key={channel._id}
+                  item={{ ...channel, fullName: channel.name }}
+                  type="channel"
+                  icon={Hash}
+                  isSelected={selectedUser?._id === channel._id}
+                  onClick={() => setSelectedUser(channel, 'channel')}
+                />
+              ))}
+              {filteredChannels.length === 0 && (
+                <div className="px-4 py-2 text-xs text-gray-600 italic">No channels joined</div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* DIRECT MESSAGES (Org Members) */}
+        <div className="space-y-0.5">
+          <div className="flex items-center justify-between px-2 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => toggleSection('directMessages')}>
+            <div className="flex items-center gap-1">
+              {sections.directMessages ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+              People
             </div>
           </div>
 
-          {/* List Content */}
-          <div className="flex-1 overflow-y-auto px-2 pb-3 space-y-0.5 custom-scrollbar">
-            {viewType === "groups" && filteredGroups.filter(g => g.type !== 'channel').map((group) => (
-              <ListItem
-                key={group._id}
-                user={{ ...group, fullName: group.name, profilePic: group.image }}
-                icon={Lock}
-                isSelected={selectedUser?._id === group._id}
-                onClick={() => setSelectedUser(group, 'group')}
-                unreadCount={group.unreadCount}
-              />
-            ))}
+          {sections.directMessages && (
+            <div className="space-y-0.5">
+              {filteredMembers.map(member => {
+                // Member object usually has { _id, userId: {fullName...}, role } if populated from OrgMembers
+                // Or if it's the raw user object?
+                // Standardize: useOrgStore.orgMembers stores populated members.
+                // Structure: { _id, userId: { _id, fullName, ... }, role }
+                // The `item` passed to ListItem should be the User part with Role merged ideally
+                const userObj = member.userId || member;
+                const role = member.role;
 
-            {viewType === "projects" && orgProjects && orgProjects.map((project) => (
-              <ListItem
-                key={project._id}
-                user={{ ...project, fullName: project.name, profilePic: "/briefcase.png" }} // Fallback icon
-                icon={Briefcase}
-                isSelected={selectedUser?._id === project._id}
-                onClick={() => setSelectedUser(project, 'project')} // Handle project click
-              // unreadCount={project.unreadCount}
-              />
-            ))}
-
-            {viewType === "channels" && (
-              <>
-                {filteredGroups.filter(g => g.type === 'channel').map((channel) => (
+                return (
                   <ListItem
-                    key={channel._id}
-                    user={{ ...channel, fullName: channel.name, profilePic: channel.image }}
-                    icon={Hash}
-                    isSelected={selectedUser?._id === channel._id}
-                    onClick={() => setSelectedUser(channel, 'channel')}
-                    unreadCount={channel.unreadCount}
+                    key={userObj._id}
+                    item={{ ...userObj, role }} // Merge role for display
+                    type="user"
+                    isOnline={onlineUsers.includes(userObj._id)}
+                    isSelected={selectedUser?._id === userObj._id}
+                    onClick={() => setSelectedUser(userObj, 'user')}
+                    useAvatar={true}
                   />
-                ))}
-                {filteredGroups.filter(g => g.type === 'channel').length === 0 && (
-                  <div className="flex flex-col items-center justify-center p-6 text-center bg-gray-800/50 rounded-2xl mt-4 mx-2 border border-gray-700/30">
-                    <div className="size-10 bg-gray-700/50 rounded-full flex items-center justify-center text-gray-500 mb-2">
-                      <Compass className="size-5" />
-                    </div>
-                    <p className="text-xs text-gray-500 font-medium mb-1">No channels yet</p>
-                    <button onClick={() => setActiveModal('explore')} className="text-[10px] text-primary font-semibold hover:underline">Explore Public Channels</button>
-                  </div>
-                )}
-              </>
-            )}
-
-            {viewType === "chats" && filteredUsers.map((user) => (
-              <ListItem
-                key={user._id}
-                user={user}
-                icon={User}
-                isSelected={selectedUser?._id === user._id}
-                isOnline={onlineUsers.includes(user._id)}
-                onClick={() => setSelectedUser(user, 'user')}
-                useAvatar
-                unreadCount={user.unreadCount}
-              />
-            ))}
-
-            {viewType === "archived" && filteredArchived.map((user) => (
-              <ListItem
-                key={user._id}
-                user={user}
-                icon={Archive}
-                isSelected={selectedUser?._id === user._id}
-                isOnline={onlineUsers.includes(user._id)}
-                onClick={() => setSelectedUser(user, 'user')}
-                useAvatar
-                unreadCount={user.unreadCount}
-              />
-            ))}
-          </div>
+                );
+              })}
+              {filteredMembers.length === 0 && (
+                <div className="px-4 py-2 text-xs text-gray-600 italic">No other members</div>
+              )}
+            </div>
+          )}
         </div>
-      </motion.div>
 
-      {/* Modals - AnimatePresence wrapper for smoother unmount if we wrap them properly later, 
-         but individual modals can handle their own entry for now */}
-      <AnimatePresence mode="wait">
-        {activeModal === 'addFriend' && <AddFriendModal key="addFriend" onClose={() => setActiveModal(null)} />}
+      </div>
+
+      {/* User Footer */}
+      <div className="p-3 border-t border-gray-800 bg-[#0f0f0f]">
+        <div className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer transition-colors group">
+          <img src={authUser?.profilePic || "/avatar.png"} className="size-8 rounded-lg object-cover" alt="Me" />
+          <div className="flex-1 min-w-0 overflow-hidden">
+            <div className="font-medium text-gray-200 text-sm truncate">{authUser?.fullName}</div>
+            <div className="text-[10px] text-gray-500 flex items-center gap-1.5">
+              <span className="size-1.5 rounded-full bg-green-500 animate-pulse" />
+              Online
+            </div>
+          </div>
+          <button onClick={logout} className="p-1.5 text-gray-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100">
+            <LogOut className="size-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Modals */}
+      <AnimatePresence>
         {activeModal === 'requests' && <FriendRequestsModal key="requests" onClose={() => setActiveModal(null)} />}
         {activeModal === 'createGroup' && <CreateGroupModal key="createGroup" onClose={() => setActiveModal(null)} />}
         {activeModal === 'createProject' && <CreateProjectModal key="createProject" onClose={() => setActiveModal(null)} />}
@@ -312,149 +255,42 @@ const Sidebar = () => {
   );
 };
 
-// --- Sub Components ---
-
-const NavIcon = ({ icon: Icon, imgSrc, isActive, onClick, title, unreadCount }) => (
-  <motion.button
-    whileHover={{ scale: 1.1 }}
-    whileTap={{ scale: 0.9 }}
-    onClick={onClick}
-    className={`relative p-2.5 rounded-xl transition-all duration-200 group flex items-center justify-center
-            ${isActive
-        ? "bg-primary/10 shadow-[0_0_15px_rgba(255,86,54,0.1)]"
-        : "text-gray-500 hover:text-gray-300 hover:bg-gray-800"
-      }
-        `}
-    title={title}
-  >
-    {imgSrc ? (
-      <img
-        src={imgSrc}
-        alt={title}
-        className={`size-6 object-contain transition-all invert brightness-0 ${isActive ? "invert brightness-0 filter-none opacity-100 drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]" : "opacity-70 hover:opacity-100 invert brightness-0 hover:drop-shadow-[0_0_2px_rgba(255,255,255,0.8)]"}`}
-        style={{ filter: isActive ? 'invert(1) brightness(2)' : 'invert(1)' }}
-      />
-    ) : (
-      <Icon className={`size-6 transition-all ${isActive ? "text-primary fill-primary/20" : ""}`} strokeWidth={isActive ? 2 : 1.5} />
-    )}
-
-    {/* Active Indicator - Left Bar */}
-    {isActive && (
-      <motion.div
-        layoutId="activeNav"
-        className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary rounded-r-full shadow-[0_0_10px_rgba(255,86,54,0.5)]"
-      />
-    )}
-
-    {/* Unread Dot */}
-    {unreadCount > 0 && (
-      <div className="absolute top-1.5 right-1.5 size-2.5 bg-primary rounded-full border-2 border-gray-900 ring-1 ring-gray-900" />
-    )}
-    {/* Tooltip */}
-    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-4 px-2.5 py-1.5 bg-gray-900/90 text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 whitespace-nowrap z-50 shadow-sm backdrop-blur-sm translate-x-[-5px] group-hover:translate-x-0">
-      {title}
-    </div>
-  </motion.button>
-);
-
-
-const ListItem = ({ user, icon: Icon, isSelected, isOnline, onClick, useAvatar, unreadCount }) => {
-  // Helper to format time (e.g., "10:16" or "Yesterday")
-  const formatTime = (dateString) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    const now = new Date();
-    const isToday = date.toDateString() === now.toDateString();
-
-    if (isToday) {
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-    }
-    return "Yesterday";
-  };
-
-  const isMe = user.lastMessage?.senderId === "me" || user.lastMessage?.senderId === useAuthStore.getState().authUser?._id;
-
-  // Status Logic
-  // 1. Sent (1 Gray Tick) -> User Offline
-  // 2. Delivered (2 Gray Ticks) -> User Online
-  const isActive = isSelected; // Renamed for clarity with the new styling
-  const isChannel = user.type === 'channel';
-  const authUser = useAuthStore.getState().authUser;
-
+// Reusable List Item
+const ListItem = ({ item, type, icon: Icon, isSelected, isOnline, onClick, useAvatar }) => {
   return (
     <div
-      key={user._id}
       onClick={onClick}
-      className={`group w-full p-2.5 flex items-center gap-3 rounded-lg transition-all cursor-pointer relative
-        ${isActive ? "bg-white/5" : "hover:bg-white/5"}
-      `}
+      className={`
+                group flex items-center gap-3 px-2 py-1.5 rounded-md cursor-pointer transition-all
+                ${isSelected ? "bg-indigo-500/10 text-indigo-300" : "text-gray-400 hover:bg-white/5 hover:text-gray-200"}
+            `}
     >
-      {/* Active Indicator Line */}
-      {isActive && (
-        <div className="absolute left-0 top-3 bottom-3 w-[3px] bg-white rounded-r-full shadow-[0_0_10px_rgba(255,255,255,0.3)]" />
+      {useAvatar ? (
+        <div className="relative shrink-0">
+          <img src={item.profilePic || "/avatar.png"} alt={item.fullName} className="size-6 rounded-md object-cover" />
+          {isOnline && <span className="absolute -bottom-0.5 -right-0.5 size-2 bg-green-500 border-2 border-[#0a0a0a] rounded-full" />}
+        </div>
+      ) : (
+        <Icon className={`size-4 shrink-0 ${isSelected ? "text-indigo-400" : "text-gray-500 group-hover:text-gray-400"}`} />
       )}
 
-      {/* Avatar Container */}
-      <div className="relative">
-        <img
-          src={user.profilePic || "/avatar.png"}
-          alt={user.fullName}
-          className={`size-10 rounded-full object-cover border border-transparent transition-all
-             ${isActive ? "border-gray-500" : "group-hover:border-gray-700"}
-          `}
-        />
-        {/* Status Indicator (User Only) */}
-        {!isChannel && (
-          <span
-            className={`absolute bottom-0 right-0 size-3 rounded-full border-2 border-black
-              ${isOnline ? "bg-green-500" : "bg-gray-600"}
-            `}
-          />
+      <div className="flex-1 min-w-0 flex flex-col">
+        <div className="flex items-center justify-between">
+          <span className={`text-sm truncate ${isSelected ? "font-medium" : "font-normal"}`}>
+            {item.fullName || item.name}
+          </span>
+          {/* Unread badge/dot logic could go here */}
+        </div>
+
+        {/* Role or Recent Message snippet (Enterprise usually prefers Role, or snippet if active chat) */}
+        {item.role && (
+          <span className="text-[10px] text-gray-600 truncate capitalize">{item.role}</span>
         )}
-      </div>
-
-      {/* Info */}
-      <div className="flex-1 min-w-0 text-left">
-        <div className="flex items-center justify-between mb-0.5">
-          <div className="flex flex-col">
-            <span className={`text-[14px] truncate transition-colors ${isActive ? "font-semibold text-white" : "font-medium text-gray-400 group-hover:text-gray-200"}`}>
-              {user.fullName}
-            </span>
-            {user.role && (
-              <span className="text-[10px] text-gray-500 capitalize">{user.role}</span>
-            )}
-          </div>
-          {/* Time */}
-          {user.lastMessage && (
-            <span className="text-[10px] text-gray-600">
-              {formatTime(user.lastMessage.createdAt)}
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center gap-1">
-          {/* Message Status Icon (User Only) */}
-          {!isChannel && user.lastMessage && user.lastMessage.senderId === authUser._id && (
-            isOnline ?
-              <ListChecks className="size-3 text-white" /> :
-              <Check className="size-3 text-gray-500" />
-          )}
-
-          <div className={`text-[12px] truncate max-w-[140px] flex-1 ${isActive ? "text-gray-300" : "text-gray-600 group-hover:text-gray-500"}`}>
-            {user.lastMessage ? (
-              <>
-                {user.lastMessage.senderId === authUser._id ? "You: " : ""}
-                {user.lastMessage.text || (user.lastMessage.image ? "Sent an image" : "")}
-              </>
-            ) : (
-              <span className="italic opacity-50">No messages yet</span>
-            )}
-          </div>
-        </div>
       </div>
     </div>
   );
-}
+};
 
 export default Sidebar;
+
 

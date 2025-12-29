@@ -1,48 +1,122 @@
 import Organization from "../models/organization.model.js";
-import OrgMember from "../models/orgMember.model.js";
-import Channel from "../models/channel.model.js";
 import User from "../models/user.model.js";
+import OrgMember from "../models/orgMember.model.js";
 
-// Create a new Organization
+// Create Organization
 export const createOrganization = async (req, res) => {
     try {
         const { name } = req.body;
-        const ownerId = req.user._id;
+        const userId = req.user._id;
 
-        // Generate simple slug (in production, ensure uniqueness logic is robust)
-        const slug = name.toLowerCase().replace(/ /g, "-") + "-" + Date.now().toString().slice(-4);
+        if (!name) return res.status(400).json({ message: "Organization name is required" });
+
+        const slug = name.toLowerCase().replace(/\s+/g, '-') + "-" + Date.now().toString().slice(-4);
+        const joinCode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
         const newOrg = new Organization({
             name,
             slug,
-            ownerId,
+            ownerId: userId,
+            joinCode
         });
 
         await newOrg.save();
 
         // Add creator as Owner
         const member = new OrgMember({
-            userId: ownerId,
+            userId,
             orgId: newOrg._id,
-            role: "owner",
+            role: "owner"
         });
+
         await member.save();
 
-        // Create default "General" channel
-        const generalChannel = new Channel({
-            orgId: newOrg._id,
-            name: "General",
-            slug: "general",
-            isPrivate: false,
-            createdBy: ownerId
-        });
-        await generalChannel.save();
+        // Update User's last active org
+        await User.findByIdAndUpdate(userId, { lastActiveOrgId: newOrg._id });
 
-        res.status(201).json({ org: newOrg, channels: [generalChannel] });
-
+        res.status(201).json(newOrg);
     } catch (error) {
-        console.error("Error creating org:", error);
-        res.status(500).json({ message: "Internal Server Error" });
+        console.error("Error in createOrganization:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+// Join Organization
+export const joinOrganization = async (req, res) => {
+    try {
+        const { joinCode, orgName } = req.body;
+        const userId = req.user._id;
+
+        let org;
+
+        if (joinCode) {
+            org = await Organization.findOne({ joinCode });
+        } else if (orgName) {
+            // Case insensitive search
+            org = await Organization.findOne({ name: { $regex: new RegExp(`^${orgName}$`, 'i') } });
+        }
+
+        if (!org) {
+            return res.status(404).json({ message: "Organization not found" });
+        }
+
+        // Check if already a member
+        const existingMember = await OrgMember.findOne({ userId, orgId: org._id });
+        if (existingMember) {
+            return res.status(400).json({ message: "You are already a member of this organization" });
+        }
+
+        const newMember = new OrgMember({
+            userId,
+            orgId: org._id,
+            role: "member"
+        });
+
+        await newMember.save();
+
+        // Update User's last active org
+        await User.findByIdAndUpdate(userId, { lastActiveOrgId: org._id });
+
+        res.status(200).json(org);
+    } catch (error) {
+        console.error("Error in joinOrganization:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+// Get Org Data (Members, Projects, etc.)
+export const getOrganizationData = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const user = await User.findById(userId);
+
+        if (!user.lastActiveOrgId) {
+            return res.status(404).json({ message: "No active organization found" });
+        }
+
+        const orgId = user.lastActiveOrgId;
+
+        const org = await Organization.findById(orgId).populate("projects");
+        const members = await OrgMember.find({ orgId }).populate("userId", "fullName email profilePic role");
+
+        // Format members data
+        const formattedMembers = members.map(m => ({
+            _id: m.userId._id,
+            fullName: m.userId.fullName,
+            email: m.userId.email,
+            profilePic: m.userId.profilePic,
+            designation: m.userId.role, // "Product Manager"
+            accessLevel: m.role, // "admin" or "member"
+            joinedAt: m.createdAt
+        }));
+
+        res.status(200).json({
+            org,
+            members: formattedMembers
+        });
+    } catch (error) {
+        console.error("Error in getOrganizationData:", error);
+        res.status(500).json({ message: "Internal server error" });
     }
 };
 
@@ -57,31 +131,6 @@ export const getMyOrganizations = async (req, res) => {
         res.status(200).json(orgs);
     } catch (error) {
         console.error("Error fetching orgs:", error);
-        res.status(500).json({ message: "Internal Server Error" });
-    }
-};
-
-// Switch to an organization (Get details)
-export const getOrganizationDetails = async (req, res) => {
-    try {
-        const { orgId } = req.params;
-        const userId = req.user._id;
-
-        // Verify Membership
-        const isMember = await OrgMember.findOne({ userId, orgId });
-        if (!isMember) {
-            return res.status(403).json({ message: "Access Denied" });
-        }
-
-        const org = await Organization.findById(orgId);
-        const channels = await Channel.find({ orgId });
-
-        // Update user's last active org
-        await User.findByIdAndUpdate(userId, { lastActiveOrgId: orgId });
-
-        res.status(200).json({ org, channels, role: isMember.role });
-    } catch (error) {
-        console.error("Error fetching org details:", error);
         res.status(500).json({ message: "Internal Server Error" });
     }
 };

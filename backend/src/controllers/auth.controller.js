@@ -102,6 +102,7 @@ export const verifyOtp = async (req, res) => {
         await user.save();
 
         // Enterprise: Provision Default Org if needed
+        /*
         let activeOrgId = user.lastActiveOrgId;
         if (!activeOrgId) {
             // Check if they have any orgs
@@ -131,6 +132,8 @@ export const verifyOtp = async (req, res) => {
                 await user.save();
             }
         }
+        */
+        let activeOrgId = user.lastActiveOrgId;
 
         generateToken(user._id, res);
         res.status(200).json({
@@ -183,6 +186,7 @@ export const googleAuth = async (req, res) => {
         }
 
         // Enterprise: Provision Default Org if needed
+        /*
         let activeOrgId = user.lastActiveOrgId;
         if (!activeOrgId) {
             const existingMember = await import("../models/orgMember.model.js").then(m => m.default.findOne({ userId: user._id }));
@@ -210,6 +214,8 @@ export const googleAuth = async (req, res) => {
                 await user.save();
             }
         }
+        */
+        let activeOrgId = user.lastActiveOrgId;
 
         generateToken(user._id, res);
         res.status(200).json({

@@ -5,14 +5,16 @@ import SidebarSkeleton from "./skeletons/SidebarSkeleton";
 import {
   Users, UserPlus, CirclePlus, MessageSquare, Archive,
   Search, Bell, Menu, ListChecks, Check, Hash, User, Compass, Lock,
-  Settings, LogOut, ChevronsLeft, ChevronsRight
+  Settings, LogOut, ChevronsLeft, ChevronsRight, Briefcase
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import AddFriendModal from "./AddFriendModal";
 import FriendRequestsModal from "./FriendRequestsModal";
 import CreateGroupModal from "./CreateGroupModal";
+import CreateProjectModal from "./CreateProjectModal";
 import ExploreChannelsModal from "./ExploreChannelsModal";
 import CreateChannelModal from "./CreateChannelModal";
+import { useOrgStore } from "../store/useOrgStore";
 import { motion, AnimatePresence } from "framer-motion";
 
 const Sidebar = () => {
@@ -37,6 +39,8 @@ const Sidebar = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  const { orgProjects } = useOrgStore(); // Import projects
 
   useEffect(() => {
     getUsers();
@@ -83,19 +87,26 @@ const Sidebar = () => {
             imgSrc="/chat.png"
             isActive={viewType === "chats" && isSidebarOpen}
             onClick={() => handleNavClick("chats")}
-            title="Chats"
+            title="Overview" // Chats = Direct Messages = Team Members
           />
           <NavIcon
-            imgSrc="/group.png"
-            isActive={viewType === "groups" && isSidebarOpen}
-            onClick={() => handleNavClick("groups")}
-            title="Groups"
+            imgSrc="/group.png" // Using group icon for Projects for now or find better
+            isActive={viewType === "projects" && isSidebarOpen}
+            onClick={() => handleNavClick("projects")}
+            title="Projects"
+            icon={Briefcase} // Fallback
           />
           <NavIcon
             imgSrc="/channel.png"
             isActive={viewType === "channels" && isSidebarOpen}
             onClick={() => handleNavClick("channels")}
             title="Channels"
+          />
+          <NavIcon
+            imgSrc="/group.png" // Legacy Groups
+            isActive={viewType === "groups" && isSidebarOpen}
+            onClick={() => handleNavClick("groups")}
+            title="Groups"
           />
           <div className="h-px w-6 bg-gray-700 my-1.5" />
           <NavIcon
@@ -164,7 +175,8 @@ const Sidebar = () => {
           {/* Header */}
           <div className="h-16 flex items-center justify-between px-5 shrink-0 border-b border-gray-700/50">
             <h2 className="text-gray-100 font-bold text-xl tracking-tight">
-              {viewType === 'chats' && 'Messages'}
+              {viewType === 'chats' && 'Team Members'}
+              {viewType === 'projects' && 'Projects'}
               {viewType === 'groups' && 'Groups'}
               {viewType === 'channels' && 'Channels'}
               {viewType === 'archived' && 'Archived'}
@@ -178,10 +190,13 @@ const Sidebar = () => {
                     <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setActiveModal('createChannel')} className="p-1.5 bg-gray-700/50 hover:bg-gray-700 text-gray-400 hover:text-primary rounded-lg transition-colors"><CirclePlus className="size-5" /></motion.button>
                     <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setActiveModal('explore')} className="p-1.5 bg-gray-700/50 hover:bg-gray-700 text-gray-400 hover:text-primary rounded-lg transition-colors"><Compass className="size-5" /></motion.button>
                   </>
+                ) : viewType === 'projects' ? (
+                  <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setActiveModal('createProject')} className="p-1.5 bg-gray-700/50 hover:bg-gray-700 text-gray-400 hover:text-primary rounded-lg transition-colors"><CirclePlus className="size-5" /></motion.button>
                 ) : viewType === 'groups' ? (
                   <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setActiveModal('createGroup')} className="p-1.5 bg-gray-700/50 hover:bg-gray-700 text-gray-400 hover:text-primary rounded-lg transition-colors"><CirclePlus className="size-5" /></motion.button>
                 ) : (
-                  <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setActiveModal('addFriend')} className="p-1.5 bg-gray-700/50 hover:bg-gray-700 text-gray-400 hover:text-primary rounded-lg transition-colors"><UserPlus className="size-5" /></motion.button>
+                  // Chats / Members
+                  null // No add button for team members here yet, handled via invite
                 )}
               </div>
 
@@ -216,6 +231,17 @@ const Sidebar = () => {
                 isSelected={selectedUser?._id === group._id}
                 onClick={() => setSelectedUser(group, 'group')}
                 unreadCount={group.unreadCount}
+              />
+            ))}
+
+            {viewType === "projects" && orgProjects && orgProjects.map((project) => (
+              <ListItem
+                key={project._id}
+                user={{ ...project, fullName: project.name, profilePic: "/briefcase.png" }} // Fallback icon
+                icon={Briefcase}
+                isSelected={selectedUser?._id === project._id}
+                onClick={() => setSelectedUser(project, 'project')} // Handle project click
+              // unreadCount={project.unreadCount}
               />
             ))}
 
@@ -278,6 +304,7 @@ const Sidebar = () => {
         {activeModal === 'addFriend' && <AddFriendModal key="addFriend" onClose={() => setActiveModal(null)} />}
         {activeModal === 'requests' && <FriendRequestsModal key="requests" onClose={() => setActiveModal(null)} />}
         {activeModal === 'createGroup' && <CreateGroupModal key="createGroup" onClose={() => setActiveModal(null)} />}
+        {activeModal === 'createProject' && <CreateProjectModal key="createProject" onClose={() => setActiveModal(null)} />}
         {activeModal === 'createChannel' && <CreateChannelModal key="createChannel" onClose={() => setActiveModal(null)} />}
         {activeModal === 'explore' && <ExploreChannelsModal key="explore" onClose={() => setActiveModal(null)} onCreate={() => setActiveModal('createChannel')} />}
       </AnimatePresence>
@@ -389,9 +416,14 @@ const ListItem = ({ user, icon: Icon, isSelected, isOnline, onClick, useAvatar, 
       {/* Info */}
       <div className="flex-1 min-w-0 text-left">
         <div className="flex items-center justify-between mb-0.5">
-          <span className={`text-[14px] truncate transition-colors ${isActive ? "font-semibold text-white" : "font-medium text-gray-400 group-hover:text-gray-200"}`}>
-            {user.fullName}
-          </span>
+          <div className="flex flex-col">
+            <span className={`text-[14px] truncate transition-colors ${isActive ? "font-semibold text-white" : "font-medium text-gray-400 group-hover:text-gray-200"}`}>
+              {user.fullName}
+            </span>
+            {user.role && (
+              <span className="text-[10px] text-gray-500 capitalize">{user.role}</span>
+            )}
+          </div>
           {/* Time */}
           {user.lastMessage && (
             <span className="text-[10px] text-gray-600">

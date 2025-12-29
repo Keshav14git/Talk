@@ -7,7 +7,17 @@ import { getReceiverSocketId, io } from "../lib/socket.js";
 export const getUsersForSidebar = async (req, res) => {
   try {
     const loggedInUserId = req.user._id;
-    const filteredUsers = await User.find({ _id: { $ne: loggedInUserId } }).select("-password");
+    const activeOrgId = req.user.lastActiveOrgId;
+
+    if (!activeOrgId) {
+      return res.status(200).json([]);
+    }
+
+    // Enterprise: Only fetch users in the same organization
+    const filteredUsers = await User.find({
+      _id: { $ne: loggedInUserId },
+      lastActiveOrgId: activeOrgId
+    }).select("-password");
 
     res.status(200).json(filteredUsers);
   } catch (error) {

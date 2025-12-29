@@ -23,6 +23,17 @@ const organizationSchema = new mongoose.Schema(
             logo: String,
             primaryColor: String,
         },
+        projects: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Project",
+            }
+        ],
+        joinCode: {
+            type: String,
+            unique: true,
+            required: true,
+        },
     },
     { timestamps: true }
 );

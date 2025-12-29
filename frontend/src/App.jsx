@@ -14,6 +14,8 @@ import { Toaster } from "react-hot-toast";
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import CalendarPage from './pages/CalendarPage';
 
+import OrgSetup from './pages/OrgSetup';
+
 const App = () => {
   const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
   const { subscribeToMessages, unsubscribeFromMessages } = useChatStore();
@@ -42,8 +44,11 @@ const App = () => {
         <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to="/" />} />
         <Route path="/signup" element={!authUser ? <SignUpPage /> : <Navigate to="/" />} />
 
+        {/* Org Setup Route */}
+        <Route path="/org-setup" element={authUser && !authUser.lastActiveOrgId ? <OrgSetup /> : <Navigate to="/" />} />
+
         {/* Protected Workspace Layout */}
-        <Route path="/" element={authUser ? <WorkspaceLayout /> : <Navigate to="/login" />}>
+        <Route path="/" element={authUser ? (authUser.lastActiveOrgId ? <WorkspaceLayout /> : <Navigate to="/org-setup" />) : <Navigate to="/login" />}>
           {/* Default Redirect to Workspace - Logic handled in Layout useEffect, but we need a placeholder index */}
           <Route index element={<div className="flex-1 bg-black flex items-center justify-center text-gray-500">Loading Workspace...</div>} />
 

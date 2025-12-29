@@ -12,6 +12,8 @@ import messageRoutes from "./routes/message.route.js";
 import connectionRoutes from './routes/connection.route.js';
 import groupRoutes from './routes/group.route.js';
 import organizationRoutes from "./routes/organization.route.js";
+import projectRoutes from "./routes/project.route.js";
+import channelRoutes from "./routes/channel.route.js";
 import calendarRoutes from "./routes/calendar.route.js";
 import { app, server } from "./lib/socket.js";
 
@@ -37,6 +39,8 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/connections", connectionRoutes);
 app.use("/api/groups", groupRoutes);
 app.use("/api/orgs", organizationRoutes);
+app.use("/api/projects", projectRoutes);
+app.use("/api/channels", channelRoutes);
 app.use("/api/calendar", calendarRoutes);
 
 // Serve static files from the frontend build directory

@@ -11,6 +11,11 @@ const userSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
+        // Role/Designation e.g. "Product Manager", "Software Engineer"
+        role: {
+            type: String,
+            default: "Employee",
+        },
         password: {
             type: String,
             required: false,

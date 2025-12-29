@@ -147,12 +147,21 @@ export const useChatStore = create((set, get) => ({
   },
 
   getMessages: async (id) => {
-    const { selectedType } = get();
+    const { selectedType, selectedUser } = get();
     set({ isMessagesLoading: true });
     try {
       let res;
       if (selectedType === "group") {
         res = await axiosInstance.get(`/groups/${id}`);
+      } else if (selectedType === "channel") {
+        res = await axiosInstance.get(`/channels/${id}/messages`);
+      } else if (selectedType === "project") {
+        // For projects, we use the chatId embedded in the project object
+        // The 'id' passed here is usually selectedUser._id (project ID), 
+        // but we need the chat ID (channel ID).
+        const chatId = selectedUser?.chatId;
+        if (!chatId) throw new Error("Project has no chat channel");
+        res = await axiosInstance.get(`/channels/${chatId}/messages`);
       } else {
         res = await axiosInstance.get(`/messages/${id}`);
       }
@@ -176,6 +185,12 @@ export const useChatStore = create((set, get) => ({
       let res;
       if (selectedType === "group") {
         res = await axiosInstance.post(`/groups/send/${selectedUser._id}`, payload);
+      } else if (selectedType === "channel") {
+        res = await axiosInstance.post(`/channels/${selectedUser._id}/send`, payload);
+      } else if (selectedType === "project") {
+        const chatId = selectedUser?.chatId;
+        if (!chatId) throw new Error("Project has no chat channel");
+        res = await axiosInstance.post(`/channels/${chatId}/send`, payload);
       } else {
         res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, payload);
       }
@@ -183,9 +198,15 @@ export const useChatStore = create((set, get) => ({
       const newMessage = res.data;
       set({ messages: [...messages, newMessage], replyMessage: null });
 
-      // Update Sidebar List (Move to top + Update Snippet)
+      // Update Sidebar List 
+      // For Projects/Channels, we might want to update preview if we had one
+      // but Sidebar currently reads from orgProjects/orgChannels which might not have 'lastMessage' 
+      // wired up reactively yet. For now, we skip updating sidebar preview for projects.
+
+      // Legacy user/group update
       set(state => {
-        // Determine which list to update
+        if (selectedType === "project" || selectedType === "channel") return {};
+
         const listKey = selectedType === "group" ? "groups" : "users";
         const list = [...state[listKey]];
         const index = list.findIndex(item => item._id === selectedUser._id);

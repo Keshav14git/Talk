@@ -68,9 +68,20 @@ const SignUpPage = () => {
     const user = await verifyOtp({ email: formData.email, otp: formData.otp });
 
     if (user) {
-      // If user already exists and has a name, maybe skip profile? 
-      // For now, let's force profile update to ensure "Role" is captured if missing.
-      setStep(3);
+      // If new user or missing role, go to profile setup
+      if (user.isNewUser || !user.role || !user.fullName) {
+        setStep(3);
+        // Pre-fill if some data exists
+        setFormData(prev => ({
+          ...prev,
+          fullName: user.fullName !== "New User" ? user.fullName : "",
+          role: user.role || "",
+          profilePic: user.profilePic || null
+        }));
+      } else {
+        // Existing user - useEffect will handle redirect
+        toast.success("Welcome back!");
+      }
     }
   };
 

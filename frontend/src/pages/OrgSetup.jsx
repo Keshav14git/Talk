@@ -1,15 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOrgStore } from '../store/useOrgStore';
 import { useAuthStore } from '../store/useAuthStore';
+import { useLocation } from 'react-router-dom';
 import { Building2, Users, ArrowRight, Plus, LogIn } from 'lucide-react';
 
 const OrgSetup = () => {
     const { createOrg, joinOrg, isCreatingOrg, isJoiningOrg } = useOrgStore();
     const { authUser, checkAuth } = useAuthStore();
+    const location = useLocation();
+
     const [mode, setMode] = useState('selection'); // selection, create, join
     const [orgName, setOrgName] = useState('');
     const [joinCode, setJoinCode] = useState('');
     const [searchName, setSearchName] = useState('');
+
+    useEffect(() => {
+        if (location.state?.defaultMode) {
+            setMode(location.state.defaultMode);
+        }
+    }, [location.state]);
 
     const handleCreate = async (e) => {
         e.preventDefault();

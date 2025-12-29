@@ -248,11 +248,12 @@ export const logout = (req, res) => {
 
 export const updateProfile = async (req, res) => {
     try {
-        const { profilePic, fullName } = req.body;
+        const { profilePic, fullName, role } = req.body;
         const userId = req.user._id;
 
         const updateData = {};
         if (fullName) updateData.fullName = fullName;
+        if (role) updateData.role = role;
 
         if (profilePic) {
             const uploadResponse = await cloudinary.uploader.upload(profilePic);

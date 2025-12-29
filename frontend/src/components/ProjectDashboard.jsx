@@ -94,12 +94,18 @@ const ProjectDashboard = () => {
                                             <div key={idx} className="flex items-center gap-2 bg-[#222] pl-1 pr-3 py-1 rounded-full border border-[#333]">
                                                 <img
                                                     src={(typeof member === 'object' ? member.profilePic : "/avatar.png") || "/avatar.png"}
-                                                    className="size-6 rounded-full"
+                                                    className="size-6 rounded-full object-cover"
                                                     alt="Member"
                                                 />
-                                                <span className="text-xs text-gray-300">{(typeof member === 'object' ? member.fullName : "User")}</span>
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs text-gray-200">{(typeof member === 'object' ? member.fullName : "User")}</span>
+                                                    {typeof member === 'object' && member.role && (
+                                                        <span className="text-[9px] text-gray-500 leading-none capitalize">{member.role}</span>
+                                                    )}
+                                                </div>
+
                                                 {project.lead === (member._id || member) && (
-                                                    <span className="text-[10px] bg-yellow-500/20 text-yellow-500 px-1.5 rounded uppercase font-bold tracking-wider">Lead</span>
+                                                    <span className="ml-1 text-[9px] bg-yellow-500/20 text-yellow-500 px-1.5 rounded uppercase font-bold tracking-wider">Lead</span>
                                                 )}
                                             </div>
                                         ))}

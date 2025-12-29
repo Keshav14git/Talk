@@ -55,7 +55,7 @@ export const getOrgProjects = async (req, res) => {
 
         const projects = await Project.find({ orgId })
             .populate("lead", "fullName profilePic")
-            .populate("members", "fullName profilePic");
+            .populate("members", "fullName profilePic role");
 
         res.status(200).json(projects);
     } catch (error) {

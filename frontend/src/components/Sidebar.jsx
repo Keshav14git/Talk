@@ -203,7 +203,7 @@ const Sidebar = () => {
                 // Structure: { _id, userId: { _id, fullName, ... }, role }
                 // The `item` passed to ListItem should be the User part with Role merged ideally
                 const userObj = member.userId || member;
-                const role = member.role;
+                const role = member.designation || member.accessLevel || member.role;
 
                 return (
                   <ListItem
@@ -218,7 +218,13 @@ const Sidebar = () => {
                 );
               })}
               {filteredMembers.length === 0 && (
-                <div className="px-4 py-2 text-xs text-gray-600 italic">No other members</div>
+                <div className="flex flex-col items-center justify-center p-4 text-center mt-2 group cursor-pointer hover:bg-white/5 rounded-lg transition-all" onClick={() => setActiveModal('requests')}>
+                  <div className="size-8 bg-gray-800 rounded-full flex items-center justify-center text-gray-500 mb-2 group-hover:bg-gray-700 group-hover:text-gray-300 transition-colors">
+                    <Users className="size-4" />
+                  </div>
+                  <p className="text-xs text-gray-500 font-medium">No other members</p>
+                  <span className="text-[10px] text-indigo-400 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">Invite Team</span>
+                </div>
               )}
             </div>
           )}
@@ -237,7 +243,7 @@ const Sidebar = () => {
               Online
             </div>
           </div>
-          <button onClick={logout} className="p-1.5 text-gray-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100">
+          <button onClick={logout} className="p-1.5 text-gray-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100" title="Logout">
             <LogOut className="size-4" />
           </button>
         </div>
@@ -261,30 +267,38 @@ const ListItem = ({ item, type, icon: Icon, isSelected, isOnline, onClick, useAv
     <div
       onClick={onClick}
       className={`
-                group flex items-center gap-3 px-2 py-1.5 rounded-md cursor-pointer transition-all
-                ${isSelected ? "bg-indigo-500/10 text-indigo-300" : "text-gray-400 hover:bg-white/5 hover:text-gray-200"}
+                group flex items-center gap-3 px-2 py-1.5 rounded-md cursor-pointer transition-all border border-transparent
+                ${isSelected
+          ? "bg-indigo-500/10 text-indigo-300 border-indigo-500/20 shadow-sm"
+          : "text-gray-400 hover:bg-white/5 hover:text-gray-200"
+        }
             `}
     >
       {useAvatar ? (
         <div className="relative shrink-0">
-          <img src={item.profilePic || "/avatar.png"} alt={item.fullName} className="size-6 rounded-md object-cover" />
+          <img src={item.profilePic || "/avatar.png"} alt={item.fullName} className="size-7 rounded-md object-cover bg-gray-800" />
           {isOnline && <span className="absolute -bottom-0.5 -right-0.5 size-2 bg-green-500 border-2 border-[#0a0a0a] rounded-full" />}
         </div>
       ) : (
-        <Icon className={`size-4 shrink-0 ${isSelected ? "text-indigo-400" : "text-gray-500 group-hover:text-gray-400"}`} />
+        <div className={`size-7 rounded-md flex items-center justify-center shrink-0 ${isSelected ? "bg-indigo-500/20" : "bg-gray-800/50 group-hover:bg-gray-800"}`}>
+          <Icon className={`size-3.5 ${isSelected ? "text-indigo-400" : "text-gray-500 group-hover:text-gray-400"}`} />
+        </div>
       )}
 
-      <div className="flex-1 min-w-0 flex flex-col">
+      <div className="flex-1 min-w-0 flex flex-col justify-center h-full">
         <div className="flex items-center justify-between">
-          <span className={`text-sm truncate ${isSelected ? "font-medium" : "font-normal"}`}>
+          <span className={`text-[13px] truncate leading-none ${isSelected ? "font-medium" : "font-normal"}`}>
             {item.fullName || item.name}
           </span>
-          {/* Unread badge/dot logic could go here */}
         </div>
 
-        {/* Role or Recent Message snippet (Enterprise usually prefers Role, or snippet if active chat) */}
-        {item.role && (
-          <span className="text-[10px] text-gray-600 truncate capitalize">{item.role}</span>
+        {/* Role - Show if available */}
+        {type === 'user' && item.role && (
+          <span className="text-[10px] text-gray-600 truncate capitalize mt-1 leading-none">{item.role}</span>
+        )}
+        {/* Project Status? */}
+        {type === 'project' && item.status && (
+          <span className={`text-[9px] truncate capitalize mt-1 leading-none ${item.status === 'active' ? 'text-green-500/60' : 'text-gray-600'}`}>{item.status}</span>
         )}
       </div>
     </div>
@@ -292,5 +306,3 @@ const ListItem = ({ item, type, icon: Icon, isSelected, isOnline, onClick, useAv
 };
 
 export default Sidebar;
-
-

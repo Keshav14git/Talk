@@ -399,7 +399,7 @@ const SignUpPage = () => {
       <div className={`fixed inset-0 w-full h-full pointer-events-none z-0 transition-opacity duration-1000 delay-300 ${introPhase === 'SPLIT' ? 'opacity-100' : 'opacity-0'} `}>
         {/* Shift grid slightly right to balance with form */}
         <div className="w-full h-full flex items-center justify-end lg:pr-32">
-          <NetworkGridPattern />
+          <ParticleNetworkPattern />
         </div>
       </div>
 

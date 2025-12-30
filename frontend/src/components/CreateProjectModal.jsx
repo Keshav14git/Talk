@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useOrgStore } from "../store/useOrgStore";
+import { useAuthStore } from "../store/useAuthStore";
 import { useChatStore } from "../store/useChatStore";
 import { X, Briefcase, Check } from "lucide-react";
 import toast from "react-hot-toast";
@@ -8,12 +9,14 @@ const CreateProjectModal = ({ onClose }) => {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
     const [selectedMembers, setSelectedMembers] = useState([]);
-    const { createProject } = useOrgStore();
-    const { users } = useChatStore(); // Get all users (which are now filtered by Org in controller!)
+    const { createProject, orgMembers } = useOrgStore();
+    const { authUser } = useAuthStore();
     const [isLoading, setIsLoading] = useState(false);
 
-    // Filter out archived users if needed, though controller handles org filtering
-    const availableUsers = users.filter(u => !u.isArchived);
+    // Filter out current user and ensure we have valid user objects
+    const availableUsers = orgMembers
+        .map(member => member.userId || member) // Handle populated/unpopulated structure
+        .filter(user => user._id !== authUser?._id);
 
     const handleSubmit = async (e) => {
         e.preventDefault();

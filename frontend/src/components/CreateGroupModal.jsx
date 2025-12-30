@@ -1,19 +1,24 @@
 import { useState, useEffect } from "react";
 import { useChatStore } from "../store/useChatStore";
+import { useOrgStore } from "../store/useOrgStore";
+import { useAuthStore } from "../store/useAuthStore";
 import { X, Search, CheckCircle2, Users } from "lucide-react";
 import { motion } from "framer-motion";
 
 const CreateGroupModal = ({ onClose }) => {
-    const { users, getUsers, createGroup } = useChatStore();
+    const { createGroup } = useChatStore();
+    const { orgMembers } = useOrgStore();
+    const { authUser } = useAuthStore();
     const [groupName, setGroupName] = useState("");
     const [description, setDescription] = useState("");
     const [selectedMembers, setSelectedMembers] = useState([]);
     const [isCreating, setIsCreating] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
 
-    useEffect(() => {
-        if (users.length === 0) getUsers();
-    }, [getUsers, users.length]);
+    // Process org members to get usable user objects, excluding self
+    const users = orgMembers
+        .map(member => member.userId || member)
+        .filter(user => user._id !== authUser?._id);
 
     const toggleMember = (userId) => {
         setSelectedMembers((prev) =>

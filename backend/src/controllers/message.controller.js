@@ -90,7 +90,8 @@ export const sendMessage = async (req, res) => {
       receiverId,
       text,
       image: imageUrl,
-      replyTo
+      replyTo,
+      orgId: req.user.lastActiveOrgId // Required by schema
     });
 
     await newMessage.save();

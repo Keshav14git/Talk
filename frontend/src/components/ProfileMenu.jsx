@@ -4,7 +4,7 @@ import { useOrgStore } from "../store/useOrgStore";
 import { LogOut, User, Building2, ShieldCheck, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-const ProfileMenu = () => {
+const ProfileMenu = ({ collapsed }) => {
     const { authUser, logout } = useAuthStore();
     const { currentOrg } = useOrgStore();
     const [isOpen, setIsOpen] = useState(false);
@@ -38,10 +38,12 @@ const ProfileMenu = () => {
                 onClick={() => setIsOpen(!isOpen)}
                 className="flex items-center gap-3 p-2 rounded-full hover:bg-white/5 transition-colors focus:outline-none ring-offset-2 ring-offset-black focus:ring-2 focus:ring-white/20"
             >
-                <div className="flex flex-col items-end hidden md:block mr-2">
-                    <span className="text-sm font-medium text-white">{authUser.fullName}</span>
-                    <span className="text-xs text-gray-500">{currentOrg?.name || "No Org"}</span>
-                </div>
+                {!collapsed && (
+                    <div className="flex flex-col items-end mr-2">
+                        <span className="text-sm font-medium text-white">{authUser.fullName}</span>
+                        <span className="text-xs text-gray-500">{currentOrg?.name || "No Org"}</span>
+                    </div>
+                )}
                 <div className="size-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold shadow-lg text-lg">
                     {authUser.profilePic ? (
                         <img src={authUser.profilePic} alt="Profile" className="w-full h-full rounded-full object-cover" />
@@ -51,9 +53,9 @@ const ProfileMenu = () => {
                 </div>
             </button>
 
-            {/* Dropdown Menu */}
+            {/* Dropdown Menu - Opens Upwards */}
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-[#111] border border-[#222] rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <div className="absolute bottom-full left-0 mb-2 w-80 bg-[#111] border border-[#222] rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                     {/* Header Info */}
                     <div className="p-5 border-b border-[#222] bg-[#161616]">
                         <div className="flex items-center gap-4">

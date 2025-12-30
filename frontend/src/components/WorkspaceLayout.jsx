@@ -53,10 +53,6 @@ const WorkspaceLayout = () => {
 
             {/* 3. Main Content Area */}
             <main className="flex-1 flex flex-col min-w-0 bg-[#000] relative">
-                {/* Top Right Profile Button */}
-                <div className="absolute top-4 right-6 z-50">
-                    <ProfileMenu />
-                </div>
                 <Outlet />
             </main>
         </div>

@@ -16,6 +16,7 @@ import ExploreChannelsModal from "./ExploreChannelsModal";
 import CreateChannelModal from "./CreateChannelModal";
 import { useOrgStore } from "../store/useOrgStore";
 import { motion, AnimatePresence } from "framer-motion";
+import ProfileMenu from "./ProfileMenu";
 
 const Sidebar = () => {
   const {
@@ -300,27 +301,9 @@ const Sidebar = () => {
         </>
       )}
 
-      {/* User Footer - Only show expanded details if not collapsed */}
+      {/* User Footer */}
       <div className="p-3 border-t border-gray-800 bg-[#0f0f0f]">
-        {!isCollapsed ? (
-          <div className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer transition-colors group">
-            <img src={authUser?.profilePic || "/avatar.png"} className="size-8 rounded-lg object-cover" alt="Me" />
-            <div className="flex-1 min-w-0 overflow-hidden">
-              <div className="font-medium text-gray-200 text-sm truncate">{authUser?.fullName}</div>
-              <div className="text-[10px] text-gray-500 flex items-center gap-1.5">
-                <span className="size-1.5 rounded-full bg-green-500 animate-pulse" />
-                Online
-              </div>
-            </div>
-            <button onClick={logout} className="p-1.5 text-gray-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100" title="Logout">
-              <LogOut className="size-4" />
-            </button>
-          </div>
-        ) : (
-          <div className="flex justify-center">
-            <img src={authUser?.profilePic || "/avatar.png"} className="size-8 rounded-lg object-cover" alt="Me" title={authUser?.fullName} />
-          </div>
-        )}
+        <ProfileMenu collapsed={isCollapsed} />
       </div>
 
       {/* Modals */}

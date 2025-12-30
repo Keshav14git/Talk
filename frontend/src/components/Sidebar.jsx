@@ -94,7 +94,7 @@ const Sidebar = () => {
         {/* Collapsed Icons - White Filter Applied */}
         <div className="flex flex-col gap-8 w-full items-center">
           <div className="group relative flex justify-center w-full" title="Projects">
-            <img src="/projects.png" alt="Projects" className="w-6 h-6 object-contain invert brightness-0 opacity-70 group-hover:opacity-100 transition-opacity" />
+            <img src="/Projects.png" alt="Projects" className="w-6 h-6 object-contain invert brightness-0 opacity-70 group-hover:opacity-100 transition-opacity" />
           </div>
 
           <div className="group relative flex justify-center w-full" title="Team">

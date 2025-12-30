@@ -182,8 +182,11 @@ const ChatContainer = ({ overrideUser, overrideType }) => {
         )}
 
         {filteredMessages.map((message, idx) => {
-          const isMe = message.senderId === authUser._id;
-          const isPrevSame = idx > 0 && filteredMessages[idx - 1].senderId === message.senderId;
+          const isMe = message.senderId?._id
+            ? message.senderId._id === authUser._id
+            : message.senderId === authUser._id;
+
+          const isPrevSame = idx > 0 && (filteredMessages[idx - 1].senderId?._id || filteredMessages[idx - 1].senderId) === (message.senderId?._id || message.senderId);
           const isSelected = selectedMessageIds.includes(message._id);
 
           // Date Separator Check
@@ -195,7 +198,7 @@ const ChatContainer = ({ overrideUser, overrideType }) => {
 
           // Revised visual grouping logic
           const effectiveIsPrevSame = showDateSeparator ? false : isPrevSame;
-          const isNextSame = idx < filteredMessages.length - 1 && filteredMessages[idx + 1].senderId === message.senderId;
+          const isNextSame = idx < filteredMessages.length - 1 && (filteredMessages[idx + 1].senderId?._id || filteredMessages[idx + 1].senderId) === (message.senderId?._id || message.senderId);
           const nextDate = idx < filteredMessages.length - 1 ? new Date(filteredMessages[idx + 1].createdAt).toDateString() : currentDate;
           const willShowSeparatorNext = nextDate !== currentDate;
           const effectiveIsNextSame = willShowSeparatorNext ? false : isNextSame;

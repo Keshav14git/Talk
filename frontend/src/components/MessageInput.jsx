@@ -7,11 +7,14 @@ import EmojiPicker from "emoji-picker-react";
 // Categories for quick search
 const GIF_CATEGORIES = ["Trending", "Happy", "Sad", "Love", "Reaction", "Work", "Code"];
 
-const MessageInput = () => {
+const MessageInput = ({ overrideUser, overrideType }) => {
   const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
+
+
+  // Feature Toggles
 
   // Feature Toggles
   const [showEmoji, setShowEmoji] = useState(false);
@@ -118,7 +121,7 @@ const MessageInput = () => {
       await sendMessage({
         text: text.trim(),
         image: imagePreview,
-      });
+      }, overrideUser, overrideType);
 
       // Clear form
       setText("");

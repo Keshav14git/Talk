@@ -7,10 +7,14 @@ import { useAuthStore } from "../store/useAuthStore";
 import { formatMessageTime, isSameDay } from "../lib/utils";
 import { X, Trash2, Reply, ListChecks, Check } from "lucide-react";
 
-const ChatContainer = () => {
-  const { messages, getMessages, isMessagesLoading, subscribeToMessages, unsubscribeFromMessages, selectedUser, selectedType, deleteMessage, setReplyMessage, messageSearchQuery } = useChatStore();
+const ChatContainer = ({ overrideUser, overrideType }) => {
+  const { messages, getMessages, isMessagesLoading, subscribeToMessages, unsubscribeFromMessages, selectedUser: storeSelectedUser, selectedType: storeSelectedType, deleteMessage, setReplyMessage, messageSearchQuery } = useChatStore();
   const { authUser, onlineUsers } = useAuthStore();
   const messageEndRef = useRef(null);
+
+  // Use overrides if provided, otherwise fallback to store
+  const selectedUser = overrideUser || storeSelectedUser;
+  const selectedType = overrideType || storeSelectedType;
 
   // Selection Mode State
   const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -18,9 +22,32 @@ const ChatContainer = () => {
   const [selectedImage, setSelectedImage] = useState(null);
 
   useEffect(() => {
-    getMessages(selectedUser._id);
-    // Subscription is now global in App.jsx
-  }, [selectedUser._id, getMessages]);
+    if (selectedUser?._id) {
+      // For overrides (like DMs in project), we fetch standard user messages
+      // logic inside getMessages handles types, but if we pass `overrideType="user"` it fetches `/messages/:id`
+      // Only issue: getMessages inside store reads `selectedType` from GET().
+      // So to support overrides, `getMessages` needs refactoring OR we manual fetch.
+      // Refactoring `getMessages` to accept optional type arg is best.
+      // But assuming getMessages(activeId) READS Store state...
+      // We should refactor getMessages in store first? Or just trick it?
+
+      // Actually `getMessages` in store:
+      // const { selectedType } = get();
+      // So it strictly uses store state.
+
+      // workaround: If override is present, we might fail to fetch correct endpoint if types differ.
+      // However, `ProjectDashboard` won't update global store for DMs to avoid page switch.
+
+      // Better solution: Pass `type` to `getMessages` in store.
+      // Let's rely on the store having `getMessages(id, type)`.
+      // I need to update store first? 
+      // Let's try passing type to getMessages and see if JS allows it even if not def.
+      // `getMessages: async (id) => ...` uses `get()`.
+
+      // I must update useChatStore.js `getMessages` signature to `getMessages: async (id, typeOverride)`.
+      getMessages(selectedUser._id, selectedType);
+    }
+  }, [selectedUser?._id, getMessages, selectedType]);
 
   useEffect(() => {
     if (messageEndRef.current && messages && !isSelectionMode) {

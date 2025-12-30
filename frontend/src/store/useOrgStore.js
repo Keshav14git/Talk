@@ -108,9 +108,34 @@ export const useOrgStore = create((set, get) => ({
                     p._id === projectId ? { ...p, status } : p
                 )
             }));
+
+            // Sync with ChatStore if selected
+            const { selectedUser: project } = useChatStore.getState();
+            if (project && project._id === projectId) {
+                useChatStore.setState({ selectedUser: { ...project, status } });
+            }
+
             toast.success("Status updated");
         } catch (error) {
             toast.error("Failed to update status");
+        }
+    },
+
+    addProjectMember: async (projectId, userId) => {
+        try {
+            const res = await axiosInstance.post(`/projects/${projectId}/members`, { userId });
+
+            // Update local state if this project is currently selected
+            const { selectedUser: project } = useChatStore.getState();
+            if (project && project._id === projectId) {
+                useChatStore.setState({ selectedUser: res.data });
+            }
+
+            toast.success("Member added successfully");
+            return true;
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to add member");
+            return false;
         }
     },
 

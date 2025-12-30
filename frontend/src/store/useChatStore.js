@@ -146,19 +146,25 @@ export const useChatStore = create((set, get) => ({
     }
   },
 
-  getMessages: async (id) => {
-    const { selectedType, selectedUser } = get();
+  getMessages: async (id, typeOverride) => {
+    const { selectedType: storeType, selectedUser } = get();
+    const type = typeOverride || storeType;
+
     set({ isMessagesLoading: true });
     try {
       let res;
-      if (selectedType === "group") {
+      if (type === "group") {
         res = await axiosInstance.get(`/groups/${id}`);
-      } else if (selectedType === "channel") {
+      } else if (type === "channel") {
         res = await axiosInstance.get(`/channels/${id}/messages`);
-      } else if (selectedType === "project") {
-        // For projects, we use the chatId embedded in the project object
-        // The 'id' passed here is usually selectedUser._id (project ID), 
-        // but we need the chat ID (channel ID).
+      } else if (type === "project") {
+        // For projects, we use the chatId embedded in the project object (which is usually selectedUser)
+        // If typeOverride is passed (e.g. DM inside project), 'id' is the user ID.
+        // Wait, if overrideUser is passed, 'id' is user ID. 'type' is 'user'.
+
+        // This block handles `type === 'project'`. 
+        // If we are in ProjectDashboard but want DM, we pass type='user'. This block won't run.
+
         const chatId = selectedUser?.chatId;
         if (!chatId) throw new Error("Project has no chat channel");
         res = await axiosInstance.get(`/channels/${chatId}/messages`);
@@ -173,9 +179,14 @@ export const useChatStore = create((set, get) => ({
     }
   },
 
-  sendMessage: async (messageData) => {
-    const { selectedUser, selectedType, messages, replyMessage } = get();
-    if (!selectedUser) {
+  sendMessage: async (messageData, targetUserOverride, targetTypeOverride) => {
+    const { selectedUser: storeUser, selectedType: storeType, messages, replyMessage } = get();
+
+    // Resolve target
+    const targetUser = targetUserOverride || storeUser;
+    const targetType = targetTypeOverride || storeType;
+
+    if (!targetUser) {
       toast.error("No conversation selected");
       return;
     }
@@ -183,16 +194,16 @@ export const useChatStore = create((set, get) => ({
     try {
       const payload = { ...messageData, replyTo: replyMessage?._id };
       let res;
-      if (selectedType === "group") {
-        res = await axiosInstance.post(`/groups/send/${selectedUser._id}`, payload);
-      } else if (selectedType === "channel") {
-        res = await axiosInstance.post(`/channels/${selectedUser._id}/send`, payload);
-      } else if (selectedType === "project") {
-        const chatId = selectedUser?.chatId;
+      if (targetType === "group") {
+        res = await axiosInstance.post(`/groups/send/${targetUser._id}`, payload);
+      } else if (targetType === "channel") {
+        res = await axiosInstance.post(`/channels/${targetUser._id}/send`, payload);
+      } else if (targetType === "project") {
+        const chatId = targetUser?.chatId;
         if (!chatId) throw new Error("Project has no chat channel");
         res = await axiosInstance.post(`/channels/${chatId}/send`, payload);
       } else {
-        res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, payload);
+        res = await axiosInstance.post(`/messages/send/${targetUser._id}`, payload);
       }
 
       const newMessage = res.data;

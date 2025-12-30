@@ -25,6 +25,39 @@ const ProjectDashboard = ({ project }) => {
     const [showAddMember, setShowAddMember] = useState(false);
     const [expandedTask, setExpandedTask] = useState(null);
     const [commentText, setCommentText] = useState("");
+    const [mentionQuery, setMentionQuery] = useState("");
+    const [showMentionDropdown, setShowMentionDropdown] = useState(false);
+
+    const { orgMembers } = useOrgStore(); // Ensure we have org members for mentions
+
+    // Mention Filtering
+    const filteredMembers = orgMembers.filter(member =>
+        member.fullName.toLowerCase().includes(mentionQuery.toLowerCase()) &&
+        member._id !== authUser._id
+    );
+
+    const handleCommentChange = (e) => {
+        const val = e.target.value;
+        setCommentText(val);
+
+        const lastAt = val.lastIndexOf('@');
+        if (lastAt !== -1 && lastAt >= val.length - 15) { // Simple check: @ recently typed
+            const query = val.slice(lastAt + 1);
+            if (!query.includes(" ")) { // Only if no space after @ yet
+                setMentionQuery(query);
+                setShowMentionDropdown(true);
+                return;
+            }
+        }
+        setShowMentionDropdown(false);
+    };
+
+    const insertMention = (member) => {
+        const lastAt = commentText.lastIndexOf('@');
+        const newText = commentText.slice(0, lastAt) + "@" + member.fullName + " " + commentText.slice(lastAt + 1 + mentionQuery.length);
+        setCommentText(newText);
+        setShowMentionDropdown(false);
+    };
 
     // Chat State
     const [activeChatMode, setActiveChatMode] = useState('general'); // 'general' | 'dm'
@@ -107,7 +140,13 @@ const ProjectDashboard = ({ project }) => {
 
     const handleSendComment = async (taskId) => {
         if (!commentText.trim()) return;
-        await addTaskComment(taskId, commentText);
+
+        // Extract mentions
+        const mentions = orgMembers
+            .filter(m => commentText.includes("@" + m.fullName))
+            .map(m => m._id);
+
+        await addTaskComment(taskId, commentText, mentions);
         setCommentText("");
     };
 

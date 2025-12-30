@@ -15,6 +15,8 @@ import organizationRoutes from "./routes/organization.route.js";
 import projectRoutes from "./routes/project.route.js";
 import channelRoutes from "./routes/channel.route.js";
 import calendarRoutes from "./routes/calendar.route.js";
+import calendarRoutes from "./routes/calendar.route.js";
+import notificationRoutes from "./routes/notification.route.js";
 import { app, server } from "./lib/socket.js";
 
 dotenv.config();
@@ -42,6 +44,7 @@ app.use("/api/orgs", organizationRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/channels", channelRoutes);
 app.use("/api/calendar", calendarRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // Serve static files from the frontend build directory
 const frontendPath = path.join(__dirname, "../frontend/dist");

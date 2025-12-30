@@ -45,9 +45,9 @@ export const useTaskStore = create((set, get) => ({
         }
     },
 
-    addTaskComment: async (taskId, text) => {
+    addTaskComment: async (taskId, text, mentions = []) => {
         try {
-            const res = await axiosInstance.post(`projects/tasks/${taskId}/comments`, { text });
+            const res = await axiosInstance.post(`projects/tasks/${taskId}/comments`, { text, mentions });
             // Update local state - the backend returns the full updated task
             set({
                 tasks: get().tasks.map((task) =>

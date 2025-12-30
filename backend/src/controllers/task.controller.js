@@ -1,5 +1,6 @@
 import Task from "../models/task.model.js";
 import Project from "../models/project.model.js";
+import Notification from "../models/notification.model.js";
 
 // Create a new task
 export const createTask = async (req, res) => {
@@ -75,7 +76,7 @@ export const updateTaskStatus = async (req, res) => {
 export const addTaskComment = async (req, res) => {
     try {
         const { taskId } = req.params;
-        const { text } = req.body;
+        const { text, mentions } = req.body; // Expect mentions array [userId, userId]
         const userId = req.user._id;
 
         if (!text) return res.status(400).json({ message: "Comment text is required" });
@@ -83,15 +84,38 @@ export const addTaskComment = async (req, res) => {
         const task = await Task.findById(taskId);
         if (!task) return res.status(404).json({ message: "Task not found" });
 
-        task.comments.push({
+        const newComment = {
             user: userId,
-            text
-        });
+            text,
+            mentions: mentions || []
+        };
+
+        task.comments.push(newComment);
 
         await task.save();
 
         // Populate the new comment user info
         await task.populate("comments.user", "fullName profilePic");
+
+        // --- Notification Logic ---
+        if (mentions && mentions.length > 0) {
+            const notificationPromises = mentions.map(async (mentionedUserId) => {
+                // Don't notify self
+                if (mentionedUserId.toString() === userId.toString()) return;
+
+                const notification = new Notification({
+                    recipient: mentionedUserId,
+                    sender: userId,
+                    type: "mention",
+                    referenceId: taskId,
+                    referenceType: "Task",
+                    text: `mentioned you in a comment on task "${task.title}"`
+                });
+                return notification.save();
+            });
+
+            await Promise.all(notificationPromises);
+        }
 
         res.status(201).json(task);
     } catch (error) {

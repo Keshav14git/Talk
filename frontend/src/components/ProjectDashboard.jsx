@@ -374,10 +374,11 @@ const ProjectDashboard = ({ project }) => {
                                                                             </div>
                                                                         </div>
 
-                                                                        <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                        <div className={`flex items-center gap-3 transition-opacity ${task.comments?.length > 0 ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                                                                             {task.comments?.length > 0 && (
-                                                                                <div className="flex items-center gap-1 text-gray-500 text-xs">
-                                                                                    <MessageSquare className="size-3" /> {task.comments.length}
+                                                                                <div className="flex items-center gap-1 text-gray-500 text-xs font-medium">
+                                                                                    <MessageSquare className="size-3 text-indigo-400" />
+                                                                                    <span className="text-gray-400">{task.comments.length}</span>
                                                                                 </div>
                                                                             )}
                                                                         </div>
@@ -414,13 +415,38 @@ const ProjectDashboard = ({ project }) => {
                                                                                             </div>
                                                                                         ))}
                                                                                     </div>
-                                                                                    <div className="flex gap-2">
+                                                                                    <div className="flex gap-2 relative">
+                                                                                        {/* Mention Dropdown */}
+                                                                                        {showMentionDropdown && filteredMembers.length > 0 && (
+                                                                                            <div className="absolute bottom-full mb-2 left-0 w-64 bg-[#1f1f1f] border border-[#333] rounded-lg shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-bottom-2">
+                                                                                                <div className="px-3 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider bg-[#111]">Suggested Members</div>
+                                                                                                <div className="max-h-48 overflow-y-auto custom-scrollbar">
+                                                                                                    {filteredMembers.map(member => (
+                                                                                                        <button
+                                                                                                            key={member._id}
+                                                                                                            onClick={() => insertMention(member)}
+                                                                                                            className="w-full flex items-center gap-2 px-3 py-2 hover:bg-[#2a2a2a] transition-colors text-left group"
+                                                                                                        >
+                                                                                                            <img src={member.profilePic || "/avatar.png"} className="size-6 rounded-full object-cover" />
+                                                                                                            <div>
+                                                                                                                <p className="text-sm text-gray-200 font-medium group-hover:text-white">{member.fullName}</p>
+                                                                                                                <p className="text-[10px] text-gray-500 capitalize">{member.role}</p>
+                                                                                                            </div>
+                                                                                                        </button>
+                                                                                                    ))}
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        )}
+
                                                                                         <input
                                                                                             type="text"
-                                                                                            placeholder="Write a comment..."
+                                                                                            placeholder="Write a comment... (Type @ to mention)"
                                                                                             value={commentText}
-                                                                                            onChange={(e) => setCommentText(e.target.value)}
-                                                                                            onKeyDown={(e) => e.key === 'Enter' && handleSendComment(task._id)}
+                                                                                            onChange={handleCommentChange}
+                                                                                            onKeyDown={(e) => {
+                                                                                                if (e.key === 'Enter') handleSendComment(task._id);
+                                                                                                if (e.key === 'Escape') setShowMentionDropdown(false);
+                                                                                            }}
                                                                                             className="flex-1 bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500/50"
                                                                                         />
                                                                                         <button onClick={() => handleSendComment(task._id)} className="px-3 py-1.5 bg-white text-black text-xs font-bold rounded-lg hover:bg-gray-200">

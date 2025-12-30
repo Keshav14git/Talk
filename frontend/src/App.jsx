@@ -40,12 +40,12 @@ const App = () => {
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
       <Routes>
         {/* Public Routes - Unified Auth */}
-        <Route path="/auth" element={!authUser ? <SignUpPage /> : <Navigate to="/" />} />
+        <Route path="/auth" element={!authUser || !authUser.lastActiveOrgId ? <SignUpPage /> : <Navigate to="/" />} />
         <Route path="/login" element={<Navigate to="/auth" />} />
         <Route path="/signup" element={<Navigate to="/auth" />} />
 
         {/* Protected Workspace Layout */}
-        <Route path="/" element={authUser ? (authUser.lastActiveOrgId ? <WorkspaceLayout /> : <div className="flex-1 bg-black flex items-center justify-center text-gray-500">Redirecting to Workspace...</div>) : <Navigate to="/auth" />}>
+        <Route path="/" element={authUser ? (authUser.lastActiveOrgId ? <WorkspaceLayout /> : <Navigate to="/auth" />) : <Navigate to="/auth" />}>
           {/* Default Redirect to Workspace - Logic handled in Layout useEffect, but we need a placeholder index */}
           <Route index element={<div className="flex-1 bg-black flex items-center justify-center text-gray-500">Loading Workspace...</div>} />
 

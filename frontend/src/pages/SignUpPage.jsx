@@ -170,7 +170,7 @@ const SignUpPage = () => {
   if (introPhase === "LOGO") {
     return (
       <div className="h-screen w-screen bg-black flex items-center justify-center animate-in fade-in duration-1000">
-        <img src="/Orchestr (3).png" alt="Logo" className="w-80 opacity-100 animate-pulse" />
+        <img src="/Orchestr (3).png" alt="Logo" className="w-160 opacity-100 animate-pulse" />
       </div>
     );
   }
@@ -400,7 +400,7 @@ const SignUpPage = () => {
 
           {/* Floating Logo on Right Side */}
           <div className="absolute top-1/2 left-1/2 lg:left-3/4 transform -translate-x-1/2 -translate-y-1/2 z-10 glass-effect p-8 rounded-full bg-black/50 border border-white/5 backdrop-blur-sm animate-in fade-in zoom-in duration-1000 delay-500">
-            <img src="/Orchestr (3).png" alt="Logo" className="w-40 opacity-90 animate-pulse-slow" />
+            <img src="/Orchestr (3).png" alt="Logo" className="w-98 opacity-90 animate-pulse-slow" />
           </div>
         </div>
       </div>

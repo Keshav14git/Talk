@@ -37,6 +37,7 @@ const Sidebar = () => {
   const [sections, setSections] = useState({
     projects: true,
     channels: true,
+    team: true,
     directMessages: true
   });
 
@@ -78,22 +79,35 @@ const Sidebar = () => {
   useEffect(() => { getGroups(); }, [getGroups]);
 
   const filteredChannels = filterList(groups.filter(g => g.type === 'channel'));
+  const filteredTeams = filterList(groups.filter(g => g.type !== 'channel')); // Non-channel groups are "Team" groups
   const filteredMembers = filterList(orgMembers.filter(m => m._id !== authUser?._id)); // Exclude self
 
   if (isUsersLoading) return <SidebarSkeleton />;
 
   if (isCollapsed) {
     return (
-      <div className="h-full w-[50px] border-r border-[#222] bg-[#0a0a0a] flex flex-col items-center py-4 z-20 shrink-0">
-        <button onClick={() => setIsCollapsed(false)} className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
-          <PanelLeftOpen className="size-5" />
+      <div className="h-full w-[80px] border-r border-[#222] bg-[#0a0a0a] flex flex-col items-center py-6 z-20 shrink-0 gap-8">
+        <button onClick={() => setIsCollapsed(false)} className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors mb-4">
+          <PanelLeftOpen className="size-6" />
         </button>
-        {/* Minimal Icons if desired, or just blank/expand button */}
-        <div className="mt-4 flex flex-col gap-4">
-          {/* Quick Access Icons could go here, but "standard collapsible" often just hides. 
-                      Let's show section icons for quick navigation if user wants, or just keep it simple.
-                      User asked for "standard collapsable", simplest is expand button.
-                  */}
+
+        {/* Collapsed Icons - White Filter Applied */}
+        <div className="flex flex-col gap-8 w-full items-center">
+          <div className="group relative flex justify-center w-full" title="Projects">
+            <img src="/projects.png" alt="Projects" className="w-6 h-6 object-contain invert brightness-0 opacity-70 group-hover:opacity-100 transition-opacity" />
+          </div>
+
+          <div className="group relative flex justify-center w-full" title="Team">
+            <img src="/group.png" alt="Team" className="w-6 h-6 object-contain invert brightness-0 opacity-70 group-hover:opacity-100 transition-opacity" />
+          </div>
+
+          <div className="group relative flex justify-center w-full" title="Announcements">
+            <img src="/announcement.png" alt="Announcements" className="w-6 h-6 object-contain invert brightness-0 opacity-70 group-hover:opacity-100 transition-opacity" />
+          </div>
+
+          <div className="group relative flex justify-center w-full" title="People">
+            <img src="/chat.png" alt="People" className="w-6 h-6 object-contain invert brightness-0 opacity-70 group-hover:opacity-100 transition-opacity" />
+          </div>
         </div>
       </div>
     );
@@ -157,6 +171,37 @@ const Sidebar = () => {
               ))}
               {filteredProjects.length === 0 && (
                 <div className="px-4 py-2 text-xs text-gray-600 italic">No projects yet</div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* TEAM SECTION */}
+        <div className="space-y-0.5">
+          <div className="group flex items-center justify-between px-2 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-300 cursor-pointer" onClick={() => toggleSection('team')}>
+            <div className="flex items-center gap-1">
+              {sections.team ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+              Team
+            </div>
+            <button onClick={(e) => { e.stopPropagation(); setActiveModal('createGroup'); }} className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-gray-800 rounded text-gray-400 hover:text-white transition-all">
+              <CirclePlus className="size-3.5" />
+            </button>
+          </div>
+
+          {sections.team && (
+            <div className="space-y-0.5">
+              {filteredTeams.map(group => (
+                <ListItem
+                  key={group._id}
+                  item={{ ...group, fullName: group.name }}
+                  type="group"
+                  icon={Users}
+                  isSelected={selectedUser?._id === group._id}
+                  onClick={() => setSelectedUser(group, 'group')}
+                />
+              ))}
+              {filteredTeams.length === 0 && (
+                <div className="px-4 py-2 text-xs text-gray-600 italic">No teams created</div>
               )}
             </div>
           )}

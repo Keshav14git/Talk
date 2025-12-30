@@ -15,7 +15,6 @@ import organizationRoutes from "./routes/organization.route.js";
 import projectRoutes from "./routes/project.route.js";
 import channelRoutes from "./routes/channel.route.js";
 import calendarRoutes from "./routes/calendar.route.js";
-import calendarRoutes from "./routes/calendar.route.js";
 import notificationRoutes from "./routes/notification.route.js";
 import { app, server } from "./lib/socket.js";
 

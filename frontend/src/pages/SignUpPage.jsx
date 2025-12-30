@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+```javascript
+import { useState, useEffect, useRef } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useOrgStore } from "../store/useOrgStore";
 import { useNavigate } from "react-router-dom";
 import {
-  Mail, ArrowRight, Loader2, ShieldCheck,
-  Building2, Users, LogIn, Lock, CheckCircle2, ChevronLeft
+  Mail, ArrowRight, Loader2, ShieldCheck, 
+  Building2, Users, LogIn, CheckCircle2, Lock, ChevronRight, Briefcase
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useGoogleLogin } from "@react-oauth/google";
@@ -12,51 +13,56 @@ import { useGoogleLogin } from "@react-oauth/google";
 const SignUpPage = () => {
   const navigate = useNavigate();
   const {
-    login, isSigningUp, isLoggingIn, authUser,
+    login, signup, isSigningUp, isLoggingIn, authUser,
     sendOtp, verifyOtp, updateProfile, googleLogin
   } = useAuthStore();
-
+  
   const { createOrg, joinOrg, isCreatingOrg, isJoiningOrg } = useOrgStore();
 
-  // --- Animation State Machine ---
-  // phases: 'BLANK' (0-2s) -> 'LOGO_FADE' (2-5s) -> 'SPLIT' (Final)
-  const [introPhase, setIntroPhase] = useState("BLANK");
+  // --- Animation Phases ---
+  const [introPhase, setIntroPhase] = useState("BLANK"); // BLANK -> LOGO -> SPLIT
 
-  // --- Auth Flow State ---
-  // mode: 'SIGNUP' (New User) | 'LOGIN' (Returning)
-  const [authMode, setAuthMode] = useState("SIGNUP");
-
-  // Signup Wizard Steps: 'DETAILS' -> 'VERIFY' -> 'ROLE' -> 'ORG_ACTION'
-  const [signupStep, setSignupStep] = useState("DETAILS");
-
-  // --- Form Data ---
+  // --- Progressive Form State ---
+  // Steps: 
+  // 1. INPUT_EMAIL (Start)
+  // 2. VERIFY_OTP (Shown after email submit)
+  // 3. SELECT_ROLE (Shown after OTP success)
+  // 4. ORG_ACTION (Shown after Role selected)
+  // 5. COMPLETED (All done)
+  
+  const [currentStep, setCurrentStep] = useState("INPUT_EMAIL");
+  
+  // Track verified states to "lock" UI sections
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [isRoleSelected, setIsRoleSelected] = useState(false);
+  
+  // Data
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
-    password: "",
-    role: "",
     otp: "",
+    role: "",
     orgName: "",
-    joinCode: "",
+    regNumber: "", // For joining by Reg Number
     searchOrgName: ""
   });
 
-  // --- Intro Animation Timing ---
-  useEffect(() => {
-    const timer1 = setTimeout(() => setIntroPhase("LOGO_FADE"), 2000);
-    const timer2 = setTimeout(() => setIntroPhase("SPLIT"), 5500);
+  const [generatedRegNum, setGeneratedRegNum] = useState(null); // To show after creation
 
-    return () => { clearTimeout(timer1); clearTimeout(timer2); };
+  // --- Intro Timing ---
+  useEffect(() => {
+    const t1 = setTimeout(() => setIntroPhase("LOGO"), 1500);
+    const t2 = setTimeout(() => setIntroPhase("SPLIT"), 4500);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
-  // --- Redirect Logic ---
+  // --- Auto-Redirect if Done ---
   useEffect(() => {
     if (authUser?.lastActiveOrgId) {
       navigate("/");
     }
   }, [authUser, navigate]);
-
 
   // --- Handlers ---
 
@@ -65,339 +71,210 @@ const SignUpPage = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // 1. Google Auth (Top)
   const loginGoogle = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
-      await googleLogin(tokenResponse.access_token);
+        const user = await googleLogin(tokenResponse.access_token);
+        // If user is new/needs org setup, the logic below or useEffect will handle it.
+        // If Google login returns a user with an org, auto-redirect happens via useEffect.
+        if (user && !user.lastActiveOrgId) {
+             // If they signed up via Google but have no org, jump to Role/Org step
+             // Prefill name/email from what we got (usually handled in backend, but we can sync local state if needed)
+             setIsEmailVerified(true);
+             if (!user.role) {
+                 setCurrentStep("SELECT_ROLE");
+             } else {
+                 setFormData(prev => ({ ...prev, role: user.role }));
+                 setIsRoleSelected(true);
+                 setCurrentStep("ORG_ACTION");
+             }
+        }
     },
     onError: () => toast.error("Google Login Cancelled")
   });
 
-  // -- Login Flow --
-  const handleLogin = async (e) => {
+  // 2. Email Verification Flow
+  const handleRequestOtp = async (e) => {
     e.preventDefault();
-    if (!formData.email || !formData.password) return toast.error("Required fields missing");
-    await login({ email: formData.email, password: formData.password });
-  };
-
-  // -- Signup Wizard Handlers --
-
-  const handleStepDetails = async (e) => {
-    e.preventDefault();
-    if (!formData.email || !formData.firstName || !formData.lastName) {
-      return toast.error("Please fill all details");
-    }
+    if (!formData.email || !formData.firstName || !formData.lastName) return toast.error("Please fill all details");
+    
     const success = await sendOtp(formData.email);
-    if (success) setSignupStep("VERIFY");
+    if (success) setCurrentStep("VERIFY_OTP");
   };
 
-  const handleStepVerify = async (e) => {
+  const handleVerifyOtp = async (e) => {
     e.preventDefault();
     if (!formData.otp) return toast.error("Enter OTP");
 
     const user = await verifyOtp({ email: formData.email, otp: formData.otp });
-
     if (user) {
-      await updateProfile({
-        fullName: `${formData.firstName} ${formData.lastName}`.trim(),
-      });
-      setSignupStep("ROLE");
+        setIsEmailVerified(true);
+        // Update Name
+        await updateProfile({ fullName: `${ formData.firstName } ${ formData.lastName } `.trim() });
+        setCurrentStep("SELECT_ROLE");
+        toast.success("Email Verified Verified");
     }
   };
 
-  const handleStepRole = async (e) => {
-    e.preventDefault();
-    if (!formData.role) return toast.error("Enter your role");
-
-    await updateProfile({ role: formData.role });
-    setSignupStep("ORG_ACTION");
+  // 3. Role Selection
+  const handleSelectRole = async (role) => {
+    setFormData(prev => ({ ...prev, role }));
+    await updateProfile({ role });
+    setIsRoleSelected(true);
+    setCurrentStep("ORG_ACTION");
   };
 
-  const handleStepOrg = async (e) => {
+  // 4. Org Action
+  const handleOrgAction = async (e) => {
     e.preventDefault();
+    
+    // Determine action type based on role
+    const isCxO = ["ceo", "founder", "md", "president", "owner"].includes(formData.role.toLowerCase());
 
-    const isCreator = isCreatorRole();
-
-    let success = false;
-    if (isCreator) {
-      if (!formData.orgName) return toast.error("Enter Organization Name");
-      success = await createOrg(formData.orgName);
+    if (isCxO) {
+        // Create Logic
+        if (!formData.orgName) return toast.error("Org Name is required");
+        const newOrg = await createOrg(formData.orgName);
+        if (newOrg && newOrg.registrationNumber) {
+            setGeneratedRegNum(newOrg.registrationNumber);
+            toast.success("Organization Created Successfully!");
+            // Short delay to show the success state before redirecting/reloading
+            setTimeout(() => window.location.reload(), 2000);
+        }
     } else {
-      if (!formData.joinCode && !formData.searchOrgName) return toast.error("Enter Org Name or Join Code");
-      success = await joinOrg({
-        joinCode: formData.joinCode,
-        orgName: formData.searchOrgName
-      });
-    }
+        // Join Logic
+        if (!formData.regNumber && !formData.searchOrgName) return toast.error("Enter Registration Number or Name");
+        
+        let success = false;
+        // Prioritize Reg Number
+        if (formData.regNumber) {
+            success = await joinOrg({ registrationNumber: formData.regNumber });
+        } else {
+            success = await joinOrg({ orgName: formData.searchOrgName });
+        }
 
-    if (success) {
-      window.location.reload();
-    }
-  };
-
-  // Helpers
-  const isCreatorRole = () => {
-    const role = formData.role.toLowerCase();
-    return ["ceo", "founder", "md", "managing director", "owner", "president"].includes(role);
-  };
-
-  // Progress Indicator Helper
-  const getProgress = () => {
-    if (authMode === 'LOGIN') return 0;
-    switch (signupStep) {
-      case 'DETAILS': return 1;
-      case 'VERIFY': return 2;
-      case 'ROLE': return 3;
-      case 'ORG_ACTION': return 4;
-      default: return 1;
+        if (success) {
+            toast.success("Joined Organization!");
+            setTimeout(() => window.location.reload(), 1000);
+        }
     }
   };
 
+  // --- Render Helpers ---
+  const isCxO = ["ceo", "founder", "md", "president", "owner"].includes(formData.role.toLowerCase());
 
-  // --- Renders ---
 
-  // 1. BLANK PHASE
-  if (introPhase === "BLANK") {
-    return <div className="h-screen w-screen bg-black" />;
-  }
-
-  // 2. LOGO FADE PHASE
-  if (introPhase === "LOGO_FADE") {
-    return (
-      <div className="h-screen w-screen bg-black flex items-center justify-center animate-in fade-in duration-1000">
-        {/* Center Logo */}
-        <img src="/Orchestr (3).png" alt="Orchestr" className="w-32 opacity-90 grayscale hover:grayscale-0 transition-all duration-700" />
-      </div>
-    );
-  }
-
-  // 3. SPLIT PHASE (Main UI)
-  return (
-    <div className="min-h-screen bg-black flex relative overflow-hidden font-sans selection:bg-white/20">
-
-      {/* Background Ambience */}
-      <div className="absolute inset-0 pointer-events-none">
-        {/* Subtle glow trails */}
-        <div className="absolute top-[-20%] left-[-10%] w-[1000px] h-[1000px] bg-white/[0.02] rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[800px] h-[800px] bg-purple-900/[0.05] rounded-full blur-[120px]" />
-      </div>
-
-      {/* LEFT SIDE: FORM CONTAINER */}
-      <div className="w-full lg:w-1/2 h-full flex flex-col justify-center px-8 lg:px-24 z-20 animate-in slide-in-from-left duration-1000 ease-out">
-
-        <div className="max-w-md w-full mx-auto">
-          {/* Minimal Header */}
-          <div className="mb-12">
-            <h1 className="text-3xl font-medium text-white mb-2 tracking-tight">
-              {authMode === 'SIGNUP' ? 'Create Account' : 'Welcome Back'}
-            </h1>
-            <p className="text-[#8A8F98]">
-              {authMode === 'SIGNUP' ? 'Start your workspace journey' : 'Enter your workspace'}
-            </p>
-          </div>
-
-          {/* Google Sign In */}
-          <button
-            onClick={() => loginGoogle()}
-            className="w-full h-12 bg-[#1A1A1A] hover:bg-[#222] border border-[#333] hover:border-[#444] text-white font-medium rounded-lg flex items-center justify-center gap-3 transition-all mb-8 group"
-          >
-            <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="size-5 opacity-90 group-hover:opacity-100 transition-opacity" />
-            <span className="text-sm">Continue with Google</span>
-          </button>
-
-          <div className="relative flex items-center justify-center mb-8">
-            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-[#222]"></div></div>
-            <div className="relative bg-black px-3 text-[10px] text-[#444] uppercase tracking-widest font-medium">Or</div>
-          </div>
-
-          {/* LOGIN FORM */}
-          {authMode === 'LOGIN' && (
-            <form onSubmit={handleLogin} className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-500">
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-[#8A8F98]">Email</label>
-                <input
-                  type="email" name="email" value={formData.email} onChange={handleInputChange}
-                  className="w-full bg-[#0A0A0A] border border-[#222] rounded-lg py-3 px-4 text-white text-sm placeholder-[#444] focus:border-[#444] focus:ring-1 focus:ring-[#333] focus:outline-none transition-all"
-                  placeholder="you@company.com" required
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-[#8A8F98]">Password</label>
-                <input
-                  type="password" name="password" value={formData.password} onChange={handleInputChange}
-                  className="w-full bg-[#0A0A0A] border border-[#222] rounded-lg py-3 px-4 text-white text-sm placeholder-[#444] focus:border-[#444] focus:ring-1 focus:ring-[#333] focus:outline-none transition-all"
-                  placeholder="••••••••" required
-                />
-              </div>
-              <button disabled={isLoggingIn} className="w-full bg-white hover:bg-gray-100 text-black font-semibold py-3.5 rounded-lg transition-all mt-2 flex items-center justify-center text-sm">
-                {isLoggingIn ? <Loader2 className="animate-spin size-4" /> : "Sign In"}
-              </button>
-
-              <p className="text-center text-[#666] text-xs mt-6">
-                Don't have an account? <button type="button" onClick={() => setAuthMode('SIGNUP')} className="text-white hover:underline ml-1">Sign Up</button>
-              </p>
-            </form>
-          )}
-
-          {/* SIGNUP WIZARD */}
-          {authMode === 'SIGNUP' && (
-            <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-
-              {/* STEP 1: DETAILS */}
-              {signupStep === 'DETAILS' && (
-                <form onSubmit={handleStepDetails} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-[#8A8F98]">First Name</label>
-                      <input
-                        type="text" name="firstName" value={formData.firstName} onChange={handleInputChange}
-                        className="w-full bg-[#0A0A0A] border border-[#222] rounded-lg py-3 px-4 text-white text-sm placeholder-[#444] focus:border-[#444] focus:ring-1 focus:ring-[#333] focus:outline-none transition-all"
-                        placeholder="John" required
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-[#8A8F98]">Last Name</label>
-                      <input
-                        type="text" name="lastName" value={formData.lastName} onChange={handleInputChange}
-                        className="w-full bg-[#0A0A0A] border border-[#222] rounded-lg py-3 px-4 text-white text-sm placeholder-[#444] focus:border-[#444] focus:ring-1 focus:ring-[#333] focus:outline-none transition-all"
-                        placeholder="Doe" required
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-[#8A8F98]">Work Email</label>
-                    <input
-                      type="email" name="email" value={formData.email} onChange={handleInputChange}
-                      className="w-full bg-[#0A0A0A] border border-[#222] rounded-lg py-3 px-4 text-white text-sm placeholder-[#444] focus:border-[#444] focus:ring-1 focus:ring-[#333] focus:outline-none transition-all"
-                      placeholder="you@company.com" required
-                    />
-                  </div>
-                  <button disabled={isSigningUp || isLoggingIn} className="w-full bg-white hover:bg-gray-100 text-black font-semibold py-3.5 rounded-lg transition-all mt-4 flex items-center justify-center text-sm shadow-[0_0_20px_rgba(255,255,255,0.1)]">
-                    {isSigningUp || isLoggingIn ? <Loader2 className="animate-spin size-4" /> : "Verify Email"}
-                  </button>
-                  <p className="text-center text-[#666] text-xs mt-6">
-                    Already registered? <button type="button" onClick={() => setAuthMode('LOGIN')} className="text-white hover:underline ml-1">Log In</button>
-                  </p>
-                </form>
-              )}
-
-              {/* STEP 2: VERIFY OTP */}
-              {signupStep === 'VERIFY' && (
-                <form onSubmit={handleStepVerify} className="space-y-8">
-                  <div className="text-center">
-                    <span className="text-[#666] text-xs uppercase tracking-widest font-medium">Verification</span>
-                    <h3 className="text-lg text-white font-medium mt-2">Check your inbox</h3>
-                    <p className="text-sm text-[#666] mt-1">We sent a code to {formData.email}</p>
-                  </div>
-                  <input
-                    type="text" name="otp" value={formData.otp} onChange={handleInputChange} autoFocus
-                    className="w-full bg-[#0A0A0A] border border-[#222] rounded-lg py-4 text-center text-3xl tracking-[0.5em] text-white font-mono placeholder-[#333] focus:border-[#444] focus:ring-1 focus:ring-[#333] focus:outline-none transition-all"
-                    placeholder="••••••" maxLength={6} required
-                  />
-                  <div className="space-y-3">
-                    <button disabled={isSigningUp || isLoggingIn} className="w-full bg-white hover:bg-gray-100 text-black font-semibold py-3 rounded-lg transition-all flex items-center justify-center text-sm">
-                      {isSigningUp || isLoggingIn ? <Loader2 className="animate-spin size-4" /> : "Confirm Code"}
-                    </button>
-                    <button type="button" onClick={() => setSignupStep('DETAILS')} className="w-full text-xs text-[#666] hover:text-white transition-colors">Change Email</button>
-                  </div>
-                </form>
-              )}
-
-              {/* STEP 3: ROLE */}
-              {signupStep === 'ROLE' && (
-                <form onSubmit={handleStepRole} className="space-y-6">
-                  <div className="mb-6">
-                    <span className="text-[#666] text-xs uppercase tracking-widest font-medium">Your Role</span>
-                    <h3 className="text-xl text-white font-medium mt-2">What do you do?</h3>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-medium text-[#8A8F98]">Job Title / Designation</label>
-                    <input
-                      type="text" name="role" value={formData.role} onChange={handleInputChange} autoFocus
-                      className="w-full bg-[#0A0A0A] border border-[#222] rounded-lg py-3.5 px-4 text-white text-sm placeholder-[#444] focus:border-[#444] focus:ring-1 focus:ring-[#333] focus:outline-none transition-all"
-                      placeholder="e.g. Founder, Developer, Visual Designer..." required
-                    />
-                  </div>
-                  <button disabled={isLoggingIn} className="w-full bg-white hover:bg-gray-100 text-black font-semibold py-3.5 rounded-lg transition-all mt-2 flex items-center justify-center text-sm group">
-                    {isLoggingIn ? <Loader2 className="animate-spin size-4" /> : <span className="flex items-center gap-2">Continue <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" /></span>}
-                  </button>
-                </form>
-              )}
-
-              {/* STEP 4: ORG SETUP */}
-              {signupStep === 'ORG_ACTION' && (
-                <form onSubmit={handleStepOrg} className="space-y-8">
-                  <div className="mb-4">
-                    <span className="text-[#666] text-xs uppercase tracking-widest font-medium">Workspace</span>
-                    <h3 className="text-xl text-white font-semibold mt-2">
-                      {isCreatorRole() ? "Setup your HQ" : "Join your team"}
-                    </h3>
-                  </div>
-
-                  {isCreatorRole() ? (
-                    <div className="space-y-6">
-                      <div className="p-4 bg-[#0A0A0A] border border-[#222] rounded-lg flex items-start gap-4">
-                        <div className="p-2 bg-[#151515] rounded-md border border-[#222]"><ShieldCheck className="size-5 text-white" /></div>
-                        <div>
-                          <h4 className="text-sm font-medium text-white">Create New Organization</h4>
-                          <p className="text-xs text-[#666] mt-1 leading-relaxed">As a {formData.role}, you'll be the Admin of this new workspace.</p>
-                        </div>
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-[#8A8F98]">Organization Name</label>
-                        <input
-                          type="text" name="orgName" value={formData.orgName} onChange={handleInputChange}
-                          className="w-full bg-[#0A0A0A] border border-[#222] rounded-lg py-3.5 px-4 text-white text-sm placeholder-[#444] focus:border-[#444] focus:ring-1 focus:ring-[#333] focus:outline-none transition-all"
-                          placeholder="Acme Corp" required
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-5">
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-[#8A8F98]">Search Organization</label>
-                        <div className="relative">
-                          <Building2 className="absolute left-4 top-3.5 size-4 text-[#444]" />
-                          <input
-                            type="text" name="searchOrgName" value={formData.searchOrgName} onChange={handleInputChange}
-                            className="w-full bg-[#0A0A0A] border border-[#222] rounded-lg py-3.5 pl-11 pr-4 text-white text-sm placeholder-[#444] focus:border-[#444] focus:ring-1 focus:ring-[#333] focus:outline-none transition-all"
-                            placeholder="Search by name..."
-                          />
-                        </div>
-                      </div>
-                      <div className="relative flex items-center justify-center">
-                        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-[#222]"></div></div>
-                        <div className="relative bg-black px-3 text-[10px] text-[#444] uppercase tracking-widest font-medium">Or</div>
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-[#8A8F98]">Join Code</label>
-                        <div className="relative">
-                          <LogIn className="absolute left-4 top-3.5 size-4 text-[#444]" />
-                          <input
-                            type="text" name="joinCode" value={formData.joinCode} onChange={handleInputChange}
-                            className="w-full bg-[#0A0A0A] border border-[#222] rounded-lg py-3.5 pl-11 pr-4 text-white text-sm placeholder-[#444] focus:border-[#444] focus:ring-1 focus:ring-[#333] focus:outline-none transition-all"
-                            placeholder="e.g. XYZ-123"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <button disabled={isCreatingOrg || isJoiningOrg} className="w-full bg-white hover:bg-gray-100 text-black font-semibold py-3.5 rounded-lg transition-all mt-4 flex items-center justify-center text-sm shadow-[0_0_20px_rgba(255,255,255,0.1)]">
-                    {isCreatingOrg || isJoiningOrg ? <Loader2 className="animate-spin size-4" /> : (isCreatorRole() ? "Launch Workspace" : "Join Workspace")}
-                  </button>
-                </form>
-              )}
-
-            </div>
-          )}
+  // --- BLANK / INTRO PHASES ---
+  if (introPhase === "BLANK") return <div className="h-screen w-screen bg-black" />;
+  
+  if (introPhase === "LOGO") {
+      return (
+        <div className="h-screen w-screen bg-black flex items-center justify-center animate-in fade-in duration-1000">
+           <img src="/Orchestr (3).png" alt="Logo" className="w-32 opacity-90 grayscale" />
         </div>
-      </div>
+      );
+  }
 
-      {/* RIGHT SIDE: LOGO / BRANDING */}
-      {/* Animation: Slide in from Right */}
-      <div className="hidden lg:flex w-1/2 bg-black items-center justify-center relative animate-in slide-in-from-right duration-1000 ease-out border-l border-[#111]">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#111] via-black to-black opacity-50" />
+  return (
+    <div className="min-h-screen bg-black flex relative overflow-hidden font-sans text-white selection:bg-white/20">
+        
+       {/* Cinematic Background */}
+       <div className="fixed inset-0 pointer-events-none">
+          <div className="absolute top-[-20%] left-[-10%] w-[1000px] h-[1000px] bg-white/[0.02] rounded-full blur-[120px]" />
+          <div className="absolute bottom-[-20%] right-[-10%] w-[800px] h-[800px] bg-purple-900/[0.05] rounded-full blur-[120px]" />
+       </div>
 
+       {/* Main Layout: Split 50/50 */}
+       <div className={`w - full lg: w - 1 / 2 h - full flex flex - col px - 8 lg: px - 24 pt - 20 z - 10 transition - all duration - 1000 ${ introPhase === 'SPLIT' ? 'translate-x-0 opacity-100' : '-translate-x-20 opacity-0' } `}>
+          
+          {/* Header */}
+          <div className="mb-8">
+             <div className="flex items-center gap-3 mb-6">
+                <img src="/Orchestr (3).png" alt="Logo" className="w-10 opacity-90" />
+             </div>
+             <h1 className="text-3xl font-medium tracking-tight mb-2">Initialize Workspace</h1>
+             <p className="text-[#666]">One identity for all your professional workflows.</p>
+          </div>
+
+          {/* --- SECTION 1: GOOGLE AUTH (ALWAYS VISIBLE) --- */}
+          <div className={`transition - all duration - 500 ${ isEmailVerified ? 'opacity-50 pointer-events-none grayscale' : 'opacity-100' } `}>
+              <button
+                onClick={() => loginGoogle()}
+                className="w-full h-12 bg-[#1A1A1A] hover:bg-[#222] border border-[#333] hover:border-[#444] rounded-lg flex items-center justify-center gap-3 transition-all group"
+              >
+                <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="size-5 filter grayscale group-hover:grayscale-0 transition-all" />
+                <span className="text-sm font-medium text-[#ccc] group-hover:text-white">Continue with Google</span>
+              </button>
+          </div>
+
+          <div className="relative flex items-center justify-center my-6">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-[#222]"></div></div>
+                <div className="relative bg-black px-3 text-[10px] text-[#444] uppercase tracking-widest font-medium">Or</div>
+          </div>
+
+          {/* --- SECTION 2: MANUAL INPUT & OTP --- */}
+          <div className="space-y-6">
+             {/* Name & Email Fields */}
+             <div className={`space - y - 4 transition - all duration - 500 ${ isEmailVerified ? 'opacity-60 pointer-events-none' : 'opacity-100' } `}>
+                 {!isEmailVerified && (
+                     <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                            <label className="text-xs text-[#666] font-medium ml-1">First Name</label>
+                            <input 
+                                name="firstName" value={formData.firstName} onChange={handleInputChange}
+                                className="w-full bg-[#0A0A0A] border border-[#222] rounded-lg p-3 text-sm focus:border-white/20 focus:outline-none transition-colors"
+                                placeholder="John"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-xs text-[#666] font-medium ml-1">Last Name</label>
+                            <input 
+                                name="lastName" value={formData.lastName} onChange={handleInputChange}
+                                className="w-full bg-[#0A0A0A] border border-[#222] rounded-lg p-3 text-sm focus:border-white/20 focus:outline-none transition-colors"
+                                placeholder="Doe"
+                            />
+                        </div>
+                     </div>
+                 )}
+                 
+                 <div className="relative">
+                    <input 
+                        type="email" name="email" value={formData.email} onChange={handleInputChange}
+                        readOnly={isEmailVerified}
+                        className={`w - full bg - [#0A0A0A] border ${ isEmailVerified ? 'border-green-900/30 text-green-500' : 'border-[#222] text-white' } rounded - lg p - 3 pl - 10 text - sm focus: border - white / 20 focus: outline - none transition - colors`}
+                        placeholder="work@company.com"
+                    />
+                    <Mail className={`absolute left - 3 top - 3.5 size - 4 ${ isEmailVerified ? 'text-green-500' : 'text-[#444]' } `} />
+                    
+                    {/* Inline Verify Button or Checkmark */}
+                    <div className="absolute right-2 top-2">
+                        {isEmailVerified ? (
+                            <CheckCircle2 className="size-5 text-green-500 mt-1" />
+                        ) : (
+                           formData.email.length > 5 && currentStep === 'INPUT_EMAIL' && (
+                                <button 
+                                    onClick={handleRequestOtp}
+                                    disabled={isSigningUp}
+                                    className="bg-white text-black px-3 py-1.5 rounded text-xs font-semibold hover:bg-gray-200 transition-colors flex items-center gap-1"
+                                >
+                                    {isSigningUp ? <Loader2 className="animate-spin size-3" /> : "Verify"}
+                                </button>
+                           )
+                        )}
+                    </div>
+                 </div>
+             </div>
+
+             {/* OTP Field (Conditionally Revealed) */}
+             {currentStep === 'VERIFY_OTP' && !isEmailVerified && (
+                 <div className="animate-in slide-in-from-left-4 fade-in duration-500">
+                    <div className="relative">
+                        <input 
+                            name="otp" value={formData.otp} onChange={handleInputChange} autoFocus
+                            maxLength={6}
+                            className="w-full bg-[#0A0A0A] border border-[#222] rounded-lg p-3 pl-10 text-sm tracking-[0.3em] font-mono focus:border-white/20 focus:outline-none transition-colors text-white"
+                            placeholder=" • • • • • • "
+                        />
         <div className="relative z-10 flex flex-col items-center">
           {/* Main Logo Display */}
           <div className="relative group cursor-default">

@@ -12,12 +12,15 @@ export const createOrganization = async (req, res) => {
 
         const slug = name.toLowerCase().replace(/\s+/g, '-') + "-" + Date.now().toString().slice(-4);
         const joinCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+        // Generate a 12-character unique registration number (e.g., ORG-9X21-8B7A)
+        const registrationNumber = "ORG-" + Math.random().toString(36).substring(2, 6).toUpperCase() + "-" + Math.random().toString(36).substring(2, 6).toUpperCase();
 
         const newOrg = new Organization({
             name,
             slug,
             ownerId: userId,
-            joinCode
+            joinCode,
+            registrationNumber
         });
 
         await newOrg.save();
@@ -44,13 +47,15 @@ export const createOrganization = async (req, res) => {
 // Join Organization
 export const joinOrganization = async (req, res) => {
     try {
-        const { joinCode, orgName } = req.body;
+        const { joinCode, orgName, registrationNumber } = req.body;
         const userId = req.user._id;
 
         let org;
 
         if (joinCode) {
             org = await Organization.findOne({ joinCode });
+        } else if (registrationNumber) {
+            org = await Organization.findOne({ registrationNumber });
         } else if (orgName) {
             // Case insensitive search
             org = await Organization.findOne({ name: { $regex: new RegExp(`^${orgName}$`, 'i') } });

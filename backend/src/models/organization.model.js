@@ -34,6 +34,11 @@ const organizationSchema = new mongoose.Schema(
             unique: true,
             required: true,
         },
+        registrationNumber: {
+            type: String,
+            unique: true,
+            required: true,
+        },
     },
     { timestamps: true }
 );

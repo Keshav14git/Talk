@@ -58,11 +58,7 @@ const SignUpPage = () => {
   }, []);
 
   // --- Auto-Redirect if Done ---
-  useEffect(() => {
-    if (authUser?.lastActiveOrgId) {
-      navigate("/");
-    }
-  }, [authUser, navigate]);
+
 
   // --- Handlers ---
 

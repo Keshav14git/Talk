@@ -4,7 +4,8 @@ import { useAuthStore } from "../store/useAuthStore";
 import SidebarSkeleton from "./skeletons/SidebarSkeleton";
 import {
   Users, CirclePlus, MessageSquare, Archive,
-  Search, Bell, Settings, LogOut, Briefcase, Hash, ChevronDown, ChevronRight, Lock
+  Search, Bell, Settings, LogOut, Briefcase, Hash, ChevronDown, ChevronRight, Lock,
+  PanelLeftClose, PanelLeftOpen, Megaphone
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import AddFriendModal from "./AddFriendModal";
@@ -30,6 +31,7 @@ const Sidebar = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeModal, setActiveModal] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Section Toggle States
   const [sections, setSections] = useState({
@@ -80,25 +82,36 @@ const Sidebar = () => {
 
   if (isUsersLoading) return <SidebarSkeleton />;
 
+  if (isCollapsed) {
+    return (
+      <div className="h-full w-[50px] border-r border-[#222] bg-[#0a0a0a] flex flex-col items-center py-4 z-20 shrink-0">
+        <button onClick={() => setIsCollapsed(false)} className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
+          <PanelLeftOpen className="size-5" />
+        </button>
+        {/* Minimal Icons if desired, or just blank/expand button */}
+        <div className="mt-4 flex flex-col gap-4">
+          {/* Quick Access Icons could go here, but "standard collapsible" often just hides. 
+                      Let's show section icons for quick navigation if user wants, or just keep it simple.
+                      User asked for "standard collapsable", simplest is expand button.
+                  */}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <aside className="h-full flex flex-col w-full md:w-[300px] border-r border-gray-800 bg-[#0a0a0a] flex-shrink-0 relative z-20">
+    <aside className="h-full flex flex-col w-full md:w-[280px] border-r border-[#222] bg-[#0a0a0a] flex-shrink-0 relative z-20 font-sans">
       {/* Workspace Header */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-gray-800 shrink-0">
+      <div className="h-16 flex items-center justify-between px-4 border-b border-[#222] shrink-0">
         <div className="flex items-center gap-3 overflow-hidden">
-          <div className="size-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-lg shrink-0">
-            {currentOrg?.name?.substring(0, 2).toUpperCase() || "W"}
-          </div>
           <div className="flex flex-col min-w-0">
-            <h1 className="font-bold text-gray-200 truncate leading-tight">{currentOrg?.name || "Workspace"}</h1>
-            <span className="text-[10px] text-gray-500 truncate">{authUser?.email}</span>
+            <h1 className="font-bold text-gray-200 truncate leading-tight tracking-wide">{currentOrg?.name || "Workspace"}</h1>
           </div>
         </div>
-        {/* Settings / Menu */}
-        <div className="flex items-center">
-          <button onClick={() => setActiveModal('requests')} title="Invites" className="p-2 text-gray-400 hover:text-white transition-colors">
-            <Bell className="size-4" />
-          </button>
-        </div>
+        {/* Collapse Button */}
+        <button onClick={() => setIsCollapsed(true)} className="p-1.5 text-gray-500 hover:text-white transition-colors">
+          <PanelLeftClose className="size-4" />
+        </button>
       </div>
 
       {/* Search */}
@@ -154,7 +167,7 @@ const Sidebar = () => {
           <div className="group flex items-center justify-between px-2 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-300 cursor-pointer" onClick={() => toggleSection('channels')}>
             <div className="flex items-center gap-1">
               {sections.channels ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
-              Channels
+              Announcements
             </div>
             <div className="flex gap-1 opacity-0 group-hover:opacity-100">
               <button onClick={(e) => { e.stopPropagation(); setActiveModal('explore'); }} className="p-0.5 hover:bg-gray-800 rounded text-gray-400 hover:text-white transition-all" title="Browse">

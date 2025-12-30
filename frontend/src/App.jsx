@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
 import HomePage from './pages/HomePage';
 import SignUpPage from './pages/SignUpPage';
-import LoginPage from './pages/LoginPage';
+
 import SettingsPage from './pages/SettingsPage';
 import ProfilePage from './pages/ProfilePage';
 import OnboardingPage from './pages/OnboardingPage';
@@ -40,11 +40,12 @@ const App = () => {
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
       <Routes>
-        {/* Public Routes */}
-        <Route path="/login" element={<Navigate to="/signup" />} />
-        <Route path="/signup" element={!authUser ? <SignUpPage /> : <Navigate to="/" />} />
+        {/* Public Routes - Unified Auth */}
+        <Route path="/auth" element={!authUser ? <SignUpPage /> : <Navigate to="/" />} />
+        <Route path="/login" element={<Navigate to="/auth" />} />
+        <Route path="/signup" element={<Navigate to="/auth" />} />
 
-        {/* Org Setup Route */}
+        {/* Org Setup Route - Kept as fallback/utility */}
         <Route path="/org-setup" element={authUser && !authUser.lastActiveOrgId ? <OrgSetup /> : <Navigate to="/" />} />
 
         {/* Protected Workspace Layout */}

@@ -186,7 +186,7 @@ const SignUpPage = () => {
       </div>
 
       {/* Main Layout: Split 50/50 */}
-      <div className={`w - full lg: w - 1 / 2 h - full flex flex - col px - 8 lg: px - 24 pt - 20 z - 10 transition - all duration - 1000 ${introPhase === 'SPLIT' ? 'translate-x-0 opacity-100' : '-translate-x-20 opacity-0'} `}>
+      <div className={`w-full lg:w-1/2 h-full flex flex-col px-8 lg:px-24 pt-20 z-10 transition-all duration-1000 ${introPhase === 'SPLIT' ? 'translate-x-0 opacity-100' : '-translate-x-20 opacity-0'} `}>
 
         {/* Header */}
         <div className="mb-8">
@@ -198,7 +198,7 @@ const SignUpPage = () => {
         </div>
 
         {/* --- SECTION 1: GOOGLE AUTH (ALWAYS VISIBLE) --- */}
-        <div className={`transition - all duration - 500 ${isEmailVerified ? 'opacity-50 pointer-events-none grayscale' : 'opacity-100'} `}>
+        <div className={`transition-all duration-500 ${isEmailVerified ? 'opacity-50 pointer-events-none grayscale' : 'opacity-100'} `}>
           <button
             onClick={() => loginGoogle()}
             className="w-full h-12 bg-[#1A1A1A] hover:bg-[#222] border border-[#333] hover:border-[#444] rounded-lg flex items-center justify-center gap-3 transition-all group"
@@ -216,7 +216,7 @@ const SignUpPage = () => {
         {/* --- SECTION 2: MANUAL INPUT & OTP --- */}
         <div className="space-y-6">
           {/* Name & Email Fields */}
-          <div className={`space - y - 4 transition - all duration - 500 ${isEmailVerified ? 'opacity-60 pointer-events-none' : 'opacity-100'} `}>
+          <div className={`space-y-4 transition-all duration-500 ${isEmailVerified ? 'opacity-60 pointer-events-none' : 'opacity-100'} `}>
             {!isEmailVerified && (
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
@@ -242,10 +242,10 @@ const SignUpPage = () => {
               <input
                 type="email" name="email" value={formData.email} onChange={handleInputChange}
                 readOnly={isEmailVerified}
-                className={`w - full bg - [#0A0A0A] border ${isEmailVerified ? 'border-green-900/30 text-green-500' : 'border-[#222] text-white'} rounded - lg p - 3 pl - 10 text - sm focus: border - white / 20 focus: outline - none transition - colors`}
+                className={`w-full bg-[#0A0A0A] border ${isEmailVerified ? 'border-green-900/30 text-green-500' : 'border-[#222] text-white'} rounded-lg p-3 pl-10 text-sm focus:border-white/20 focus:outline-none transition-colors`}
                 placeholder="work@company.com"
               />
-              <Mail className={`absolute left - 3 top - 3.5 size - 4 ${isEmailVerified ? 'text-green-500' : 'text-[#444]'} `} />
+              <Mail className={`absolute left-3 top-3.5 size-4 ${isEmailVerified ? 'text-green-500' : 'text-[#444]'} `} />
 
               {/* Inline Verify Button or Checkmark */}
               <div className="absolute right-2 top-2">
@@ -293,7 +293,7 @@ const SignUpPage = () => {
 
           {/* --- SECTION 3: ROLE SELECTION (Conditionally Revealed) --- */}
           {isEmailVerified && (
-            <div className={`space - y - 4 animate -in slide -in -from - bottom - 4 fade -in duration - 700 delay - 100 ${isRoleSelected ? 'opacity-60 pointer-events-none' : 'opacity-100'} `}>
+            <div className={`space-y-4 animate-in slide-in-from-bottom-4 fade-in duration-700 delay-100 ${isRoleSelected ? 'opacity-60 pointer-events-none' : 'opacity-100'} `}>
               <div className="flex items-center gap-2">
                 <Briefcase className="size-4 text-[#666]" />
                 <span className="text-xs font-medium text-[#666] uppercase tracking-wider">Your Role</span>
@@ -304,7 +304,7 @@ const SignUpPage = () => {
                   <button
                     key={r}
                     onClick={() => handleSelectRole(r)}
-                    className={`p - 3 rounded - lg border text - left text - sm transition - all duration - 300 ${formData.role === r ? 'bg-white text-black border-white ring-2 ring-white/20' : 'bg-[#0A0A0A] border-[#222] text-[#888] hover:border-[#444] hover:text-[#ccc]'} `}
+                    className={`p-3 rounded-lg border text-left text-sm transition-all duration-300 ${formData.role === r ? 'bg-white text-black border-white ring-2 ring-white/20' : 'bg-[#0A0A0A] border-[#222] text-[#888] hover:border-[#444] hover:text-[#ccc]'} `}
                   >
                     {r}
                   </button>
@@ -397,7 +397,7 @@ const SignUpPage = () => {
       </div>
 
       {/* RIGHT SIDE (Decorative) */}
-      <div className={`hidden lg:block w - 1 / 2 h - full bg - [#050505] border - l border - [#222] relative overflow - hidden transition - all duration - 1000 delay - 300 ${introPhase === 'SPLIT' ? 'translate-x-0 opacity-100' : 'translate-x-20 opacity-0'} `}>
+      <div className={`hidden lg:block w-1/2 h-full bg-[#050505] border-l border-[#222] relative overflow-hidden transition-all duration-1000 delay-300 ${introPhase === 'SPLIT' ? 'translate-x-0 opacity-100' : 'translate-x-20 opacity-0'} `}>
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="w-[80%] h-[60%] bg-gradient-to-tr from-[#111] to-[#000] rounded-xl border border-[#222] shadow-2xl relative overflow-hidden group">
             {/* Fake UI Preview inside */}

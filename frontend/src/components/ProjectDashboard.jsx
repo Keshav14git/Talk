@@ -129,7 +129,7 @@ const ProjectDashboard = ({ project }) => {
     return (
         <div className="flex-1 flex flex-col h-full bg-[#000] overflow-hidden">
             {/* Project Header - Control Strip */}
-            <div className="h-20 border-b border-[#222] flex items-center justify-between px-6 bg-[#111] shrink-0">
+            <div className="h-16 border-b border-[#222] flex items-center justify-between px-6 bg-[#111] shrink-0">
                 <div className="flex items-center gap-6">
                     {/* Identity */}
                     <div className="flex items-center gap-4">

@@ -170,7 +170,7 @@ const SignUpPage = () => {
   if (introPhase === "LOGO") {
     return (
       <div className="h-screen w-screen bg-black flex items-center justify-center animate-in fade-in duration-1000">
-        <img src="/Orchestr (3).png" alt="Logo" className="w-32 opacity-90 grayscale" />
+        <img src="/Orchestr (3).png" alt="Logo" className="w-48 opacity-100 animate-pulse" />
       </div>
     );
   }
@@ -189,9 +189,6 @@ const SignUpPage = () => {
 
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-6">
-            <img src="/Orchestr (3).png" alt="Logo" className="w-10 opacity-90" />
-          </div>
           <h1 className="text-3xl font-medium tracking-tight mb-2">Initialize Workspace</h1>
           <p className="text-[#666]">One identity for all your professional workflows.</p>
         </div>
@@ -398,8 +395,13 @@ const SignUpPage = () => {
       {/* Animated Grid Pattern (Full Screen) */}
       <div className={`fixed inset-0 w-full h-full pointer-events-none z-0 transition-opacity duration-1000 delay-300 ${introPhase === 'SPLIT' ? 'opacity-100' : 'opacity-0'} `}>
         {/* Shift grid slightly right to balance with form */}
-        <div className="w-full h-full flex items-center justify-end lg:pr-32">
+        <div className="w-full h-full flex items-center justify-end lg:pr-32 relative">
           <ParticleNetworkPattern />
+
+          {/* Floating Logo on Right Side */}
+          <div className="absolute top-1/2 left-1/2 lg:left-3/4 transform -translate-x-1/2 -translate-y-1/2 z-10 glass-effect p-8 rounded-full bg-black/50 border border-white/5 backdrop-blur-sm animate-in fade-in zoom-in duration-1000 delay-500">
+            <img src="/Orchestr (3).png" alt="Logo" className="w-24 opacity-90 animate-pulse-slow" />
+          </div>
         </div>
       </div>
 

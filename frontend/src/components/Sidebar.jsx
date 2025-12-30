@@ -84,227 +84,243 @@ const Sidebar = () => {
 
   if (isUsersLoading) return <SidebarSkeleton />;
 
-  if (isCollapsed) {
-    return (
-      <div className="h-full w-[80px] border-r border-[#222] bg-[#0a0a0a] flex flex-col items-center py-6 z-20 shrink-0 gap-8">
-        <button onClick={() => setIsCollapsed(false)} className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors mb-4">
-          <PanelLeftOpen className="size-6" />
-        </button>
+  if (isUsersLoading) return <SidebarSkeleton />;
 
-        {/* Collapsed Icons - White Filter Applied */}
-        <div className="flex flex-col gap-8 w-full items-center">
-          <div className="group relative flex justify-center w-full" title="Projects">
+  return (
+    <motion.aside
+      initial={{ width: 280 }}
+      animate={{ width: isCollapsed ? 80 : 280 }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
+      className="h-full flex flex-col border-r border-[#222] bg-[#0a0a0a] flex-shrink-0 relative z-20 font-sans overflow-hidden"
+    >
+      {/* Workspace Header - Collapsed vs Expanded */}
+      <div className="h-16 flex items-center justify-between px-4 border-b border-[#222] shrink-0">
+        {!isCollapsed ? (
+          <>
+            <div className="flex items-center gap-3 overflow-hidden">
+              <div className="flex flex-col min-w-0">
+                <h1 className="font-bold text-gray-200 truncate leading-tight tracking-wide">{currentOrg?.name || "Workspace"}</h1>
+              </div>
+            </div>
+            <button onClick={() => setIsCollapsed(true)} className="p-1.5 text-gray-500 hover:text-white transition-colors">
+              <PanelLeftClose className="size-4" />
+            </button>
+          </>
+        ) : (
+          <div className="w-full flex justify-center">
+            <button onClick={() => setIsCollapsed(false)} className="p-1.5 text-gray-500 hover:text-white transition-colors">
+              <PanelLeftOpen className="size-5" />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {isCollapsed ? (
+        <div className="flex-1 flex flex-col items-center py-6 gap-8 overflow-y-auto custom-scrollbar">
+          <div className="group relative flex justify-center w-full cursor-pointer" title="Projects" onClick={() => { setIsCollapsed(false); toggleSection('projects'); }}>
             <img src="/Projects.png" alt="Projects" className="w-6 h-6 object-contain invert brightness-0 opacity-70 group-hover:opacity-100 transition-opacity" />
           </div>
 
-          <div className="group relative flex justify-center w-full" title="Team">
+          <div className="group relative flex justify-center w-full cursor-pointer" title="Team" onClick={() => { setIsCollapsed(false); toggleSection('team'); }}>
             <img src="/group.png" alt="Team" className="w-6 h-6 object-contain invert brightness-0 opacity-70 group-hover:opacity-100 transition-opacity" />
           </div>
 
-          <div className="group relative flex justify-center w-full" title="Announcements">
+          <div className="group relative flex justify-center w-full cursor-pointer" title="Announcements" onClick={() => { setIsCollapsed(false); toggleSection('channels'); }}>
             <img src="/announcement.png" alt="Announcements" className="w-6 h-6 object-contain invert brightness-0 opacity-70 group-hover:opacity-100 transition-opacity" />
           </div>
 
-          <div className="group relative flex justify-center w-full" title="People">
+          <div className="group relative flex justify-center w-full cursor-pointer" title="People" onClick={() => { setIsCollapsed(false); toggleSection('directMessages'); }}>
             <img src="/chat.png" alt="People" className="w-6 h-6 object-contain invert brightness-0 opacity-70 group-hover:opacity-100 transition-opacity" />
           </div>
         </div>
-      </div>
-    );
-  }
-
-  return (
-    <aside className="h-full flex flex-col w-full md:w-[280px] border-r border-[#222] bg-[#0a0a0a] flex-shrink-0 relative z-20 font-sans">
-      {/* Workspace Header */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-[#222] shrink-0">
-        <div className="flex items-center gap-3 overflow-hidden">
-          <div className="flex flex-col min-w-0">
-            <h1 className="font-bold text-gray-200 truncate leading-tight tracking-wide">{currentOrg?.name || "Workspace"}</h1>
-          </div>
-        </div>
-        {/* Collapse Button */}
-        <button onClick={() => setIsCollapsed(true)} className="p-1.5 text-gray-500 hover:text-white transition-colors">
-          <PanelLeftClose className="size-4" />
-        </button>
-      </div>
-
-      {/* Search */}
-      <div className="px-3 py-2">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-gray-500" />
-          <input
-            type="text"
-            placeholder="Jump to..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[#1A1A1A] border border-gray-800/50 text-gray-300 text-sm rounded-md pl-9 pr-3 py-1.5 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all placeholder-gray-600"
-          />
-        </div>
-      </div>
-
-      {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto px-2 custom-scrollbar space-y-6 py-2">
-
-        {/* PROJECTS SECTION */}
-        <div className="space-y-0.5">
-          <div className="group flex items-center justify-between px-2 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-300 cursor-pointer" onClick={() => toggleSection('projects')}>
-            <div className="flex items-center gap-1">
-              {sections.projects ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
-              Projects
+      ) : (
+        <>
+          {/* Search */}
+          <div className="px-3 py-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-gray-500" />
+              <input
+                type="text"
+                placeholder="Jump to..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-[#1A1A1A] border border-gray-800/50 text-gray-300 text-sm rounded-md pl-9 pr-3 py-1.5 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all placeholder-gray-600"
+              />
             </div>
-            <button onClick={(e) => { e.stopPropagation(); setActiveModal('createProject'); }} className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-gray-800 rounded text-gray-400 hover:text-white transition-all">
-              <CirclePlus className="size-3.5" />
-            </button>
           </div>
 
-          {sections.projects && (
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto px-2 custom-scrollbar space-y-6 py-2">
+
+            {/* PROJECTS SECTION */}
             <div className="space-y-0.5">
-              {filteredProjects.map(project => (
-                <ListItem
-                  key={project._id}
-                  item={project}
-                  type="project"
-                  icon={Briefcase}
-                  isSelected={selectedUser?._id === project._id}
-                  onClick={() => setSelectedUser(project, 'project')}
-                />
-              ))}
-              {filteredProjects.length === 0 && (
-                <div className="px-4 py-2 text-xs text-gray-600 italic">No projects yet</div>
-              )}
-            </div>
-          )}
-        </div>
+              <div className="group flex items-center justify-between px-2 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-300 cursor-pointer" onClick={() => toggleSection('projects')}>
+                <div className="flex items-center gap-1">
+                  {sections.projects ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+                  Projects
+                </div>
+                <button onClick={(e) => { e.stopPropagation(); setActiveModal('createProject'); }} className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-gray-800 rounded text-gray-400 hover:text-white transition-all">
+                  <CirclePlus className="size-3.5" />
+                </button>
+              </div>
 
-        {/* TEAM SECTION */}
-        <div className="space-y-0.5">
-          <div className="group flex items-center justify-between px-2 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-300 cursor-pointer" onClick={() => toggleSection('team')}>
-            <div className="flex items-center gap-1">
-              {sections.team ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
-              Team
-            </div>
-            <button onClick={(e) => { e.stopPropagation(); setActiveModal('createGroup'); }} className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-gray-800 rounded text-gray-400 hover:text-white transition-all">
-              <CirclePlus className="size-3.5" />
-            </button>
-          </div>
-
-          {sections.team && (
-            <div className="space-y-0.5">
-              {filteredTeams.map(group => (
-                <ListItem
-                  key={group._id}
-                  item={{ ...group, fullName: group.name }}
-                  type="group"
-                  icon={Users}
-                  isSelected={selectedUser?._id === group._id}
-                  onClick={() => setSelectedUser(group, 'group')}
-                />
-              ))}
-              {filteredTeams.length === 0 && (
-                <div className="px-4 py-2 text-xs text-gray-600 italic">No teams created</div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* CHANNELS SECTION */}
-        <div className="space-y-0.5">
-          <div className="group flex items-center justify-between px-2 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-300 cursor-pointer" onClick={() => toggleSection('channels')}>
-            <div className="flex items-center gap-1">
-              {sections.channels ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
-              Announcements
-            </div>
-            <div className="flex gap-1 opacity-0 group-hover:opacity-100">
-              <button onClick={(e) => { e.stopPropagation(); setActiveModal('explore'); }} className="p-0.5 hover:bg-gray-800 rounded text-gray-400 hover:text-white transition-all" title="Browse">
-                <Search className="size-3.5" />
-              </button>
-              <button onClick={(e) => { e.stopPropagation(); setActiveModal('createChannel'); }} className="p-0.5 hover:bg-gray-800 rounded text-gray-400 hover:text-white transition-all" title="Create">
-                <CirclePlus className="size-3.5" />
-              </button>
-            </div>
-          </div>
-
-          {sections.channels && (
-            <div className="space-y-0.5">
-              {filteredChannels.map(channel => (
-                <ListItem
-                  key={channel._id}
-                  item={{ ...channel, fullName: channel.name }}
-                  type="channel"
-                  icon={Hash}
-                  isSelected={selectedUser?._id === channel._id}
-                  onClick={() => setSelectedUser(channel, 'channel')}
-                />
-              ))}
-              {filteredChannels.length === 0 && (
-                <div className="px-4 py-2 text-xs text-gray-600 italic">No channels joined</div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* DIRECT MESSAGES (Org Members) */}
-        <div className="space-y-0.5">
-          <div className="flex items-center justify-between px-2 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => toggleSection('directMessages')}>
-            <div className="flex items-center gap-1">
-              {sections.directMessages ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
-              People
-            </div>
-          </div>
-
-          {sections.directMessages && (
-            <div className="space-y-0.5">
-              {filteredMembers.map(member => {
-                // Member object usually has { _id, userId: {fullName...}, role } if populated from OrgMembers
-                // Or if it's the raw user object?
-                // Standardize: useOrgStore.orgMembers stores populated members.
-                // Structure: { _id, userId: { _id, fullName, ... }, role }
-                // The `item` passed to ListItem should be the User part with Role merged ideally
-                const userObj = member.userId || member;
-                const role = member.designation || member.accessLevel || member.role;
-
-                return (
-                  <ListItem
-                    key={userObj._id}
-                    item={{ ...userObj, role }} // Merge role for display
-                    type="user"
-                    isOnline={onlineUsers.includes(userObj._id)}
-                    isSelected={selectedUser?._id === userObj._id}
-                    onClick={() => setSelectedUser(userObj, 'user')}
-                    useAvatar={true}
-                  />
-                );
-              })}
-              {filteredMembers.length === 0 && (
-                <div className="flex flex-col items-center justify-center p-4 text-center mt-2 group cursor-pointer hover:bg-white/5 rounded-lg transition-all" onClick={() => setActiveModal('requests')}>
-                  <div className="size-8 bg-gray-800 rounded-full flex items-center justify-center text-gray-500 mb-2 group-hover:bg-gray-700 group-hover:text-gray-300 transition-colors">
-                    <Users className="size-4" />
-                  </div>
-                  <p className="text-xs text-gray-500 font-medium">No other members</p>
-                  <span className="text-[10px] text-indigo-400 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">Invite Team</span>
+              {sections.projects && (
+                <div className="space-y-0.5">
+                  {filteredProjects.map(project => (
+                    <ListItem
+                      key={project._id}
+                      item={project}
+                      type="project"
+                      icon={Briefcase}
+                      isSelected={selectedUser?._id === project._id}
+                      onClick={() => setSelectedUser(project, 'project')}
+                    />
+                  ))}
+                  {filteredProjects.length === 0 && (
+                    <div className="px-4 py-2 text-xs text-gray-600 italic">No projects yet</div>
+                  )}
                 </div>
               )}
             </div>
-          )}
-        </div>
 
-      </div>
+            {/* TEAM SECTION */}
+            <div className="space-y-0.5">
+              <div className="group flex items-center justify-between px-2 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-300 cursor-pointer" onClick={() => toggleSection('team')}>
+                <div className="flex items-center gap-1">
+                  {sections.team ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+                  Team
+                </div>
+                <button onClick={(e) => { e.stopPropagation(); setActiveModal('createGroup'); }} className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-gray-800 rounded text-gray-400 hover:text-white transition-all">
+                  <CirclePlus className="size-3.5" />
+                </button>
+              </div>
 
-      {/* User Footer */}
-      <div className="p-3 border-t border-gray-800 bg-[#0f0f0f]">
-        <div className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer transition-colors group">
-          <img src={authUser?.profilePic || "/avatar.png"} className="size-8 rounded-lg object-cover" alt="Me" />
-          <div className="flex-1 min-w-0 overflow-hidden">
-            <div className="font-medium text-gray-200 text-sm truncate">{authUser?.fullName}</div>
-            <div className="text-[10px] text-gray-500 flex items-center gap-1.5">
-              <span className="size-1.5 rounded-full bg-green-500 animate-pulse" />
-              Online
+              {sections.team && (
+                <div className="space-y-0.5">
+                  {filteredTeams.map(group => (
+                    <ListItem
+                      key={group._id}
+                      item={{ ...group, fullName: group.name }}
+                      type="group"
+                      icon={Users}
+                      isSelected={selectedUser?._id === group._id}
+                      onClick={() => setSelectedUser(group, 'group')}
+                    />
+                  ))}
+                  {filteredTeams.length === 0 && (
+                    <div className="px-4 py-2 text-xs text-gray-600 italic">No teams created</div>
+                  )}
+                </div>
+              )}
             </div>
+
+            {/* CHANNELS SECTION */}
+            <div className="space-y-0.5">
+              <div className="group flex items-center justify-between px-2 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-300 cursor-pointer" onClick={() => toggleSection('channels')}>
+                <div className="flex items-center gap-1">
+                  {sections.channels ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+                  Announcements
+                </div>
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100">
+                  <button onClick={(e) => { e.stopPropagation(); setActiveModal('explore'); }} className="p-0.5 hover:bg-gray-800 rounded text-gray-400 hover:text-white transition-all" title="Browse">
+                    <Search className="size-3.5" />
+                  </button>
+                  <button onClick={(e) => { e.stopPropagation(); setActiveModal('createChannel'); }} className="p-0.5 hover:bg-gray-800 rounded text-gray-400 hover:text-white transition-all" title="Create">
+                    <CirclePlus className="size-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {sections.channels && (
+                <div className="space-y-0.5">
+                  {filteredChannels.map(channel => (
+                    <ListItem
+                      key={channel._id}
+                      item={{ ...channel, fullName: channel.name }}
+                      type="channel"
+                      icon={Hash}
+                      isSelected={selectedUser?._id === channel._id}
+                      onClick={() => setSelectedUser(channel, 'channel')}
+                    />
+                  ))}
+                  {filteredChannels.length === 0 && (
+                    <div className="px-4 py-2 text-xs text-gray-600 italic">No channels joined</div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* DIRECT MESSAGES (Org Members) */}
+            <div className="space-y-0.5">
+              <div className="flex items-center justify-between px-2 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => toggleSection('directMessages')}>
+                <div className="flex items-center gap-1">
+                  {sections.directMessages ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+                  People
+                </div>
+              </div>
+
+              {sections.directMessages && (
+                <div className="space-y-0.5">
+                  {filteredMembers.map(member => {
+                    // Member object usually has { _id, userId: {fullName...}, role } if populated from OrgMembers
+                    // Or if it's the raw user object?
+                    // Standardize: useOrgStore.orgMembers stores populated members.
+                    // Structure: { _id, userId: { _id, fullName, ... }, role }
+                    // The `item` passed to ListItem should be the User part with Role merged ideally
+                    const userObj = member.userId || member;
+                    const role = member.designation || member.accessLevel || member.role;
+
+                    return (
+                      <ListItem
+                        key={userObj._id}
+                        item={{ ...userObj, role }} // Merge role for display
+                        type="user"
+                        isOnline={onlineUsers.includes(userObj._id)}
+                        isSelected={selectedUser?._id === userObj._id}
+                        onClick={() => setSelectedUser(userObj, 'user')}
+                        useAvatar={true}
+                      />
+                    );
+                  })}
+                  {filteredMembers.length === 0 && (
+                    <div className="flex flex-col items-center justify-center p-4 text-center mt-2 group cursor-pointer hover:bg-white/5 rounded-lg transition-all" onClick={() => setActiveModal('requests')}>
+                      <div className="size-8 bg-gray-800 rounded-full flex items-center justify-center text-gray-500 mb-2 group-hover:bg-gray-700 group-hover:text-gray-300 transition-colors">
+                        <Users className="size-4" />
+                      </div>
+                      <p className="text-xs text-gray-500 font-medium">No other members</p>
+                      <span className="text-[10px] text-indigo-400 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">Invite Team</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
           </div>
-          <button onClick={logout} className="p-1.5 text-gray-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100" title="Logout">
-            <LogOut className="size-4" />
-          </button>
-        </div>
+
+        </>
+      )}
+
+      {/* User Footer - Only show expanded details if not collapsed */}
+      <div className="p-3 border-t border-gray-800 bg-[#0f0f0f]">
+        {!isCollapsed ? (
+          <div className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer transition-colors group">
+            <img src={authUser?.profilePic || "/avatar.png"} className="size-8 rounded-lg object-cover" alt="Me" />
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <div className="font-medium text-gray-200 text-sm truncate">{authUser?.fullName}</div>
+              <div className="text-[10px] text-gray-500 flex items-center gap-1.5">
+                <span className="size-1.5 rounded-full bg-green-500 animate-pulse" />
+                Online
+              </div>
+            </div>
+            <button onClick={logout} className="p-1.5 text-gray-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100" title="Logout">
+              <LogOut className="size-4" />
+            </button>
+          </div>
+        ) : (
+          <div className="flex justify-center">
+            <img src={authUser?.profilePic || "/avatar.png"} className="size-8 rounded-lg object-cover" alt="Me" title={authUser?.fullName} />
+          </div>
+        )}
       </div>
 
       {/* Modals */}
@@ -315,7 +331,7 @@ const Sidebar = () => {
         {activeModal === 'createChannel' && <CreateChannelModal key="createChannel" onClose={() => setActiveModal(null)} />}
         {activeModal === 'explore' && <ExploreChannelsModal key="explore" onClose={() => setActiveModal(null)} onCreate={() => setActiveModal('createChannel')} />}
       </AnimatePresence>
-    </aside>
+    </motion.aside>
   );
 };
 

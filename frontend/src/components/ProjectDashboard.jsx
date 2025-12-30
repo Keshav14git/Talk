@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import useChatStore from "../store/useChatStore";
-import useAuthStore from "../store/useAuthStore";
-import useTaskStore from "../store/useTaskStore";
+import { useChatStore } from "../store/useChatStore";
+import { useOrgStore } from "../store/useOrgStore";
+import { useTaskStore } from "../store/useTaskStore";
+import { useAuthStore } from "../store/useAuthStore";
 import ChatContainer from "../components/ChatContainer";
 import AddProjectMemberModal from "../components/AddProjectMemberModal";
 import CreateTaskModal from "../components/CreateTaskModal";
@@ -139,8 +140,8 @@ const ProjectDashboard = ({ project }) => {
                             <div className="flex items-center gap-3 mb-1">
                                 <h1 className="text-xl font-bold text-white leading-none tracking-tight">{project.name}</h1>
                                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${project.status === 'active' ? 'bg-green-500/10 text-green-500 border-green-500/20' :
-                                        project.status === 'archived' ? 'bg-gray-500/10 text-gray-500 border-gray-500/20' :
-                                            'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
+                                    project.status === 'archived' ? 'bg-gray-500/10 text-gray-500 border-gray-500/20' :
+                                        'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
                                     }`}>
                                     {project.status || 'Active'}
                                 </span>

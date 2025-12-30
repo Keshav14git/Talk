@@ -8,12 +8,12 @@ const ParticleNetworkPattern = () => {
         const ctx = canvas.getContext("2d");
         let animationFrameId;
         let particles = [];
-        let mouse = { x: window.innerWidth * 0.75, y: window.innerHeight / 2 }; // Default target
+        let mouse = { x: window.innerWidth * 0.75, y: window.innerHeight / 2 };
 
         // Configuration
         const particleCount = 70;
-        const connectionDistance = 150;
-        const speedLimit = 2; // Max speed
+        const connectionDistance = 140;
+        const mouseInteractionRadius = 300; // Range where mouse affects particles
 
         const resizeCanvas = () => {
             canvas.width = window.innerWidth;
@@ -30,50 +30,60 @@ const ParticleNetworkPattern = () => {
             constructor() {
                 this.x = Math.random() * canvas.width;
                 this.y = Math.random() * canvas.height;
-                this.vx = (Math.random() - 0.5) * 0.5;
-                this.vy = (Math.random() - 0.5) * 0.5;
-                this.size = Math.random() * 1.5 + 1;
+                // Give them inherent life/velocity
+                this.vx = (Math.random() - 0.5) * 1.5;
+                this.vy = (Math.random() - 0.5) * 1.5;
+                this.size = Math.random() * 2 + 1;
+                this.baseX = this.x; // Remember original "orbit" center if needed, or just float
             }
 
             update() {
-                // Vector to mouse
+                // 1. Natural Drift (Brownian motion)
+                // Keep them moving even if mouse is still
+
+                // 2. Mouse Interaction
                 const dx = mouse.x - this.x;
                 const dy = mouse.y - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
 
-                // Gentle Steering Force
-                // The factor (0.0005) controls how strong the attraction is.
-                const forceX = dx * 0.0005;
-                const forceY = dy * 0.0005;
+                if (distance < mouseInteractionRadius) {
+                    // Interaction Zone
 
-                this.vx += forceX;
-                this.vy += forceY;
+                    // Complex Force: Attract at edge, Rapel at center (Orbital)
+                    // If dist > 100: Attract (Positive force)
+                    // If dist < 100: Repel (Negative force)
+                    const orbitRadius = 100;
+                    const forceDirection = (distance - orbitRadius) * 0.001; // Positive = Pull, Negative = Push
 
-                // Friction / Damping to prevent infinite acceleration
-                this.vx *= 0.96;
-                this.vy *= 0.96;
-
-                // Soft Speed Limit
-                const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-                if (speed > speedLimit) {
-                    this.vx = (this.vx / speed) * speedLimit;
-                    this.vy = (this.vy / speed) * speedLimit;
+                    this.vx += (dx / distance) * forceDirection;
+                    this.vy += (dy / distance) * forceDirection;
                 }
 
-                // Apply velocity
+                // 3. Friction (Damping) - Essential for stability
+                this.vx *= 0.97;
+                this.vy *= 0.97;
+
+                // 4. Minimum movement guarantee (prevent freezing)
+                // If velocity is too low, nudge it
+                if (Math.abs(this.vx) < 0.1) this.vx += (Math.random() - 0.5) * 0.1;
+                if (Math.abs(this.vy) < 0.1) this.vy += (Math.random() - 0.5) * 0.1;
+
                 this.x += this.vx;
                 this.y += this.vy;
 
-                // Screen Wrapping (Endless flow)
-                if (this.x < 0) this.x = canvas.width;
-                if (this.x > canvas.width) this.x = 0;
-                if (this.y < 0) this.y = canvas.height;
-                if (this.y > canvas.height) this.y = 0;
+                // 5. Screen Wrapping (Toroidal space)
+                // Using a buffer to prevent popping
+                const buffer = 50;
+                if (this.x < -buffer) this.x = canvas.width + buffer;
+                if (this.x > canvas.width + buffer) this.x = -buffer;
+                if (this.y < -buffer) this.y = canvas.height + buffer;
+                if (this.y > canvas.height + buffer) this.y = -buffer;
             }
 
             draw() {
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fillStyle = "rgba(120, 120, 120, 0.6)";
+                ctx.fillStyle = "rgba(150, 150, 150, 0.6)"; // Slightly brighter nodes
                 ctx.fill();
             }
         }
@@ -94,9 +104,8 @@ const ParticleNetworkPattern = () => {
 
                     if (dist < connectionDistance) {
                         ctx.beginPath();
-                        // Opacity based on distance
-                        const opacity = 0.15 * (1 - dist / connectionDistance);
-                        ctx.strokeStyle = `rgba(120, 120, 120, ${opacity})`;
+                        const opacity = 1 - dist / connectionDistance;
+                        ctx.strokeStyle = `rgba(120, 120, 120, ${opacity * 0.4})`;
                         ctx.lineWidth = 0.5;
                         ctx.moveTo(particles[i].x, particles[i].y);
                         ctx.lineTo(particles[j].x, particles[j].y);

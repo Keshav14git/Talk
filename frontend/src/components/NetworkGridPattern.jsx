@@ -7,9 +7,8 @@ const NetworkGridPattern = () => {
     const cols = 8;
 
     return (
-        <div className="w-full h-full bg-[#050505] relative overflow-hidden flex items-center justify-center">
-            {/* Subtle Gradient Background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-purple-500/5" />
+        <div className="w-full h-full relative overflow-hidden flex items-center justify-center pointer-events-none">
+            {/* Transparent Background */}
 
             <div className="relative w-full max-w-lg aspect-square">
                 {/* Grid Dots */}

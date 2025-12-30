@@ -396,7 +396,7 @@ const SignUpPage = () => {
       </div>
 
       {/* RIGHT SIDE (Decorative) */}
-      <div className={`hidden lg:block w-1/2 h-full bg-[#050505] border-l border-[#222] relative overflow-hidden transition-all duration-1000 delay-300 ${introPhase === 'SPLIT' ? 'translate-x-0 opacity-100' : 'translate-x-20 opacity-0'} `}>
+      <div className={`hidden lg:block w-1/2 h-full relative transition-all duration-1000 delay-300 ${introPhase === 'SPLIT' ? 'opacity-100' : 'opacity-0'} `}>
         <NetworkGridPattern />
       </div>
 

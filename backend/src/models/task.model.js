@@ -2,20 +2,27 @@ import mongoose from "mongoose";
 
 const taskSchema = new mongoose.Schema(
     {
-        orgId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Organization",
-            required: true,
-        },
         title: {
             type: String,
             required: true,
             trim: true,
         },
-        description: String,
+        description: {
+            type: String,
+            default: "",
+        },
+        projectId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Project",
+            required: true,
+        },
+        assignee: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+        },
         status: {
             type: String,
-            enum: ["todo", "in_progress", "review", "done"],
+            enum: ["todo", "in-progress", "completed", "blocked", "delayed"],
             default: "todo",
         },
         priority: {
@@ -23,16 +30,19 @@ const taskSchema = new mongoose.Schema(
             enum: ["low", "medium", "high", "urgent"],
             default: "medium",
         },
-        assignees: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User"
-        }],
-        // Contextual Link
-        linkedMessageId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Message",
+        dueDate: {
+            type: Date,
         },
-        dueDate: Date,
+        comments: [
+            {
+                user: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: "User",
+                },
+                text: { type: String, required: true },
+                createdAt: { type: Date, default: Date.now },
+            }
+        ],
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
@@ -43,4 +53,5 @@ const taskSchema = new mongoose.Schema(
 );
 
 const Task = mongoose.model("Task", taskSchema);
+
 export default Task;

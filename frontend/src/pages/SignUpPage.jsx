@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useGoogleLogin } from "@react-oauth/google";
-import NetworkGridPattern from "../components/NetworkGridPattern";
+import ParticleNetworkPattern from "../components/ParticleNetworkPattern";
 
 const SignUpPage = () => {
   const navigate = useNavigate();

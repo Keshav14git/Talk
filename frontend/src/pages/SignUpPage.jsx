@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useGoogleLogin } from "@react-oauth/google";
+import NetworkGridPattern from "../components/NetworkGridPattern";
 
 const SignUpPage = () => {
   const navigate = useNavigate();
@@ -396,33 +397,7 @@ const SignUpPage = () => {
 
       {/* RIGHT SIDE (Decorative) */}
       <div className={`hidden lg:block w-1/2 h-full bg-[#050505] border-l border-[#222] relative overflow-hidden transition-all duration-1000 delay-300 ${introPhase === 'SPLIT' ? 'translate-x-0 opacity-100' : 'translate-x-20 opacity-0'} `}>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-[80%] h-[60%] bg-gradient-to-tr from-[#111] to-[#000] rounded-xl border border-[#222] shadow-2xl relative overflow-hidden group">
-            {/* Fake UI Preview inside */}
-            <div className="absolute top-0 left-0 w-full h-8 bg-[#1a1a1a] border-b border-[#222] flex items-center px-4 gap-2">
-              <div className="size-2 rounded-full bg-red-500/20" />
-              <div className="size-2 rounded-full bg-yellow-500/20" />
-              <div className="size-2 rounded-full bg-green-500/20" />
-            </div>
-            <div className="p-8">
-              <div className="w-1/2 h-4 bg-[#222] rounded mb-4" />
-              <div className="w-full h-2 bg-[#1a1a1a] rounded mb-2" />
-              <div className="w-[90%] h-2 bg-[#1a1a1a] rounded mb-2" />
-              <div className="w-[60%] h-2 bg-[#1a1a1a] rounded" />
-
-              <div className="mt-8 flex gap-4">
-                <div className="w-24 h-24 bg-[#1a1a1a] rounded-lg border border-[#222]" />
-                <div className="w-24 h-24 bg-[#1a1a1a] rounded-lg border border-[#222]" />
-              </div>
-            </div>
-
-            {/* Gradient Text Overlay */}
-            <div className="absolute bottom-0 left-0 w-full p-8 bg-gradient-to-t from-black via-black/80 to-transparent">
-              <h2 className="text-xl font-medium text-white">Focus on what matters.</h2>
-              <p className="text-sm text-[#666] mt-2">The new standard for modern software development teams.</p>
-            </div>
-          </div>
-        </div>
+        <NetworkGridPattern />
       </div>
 
     </div>

@@ -13,7 +13,7 @@ const HomePage = () => {
         {!selectedUser ? (
           <NoChatSelected />
         ) : selectedType === 'project' ? (
-          <ProjectDashboard />
+          <ProjectDashboard project={selectedUser} />
         ) : (
           <ChatContainer />
         )}

@@ -11,9 +11,9 @@ const ParticleNetworkPattern = () => {
         let mouse = { x: window.innerWidth * 0.75, y: window.innerHeight / 2 };
 
         // Configuration
-        const particleCount = 70;
+        const particleCount = 75; // Slightly more dense
         const connectionDistance = 140;
-        const mouseInteractionRadius = 300; // Range where mouse affects particles
+        const mouseInteractionRadius = 400; // Larger grab range
 
         const resizeCanvas = () => {
             canvas.width = window.innerWidth;
@@ -28,51 +28,66 @@ const ParticleNetworkPattern = () => {
 
         class Particle {
             constructor() {
-                this.x = Math.random() * canvas.width;
+                // INITIALIZATION: RIGHT SIDE ONLY
+                // Random position between 50% width and 100% width
+                this.x = (Math.random() * 0.5 + 0.5) * canvas.width;
                 this.y = Math.random() * canvas.height;
-                // Give them inherent life/velocity
+
+                // Velocity: Give them a good initial kick
                 this.vx = (Math.random() - 0.5) * 1.5;
                 this.vy = (Math.random() - 0.5) * 1.5;
-                this.size = Math.random() * 2 + 1;
-                this.baseX = this.x; // Remember original "orbit" center if needed, or just float
+
+                this.size = Math.random() * 2 + 1.5; // Slightly larger average size
             }
 
             update() {
-                // 1. Natural Drift (Brownian motion)
-                // Keep them moving even if mouse is still
-
-                // 2. Mouse Interaction
+                // 1. Mouse Interaction (The Core Logic)
                 const dx = mouse.x - this.x;
                 const dy = mouse.y - this.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
 
                 if (distance < mouseInteractionRadius) {
-                    // Interaction Zone
+                    // "Orbital" Mechanics:
+                    // If far: Gentle attraction (Pull)
+                    // If near: Forceful repulsion (Push) - Keeps the cloud open
 
-                    // Complex Force: Attract at edge, Rapel at center (Orbital)
-                    // If dist > 100: Attract (Positive force)
-                    // If dist < 100: Repel (Negative force)
-                    const orbitRadius = 100;
-                    const forceDirection = (distance - orbitRadius) * 0.001; // Positive = Pull, Negative = Push
+                    const safeRadius = 120; // Ensure cloud stays >= 240px wide
 
-                    this.vx += (dx / distance) * forceDirection;
-                    this.vy += (dy / distance) * forceDirection;
+                    let force = 0;
+                    if (distance > safeRadius) {
+                        // Pull in
+                        force = (distance - safeRadius) * 0.0003;
+                    } else {
+                        // Push out HARD to prevent shrinking
+                        force = (distance - safeRadius) * 0.002;
+                    }
+
+                    this.vx += (dx / distance) * force;
+                    this.vy += (dy / distance) * force;
+                } else {
+                    // Distant drift: Slowly drift back towards center of right side? 
+                    // Or just random drift. Brownian implies "life".
+                    // Let's add a very tiny "home" force to keep them from dispersing entirely off screen?
+                    // No, wrapping handles that. Let's just create some random noise.
+                    this.vx += (Math.random() - 0.5) * 0.05;
+                    this.vy += (Math.random() - 0.5) * 0.05;
                 }
 
-                // 3. Friction (Damping) - Essential for stability
-                this.vx *= 0.97;
-                this.vy *= 0.97;
+                // 2. Friction (Stability)
+                this.vx *= 0.96;
+                this.vy *= 0.96;
 
-                // 4. Minimum movement guarantee (prevent freezing)
-                // If velocity is too low, nudge it
-                if (Math.abs(this.vx) < 0.1) this.vx += (Math.random() - 0.5) * 0.1;
-                if (Math.abs(this.vy) < 0.1) this.vy += (Math.random() - 0.5) * 0.1;
+                // 3. Keep them moving (Life)
+                const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+                if (speed < 0.2) {
+                    this.vx += (Math.random() - 0.5) * 0.2;
+                    this.vy += (Math.random() - 0.5) * 0.2;
+                }
 
                 this.x += this.vx;
                 this.y += this.vy;
 
-                // 5. Screen Wrapping (Toroidal space)
-                // Using a buffer to prevent popping
+                // 4. Screen Wrapping
                 const buffer = 50;
                 if (this.x < -buffer) this.x = canvas.width + buffer;
                 if (this.x > canvas.width + buffer) this.x = -buffer;
@@ -83,7 +98,7 @@ const ParticleNetworkPattern = () => {
             draw() {
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fillStyle = "rgba(150, 150, 150, 0.6)"; // Slightly brighter nodes
+                ctx.fillStyle = "rgba(180, 180, 180, 0.7)"; // Brighter, more visible nodes
                 ctx.fill();
             }
         }
@@ -105,8 +120,9 @@ const ParticleNetworkPattern = () => {
                     if (dist < connectionDistance) {
                         ctx.beginPath();
                         const opacity = 1 - dist / connectionDistance;
-                        ctx.strokeStyle = `rgba(120, 120, 120, ${opacity * 0.4})`;
-                        ctx.lineWidth = 0.5;
+                        // Brighter lines
+                        ctx.strokeStyle = `rgba(150, 150, 150, ${opacity * 0.5})`;
+                        ctx.lineWidth = 0.8;
                         ctx.moveTo(particles[i].x, particles[i].y);
                         ctx.lineTo(particles[j].x, particles[j].y);
                         ctx.stroke();

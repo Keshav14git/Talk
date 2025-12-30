@@ -272,7 +272,6 @@ const ProjectDashboard = () => {
                 {subTab === "chat" && (
                     <div className="flex-1 flex flex-col h-full">
                         <ChatContainer isProjectChat={true} />
-                        <MessageInput isProjectChat={true} />
                     </div>
                 )}
 

@@ -83,3 +83,40 @@ export const updateProjectStatus = async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 };
+// Add member to project
+export const addProjectMember = async (req, res) => {
+    try {
+        const { projectId } = req.params;
+        const { userId } = req.body;
+
+        if (!userId) return res.status(400).json({ message: "User ID is required" });
+
+        const project = await Project.findById(projectId);
+        if (!project) return res.status(404).json({ message: "Project not found" });
+
+        // Check if already a member
+        if (project.members.includes(userId)) {
+            return res.status(400).json({ message: "User is already a member" });
+        }
+
+        project.members.push(userId);
+        await project.save();
+
+        // Also add to the Project Channel
+        if (project.chatId) {
+            await Channel.findByIdAndUpdate(project.chatId, {
+                $addToSet: { members: userId }
+            });
+        }
+
+        // Return updated project with populated members
+        const updatedProject = await Project.findById(projectId)
+            .populate("lead", "fullName profilePic")
+            .populate("members", "fullName profilePic role");
+
+        res.status(200).json(updatedProject);
+    } catch (error) {
+        console.error("Error adding project member:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};

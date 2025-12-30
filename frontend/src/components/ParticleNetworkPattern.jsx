@@ -8,12 +8,13 @@ const ParticleNetworkPattern = () => {
         const ctx = canvas.getContext("2d");
         let animationFrameId;
         let particles = [];
-        let mouse = { x: window.innerWidth * 0.75, y: window.innerHeight / 2 };
+        // Default mouse far away to allow initial spread state
+        let mouse = { x: -1000, y: -1000 };
 
         // Configuration
         const particleCount = 80;
         const connectionDistance = 160;
-        const mouseInteractionRadius = 500; // Giant interaction zone
+        const mouseInteractionRadius = 450;
 
         const resizeCanvas = () => {
             canvas.width = window.innerWidth;
@@ -29,12 +30,15 @@ const ParticleNetworkPattern = () => {
         class Particle {
             constructor() {
                 // Initialize broadly on the right side
-                // From 40% width to 100% width
                 this.x = (Math.random() * 0.6 + 0.4) * canvas.width;
                 this.y = Math.random() * canvas.height;
 
-                this.vx = (Math.random() - 0.5) * 1.0;
-                this.vy = (Math.random() - 0.5) * 1.0;
+                // Store ORIGINAL position for rubber-band return
+                this.baseX = this.x;
+                this.baseY = this.y;
+
+                this.vx = (Math.random() - 0.5) * 0.8;
+                this.vy = (Math.random() - 0.5) * 0.8;
                 this.size = Math.random() * 2 + 1.5;
             }
 
@@ -43,53 +47,49 @@ const ParticleNetworkPattern = () => {
                 const dy = mouse.y - this.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
 
-                // --- PHYSICS TUNING ---
-
-                // 1. Mouse Interaction
+                // --- 1. MOUSE INTERACTION (The Disturbance) ---
                 if (distance < mouseInteractionRadius) {
-                    // "Safe Zone" Radius: Keep particles this far away from mouse center
-                    // Increased to 280px to prevent "congestion"
-                    const safeRadius = 280;
+                    const safeRadius = 260; // Keep cloud expanded
 
                     if (distance > safeRadius) {
-                        // GENTLE Pull (Attraction)
-                        // Reduced force factor significantly so they don't rush in
-                        const pullForce = (distance - safeRadius) * 0.00015;
+                        // Gentle Attraction
+                        const pullForce = (distance - safeRadius) * 0.0002;
                         this.vx += (dx / distance) * pullForce;
                         this.vy += (dy / distance) * pullForce;
                     } else {
-                        // STRONG Push (Repulsion)
-                        // If they get inside the circle, push them out hard
+                        // Strong Repulsion (Anti-Shrink)
                         const pushForce = (distance - safeRadius) * 0.003;
                         this.vx += (dx / distance) * pushForce;
                         this.vy += (dy / distance) * pushForce;
                     }
                 }
+                // --- 2. RETURN TO ORIGIN (The Restoration) ---
+                else {
+                    // If mouse is far, slowly float back to base position
+                    const homeDx = this.baseX - this.x;
+                    const homeDy = this.baseY - this.y;
 
-                // 2. Right-Side Drift (Subtle bias)
-                // If particle drifts too far left (e.g., < 20% width), gently nudge it right
-                if (this.x < canvas.width * 0.2) {
-                    this.vx += 0.02;
+                    // Very gentle spring force back home
+                    this.vx += homeDx * 0.0005;
+                    this.vy += homeDy * 0.0005;
                 }
 
                 // 3. Friction
-                this.vx *= 0.96;
-                this.vy *= 0.96;
+                this.vx *= 0.95; // Slightly higher friction for stability
+                this.vy *= 0.95;
 
-                // 4. Base Movement (Life)
-                if (Math.abs(this.vx) < 0.1 && Math.abs(this.vy) < 0.1) {
-                    this.vx += (Math.random() - 0.5) * 0.1;
-                }
+                // 4. Natural Life (Brownian)
+                // Always add a tiny bit of noise so they don't freeze at home
+                this.vx += (Math.random() - 0.5) * 0.05;
+                this.vy += (Math.random() - 0.5) * 0.05;
 
                 this.x += this.vx;
                 this.y += this.vy;
 
-                // 5. Wrapping
-                const buffer = 50;
-                if (this.x < -buffer) this.x = canvas.width + buffer;
-                if (this.x > canvas.width + buffer) this.x = -buffer;
-                if (this.y < -buffer) this.y = canvas.height + buffer;
-                if (this.y > canvas.height + buffer) this.y = -buffer;
+                // 5. Hard Boundaries / Soft Wrap
+                // If particles get shoved way off screen, wrap them? 
+                // Or just clamp them? "Return to Origin" handles most drifting.
+                // Let's just constrain them loosely.
             }
 
             draw() {

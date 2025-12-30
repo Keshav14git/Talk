@@ -216,9 +216,9 @@ export const useChatStore = create((set, get) => ({
 
       // Legacy user/group update
       set(state => {
-        if (selectedType === "project" || selectedType === "channel") return {};
+        if (targetType === "project" || targetType === "channel") return {};
 
-        const listKey = selectedType === "group" ? "groups" : "users";
+        const listKey = targetType === "group" ? "groups" : "users";
         const list = [...state[listKey]];
         const index = list.findIndex(item => item._id === selectedUser._id);
 

@@ -257,6 +257,21 @@ const ChatContainer = ({ overrideUser, overrideType }) => {
 
                 {/* Content Bubble */}
                 <div className={`flex flex-col max-w-[85%] md:max-w-[70%] ${isMe ? "items-end" : "items-start"}`}>
+
+                  {/* Sender Name & Role - Only for Groups/Channels, Not Me, and First in Block */}
+                  {!isMe && (selectedType === "group" || selectedType === "channel") && !effectiveIsPrevSame && (
+                    <div className="ml-1 mb-1 flex items-baseline gap-2">
+                      <span className="text-xs font-bold text-gray-300">
+                        {message.senderId?.fullName || "Unknown"}
+                      </span>
+                      {message.senderId?.role && (
+                        <span className="text-[10px] text-indigo-400 bg-indigo-500/10 px-1.5 py-0.5 rounded border border-indigo-500/20 uppercase tracking-wider font-semibold">
+                          {message.senderId.role}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
                   <div
                     className={`relative text-[14px] leading-relaxed break-words shadow-sm
                          ${isMe

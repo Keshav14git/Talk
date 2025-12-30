@@ -6,7 +6,7 @@ import cloudinary from "../lib/cloudinary.js";
 export const getChannelMessages = async (req, res) => {
     try {
         const { channelId } = req.params;
-        const messages = await Message.find({ channelId }).populate("senderId", "fullName profilePic").populate("replyTo");
+        const messages = await Message.find({ channelId }).populate("senderId", "fullName profilePic role").populate("replyTo");
         res.status(200).json(messages);
     } catch (error) {
         console.error("Error in getChannelMessages: ", error.message);
@@ -36,7 +36,7 @@ export const sendChannelMessage = async (req, res) => {
         });
 
         await newMessage.save();
-        await newMessage.populate("senderId", "fullName profilePic");
+        await newMessage.populate("senderId", "fullName profilePic role");
         await newMessage.populate("replyTo");
 
         // Broadcast to channel room

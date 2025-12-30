@@ -73,7 +73,7 @@ export const useOrgStore = create((set, get) => ({
                 orgProjects: []
             }));
             toast.success("Organization created successfully!");
-            return true;
+            return res.data;
         } catch (error) {
             toast.error(error.response?.data?.message || "Failed to create organization");
             return false;

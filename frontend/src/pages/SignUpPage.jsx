@@ -14,7 +14,7 @@ const SignUpPage = () => {
   const navigate = useNavigate();
   const {
     login, signup, isSigningUp, isLoggingIn, authUser,
-    sendOtp, verifyOtp, updateProfile, googleLogin
+    sendOtp, verifyOtp, updateProfile, googleLogin, checkAuth
   } = useAuthStore();
 
   const { createOrg, joinOrg, isCreatingOrg, isJoiningOrg } = useOrgStore();
@@ -135,8 +135,9 @@ const SignUpPage = () => {
       if (newOrg && newOrg.registrationNumber) {
         setGeneratedRegNum(newOrg.registrationNumber);
         toast.success("Organization Created Successfully!");
-        // Short delay to show the success state before redirecting/reloading
-        setTimeout(() => window.location.reload(), 2000);
+
+        await checkAuth();
+        setTimeout(() => navigate("/"), 2000);
       }
     } else {
       // Join Logic
@@ -152,7 +153,8 @@ const SignUpPage = () => {
 
       if (success) {
         toast.success("Joined Organization!");
-        setTimeout(() => window.location.reload(), 1000);
+        await checkAuth();
+        setTimeout(() => navigate("/"), 1000);
       }
     }
   };

@@ -4,7 +4,7 @@ import { useOrgStore } from "../store/useOrgStore";
 import { useNavigate } from "react-router-dom";
 import {
   Mail, ArrowRight, Loader2, ShieldCheck,
-  Building2, Users, LogIn, Lock
+  Building2, Users, LogIn, Lock, CheckCircle2, ChevronLeft
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useGoogleLogin } from "@react-oauth/google";
@@ -138,6 +138,18 @@ const SignUpPage = () => {
   const isCreatorRole = () => {
     const role = formData.role.toLowerCase();
     return ["ceo", "founder", "md", "managing director", "owner", "president"].includes(role);
+  };
+
+  // Progress Indicator Helper
+  const getProgress = () => {
+    if (authMode === 'LOGIN') return 0;
+    switch (signupStep) {
+      case 'DETAILS': return 1;
+      case 'VERIFY': return 2;
+      case 'ROLE': return 3;
+      case 'ORG_ACTION': return 4;
+      default: return 1;
+    }
   };
 
 

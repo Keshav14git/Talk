@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useHomeStore } from "../store/useHomeStore";
+import { useAuthStore } from "../store/useAuthStore";
 import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import format from "date-fns/format";
 import parse from "date-fns/parse";
@@ -15,6 +16,7 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import { CheckCircle2, Clock, Calendar as CalendarIcon, ListTodo, AlertCircle, Info, ArrowUpRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
+import CreateMeetingModal from "./CreateMeetingModal";
 
 // Setup Calendar Localizer
 const locales = {
@@ -30,8 +32,13 @@ const localizer = dateFnsLocalizer({
 
 const HomeDashboard = () => {
     const { userTasks, userEvents, fetchUserDashboardData, isLoading } = useHomeStore();
+    const { socket } = useAuthStore();
     const [view, setView] = useState("month");
     const [date, setDate] = useState(new Date());
+
+    // Modal & Selection State
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [selectedSlot, setSelectedSlot] = useState(null);
 
     // Calculate initial range based on view/date
     const [range, setRange] = useState({
@@ -43,11 +50,49 @@ const HomeDashboard = () => {
         fetchUserDashboardData();
     }, [fetchUserDashboardData]);
 
+    // Real-time Updates via Socket
+    useEffect(() => {
+        if (!socket) return;
+
+        const handleUpdate = () => {
+            fetchUserDashboardData();
+        };
+
+        const handleTaskAssigned = (task) => {
+            toast.success(`New task assigned: ${task.title}`);
+            fetchUserDashboardData();
+        };
+
+        const handleMeetingScheduled = (meeting) => {
+            fetchUserDashboardData();
+        }
+
+        socket.on("newTaskAssigned", handleTaskAssigned);
+        socket.on("taskUpdated", handleUpdate);
+        socket.on("newMeetingScheduled", handleMeetingScheduled);
+
+        return () => {
+            socket.off("newTaskAssigned", handleTaskAssigned);
+            socket.off("taskUpdated", handleUpdate);
+            socket.off("newMeetingScheduled", handleMeetingScheduled);
+        };
+    }, [socket, fetchUserDashboardData]);
+
     // Handle Drilldown (Clicking a date in Month/Week view)
     const handleDrillDown = useCallback((drillDate) => {
         setDate(drillDate);
         setView("day");
         // Range update will be handled by the effect below
+    }, []);
+
+    // Handle Slot Selection (Dragging to create event)
+    const handleSelectSlot = useCallback(({ start, end, action }) => {
+        // In month view, clicks might be navigation.
+        // We only really want "drag to create" in Time views (Week/Day)
+        // OR explicit clicks.
+
+        setSelectedSlot({ start, end });
+        setIsCreateModalOpen(true);
     }, []);
 
     // Also update range when view/date manually changes if needed
@@ -97,7 +142,15 @@ const HomeDashboard = () => {
                 /* Dark Theme Calendar Overrides */
                 .rbc-calendar { font-family: inherit; color: #a1a1aa; }
                 .rbc-header { border-bottom: 1px solid #27272a; padding: 12px 4px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-                .rbc-month-view, .rbc-time-view, .rbc-agenda-view { border: 1px solid #27272a; background: #09090b; border-radius: 12px; overflow: hidden; }
+                
+                /* Container Scroll Fixes */
+                .rbc-month-view, .rbc-time-view, .rbc-agenda-view { 
+                    border: 1px solid #27272a; 
+                    background: #09090b; 
+                    border-radius: 12px; 
+                    /* overflow: hidden; Removed to allow internal scroll logic to work better if needed, usually RBC handles it */
+                }
+
                 .rbc-month-row + .rbc-month-row { border-top: 1px solid #27272a; }
                 .rbc-day-bg + .rbc-day-bg { border-left: 1px solid #27272a; }
                 .rbc-off-range-bg { background: #18181b; }
@@ -109,7 +162,13 @@ const HomeDashboard = () => {
                 .rbc-day-slot .rbc-time-slot { border-top: 1px solid #27272a; opacity: 0.5; }
                 .rbc-time-gutter .rbc-timeslot-group { border-bottom: 1px solid #27272a; }
                 .rbc-label { color: #71717a; font-size: 0.7rem; font-weight: 500; }
+                
+                /* Current Time */
                 .rbc-current-time-indicator { background-color: #6366f1; height: 2px; }
+                
+                /* Selection Highlight */
+                .rbc-slot-selection { background-color: rgba(99, 102, 241, 0.2); border: 1px solid rgba(99, 102, 241, 0.5); color: white; border-radius: 4px; }
+
                 /* Scrollbar polish */
                 ::-webkit-scrollbar { width: 6px; height: 6px; }
                 ::-webkit-scrollbar-track { background: transparent; }
@@ -192,7 +251,7 @@ const HomeDashboard = () => {
 
                 {/* Right: Calendar */}
                 <div className="lg:w-2/3 flex flex-col bg-[#09090b] rounded-2xl border border-[#27272a] overflow-hidden shadow-2xl relative">
-                    <div className="flex-1 p-1">
+                    <div className="flex-1 p-1 h-full overflow-hidden">
                         <Calendar
                             localizer={localizer}
                             events={userEvents}
@@ -206,9 +265,11 @@ const HomeDashboard = () => {
                             onNavigate={setDate}
                             onSelectEvent={handleSelectEvent}
                             onDrillDown={handleDrillDown} // Enable click-to-day
+                            onSelectSlot={handleSelectSlot}
+                            selectable
                             scrollToTime={new Date(1970, 1, 1, 8, 0, 0)} // Scroll to 8 AM default
-                            step={60} // 1 hour steps to save space and show more day
-                            timeslots={1}
+                            step={30} // 30 min steps for real feel
+                            timeslots={2}
                             components={{
                                 event: EventComponent,
                                 toolbar: CustomToolbar
@@ -226,6 +287,14 @@ const HomeDashboard = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Create Meeting Modal */}
+            <CreateMeetingModal
+                isOpen={isCreateModalOpen}
+                onClose={() => setIsCreateModalOpen(false)}
+                selectedSlot={selectedSlot}
+                onSuccess={fetchUserDashboardData}
+            />
         </div>
     );
 };

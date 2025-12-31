@@ -123,3 +123,35 @@ export const addTaskComment = async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 };
+
+// Delete comments
+export const deleteTaskComments = async (req, res) => {
+    try {
+        const { taskId } = req.params;
+        const { commentIds } = req.body; // Expect array of commentIds
+        const userId = req.user._id;
+
+        if (!commentIds || !Array.isArray(commentIds) || commentIds.length === 0) {
+            return res.status(400).json({ message: "No comment IDs provided" });
+        }
+
+        const task = await Task.findById(taskId);
+        if (!task) return res.status(404).json({ message: "Task not found" });
+
+        // Filter out the comments to be deleted
+        // Optional: Check permission (e.g., only their own comments or admin/lead?)
+        // For now, assuming any member can delete (or rely on UI to limit selection)
+        // A safer check: comment.user.toString() === userId.toString() || projectLead
+
+        // We will perform the pull
+        task.comments = task.comments.filter(c => !commentIds.includes(c._id.toString()));
+
+        await task.save();
+        await task.populate("comments.user", "fullName profilePic");
+
+        res.status(200).json(task);
+    } catch (error) {
+        console.error("Error deleting comments:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};

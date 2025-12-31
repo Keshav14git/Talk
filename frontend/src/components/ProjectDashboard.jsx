@@ -15,7 +15,7 @@ import toast from "react-hot-toast";
 const ProjectDashboard = ({ project }) => {
     const { authUser } = useAuthStore();
     const { users } = useChatStore();
-    const { tasks, fetchTasks, updateTaskStatus, addTaskComment } = useTaskStore();
+    const { tasks, fetchTasks, updateTaskStatus, addTaskComment, deleteTaskComments } = useTaskStore();
 
     // UI State
     const [subTab, setSubTab] = useState("overview");
@@ -27,6 +27,8 @@ const ProjectDashboard = ({ project }) => {
     const [commentText, setCommentText] = useState("");
     const [mentionQuery, setMentionQuery] = useState("");
     const [showMentionDropdown, setShowMentionDropdown] = useState(false);
+    const [selectedComments, setSelectedComments] = useState(new Set());
+    const [isSelectionMode, setIsSelectionMode] = useState(false);
 
     const { orgMembers } = useOrgStore(); // Ensure we have org members for mentions
 
@@ -148,6 +150,26 @@ const ProjectDashboard = ({ project }) => {
 
         await addTaskComment(taskId, commentText, mentions);
         setCommentText("");
+    };
+
+    const handleDeleteSelectedComments = async (taskId) => {
+        if (selectedComments.size === 0) return;
+
+        const success = await deleteTaskComments(taskId, Array.from(selectedComments));
+        if (success) {
+            setSelectedComments(new Set());
+            setIsSelectionMode(false);
+        }
+    };
+
+    const toggleCommentSelection = (commentId) => {
+        const newSet = new Set(selectedComments);
+        if (newSet.has(commentId)) {
+            newSet.delete(commentId);
+        } else {
+            newSet.add(commentId);
+        }
+        setSelectedComments(newSet);
     };
 
     const getStatusColor = (status) => {
@@ -438,18 +460,51 @@ const ProjectDashboard = ({ project }) => {
                                                                                     </div>
                                                                                 )}
                                                                                 <div>
-                                                                                    <p className="font-semibold text-gray-500 text-xs uppercase mb-2">Activity & Comments</p>
+                                                                                    <div className="flex items-center justify-between mb-2">
+                                                                                        <p className="font-semibold text-gray-500 text-xs uppercase">Activity & Comments</p>
+                                                                                        {task.comments?.length > 0 && (
+                                                                                            <div className="flex items-center gap-2">
+                                                                                                {isSelectionMode && selectedComments.size > 0 && (
+                                                                                                    <button
+                                                                                                        onClick={() => handleDeleteSelectedComments(task._id)}
+                                                                                                        className="text-red-400 text-xs font-bold hover:text-red-300 transition-colors"
+                                                                                                    >
+                                                                                                        Delete ({selectedComments.size})
+                                                                                                    </button>
+                                                                                                )}
+                                                                                                <button
+                                                                                                    onClick={() => {
+                                                                                                        setIsSelectionMode(!isSelectionMode);
+                                                                                                        setSelectedComments(new Set());
+                                                                                                    }}
+                                                                                                    className={`text-xs font-medium px-2 py-0.5 rounded transition-colors ${isSelectionMode ? 'text-indigo-400 bg-indigo-500/10' : 'text-gray-500 hover:text-gray-300'}`}
+                                                                                                >
+                                                                                                    {isSelectionMode ? 'Cancel' : 'Select'}
+                                                                                                </button>
+                                                                                            </div>
+                                                                                        )}
+                                                                                    </div>
                                                                                     <div className="space-y-3 mb-4 max-h-40 overflow-y-auto custom-scrollbar">
                                                                                         {task.comments?.length === 0 && <p className="text-xs text-gray-600 italic">No comments yet.</p>}
                                                                                         {task.comments?.map((comment, i) => (
-                                                                                            <div key={i} className="flex gap-2 text-sm">
+                                                                                            <div key={i} className={`flex gap-2 text-sm p-2 rounded-lg transition-colors ${selectedComments.has(comment._id) ? 'bg-indigo-500/10 border border-indigo-500/20' : 'hover:bg-white/5'}`}>
+                                                                                                {isSelectionMode && (
+                                                                                                    <div className="flex items-center pt-1">
+                                                                                                        <input
+                                                                                                            type="checkbox"
+                                                                                                            checked={selectedComments.has(comment._id)}
+                                                                                                            onChange={() => toggleCommentSelection(comment._id)}
+                                                                                                            className="appearance-none size-4 rounded border border-[#444] bg-[#222] checked:bg-indigo-500 checked:border-indigo-500 cursor-pointer transition-all"
+                                                                                                        />
+                                                                                                    </div>
+                                                                                                )}
                                                                                                 <img src={comment.user?.profilePic || "/avatar.png"} className="size-6 rounded-full object-cover mt-0.5" />
-                                                                                                <div>
+                                                                                                <div className="flex-1 min-w-0">
                                                                                                     <div className="flex items-center gap-2">
                                                                                                         <span className="font-bold text-gray-300 text-xs">{comment.user?.fullName}</span>
                                                                                                         <span className="text-[10px] text-gray-600">{new Date(comment.createdAt).toLocaleTimeString()}</span>
                                                                                                     </div>
-                                                                                                    <p className="text-gray-400 text-xs">{comment.text}</p>
+                                                                                                    <p className="text-gray-400 text-xs break-words">{comment.text}</p>
                                                                                                 </div>
                                                                                             </div>
                                                                                         ))}

@@ -59,4 +59,21 @@ export const useTaskStore = create((set, get) => ({
             toast.error(error.response?.data?.message || "Failed to add comment");
         }
     },
+
+    deleteTaskComments: async (taskId, commentIds) => {
+        try {
+            const res = await axiosInstance.delete(`projects/tasks/${taskId}/comments`, { data: { commentIds } });
+            // Update local state is automatic since backend returns full task
+            set({
+                tasks: get().tasks.map((task) =>
+                    task._id === taskId ? res.data : task
+                ),
+            });
+            toast.success("Comments deleted");
+            return true;
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to delete comments");
+            return false;
+        }
+    },
 }));

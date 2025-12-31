@@ -5,8 +5,9 @@ import SidebarSkeleton from "./skeletons/SidebarSkeleton";
 import {
   Users, CirclePlus, MessageSquare, Archive,
   Search, Bell, Settings, LogOut, Briefcase, Hash, ChevronDown, ChevronRight, Lock,
-  PanelLeftClose, PanelLeftOpen, Megaphone
+  PanelLeftClose, PanelLeftOpen, Megaphone, House, Video
 } from "lucide-react";
+import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
 import AddFriendModal from "./AddFriendModal";
 import FriendRequestsModal from "./FriendRequestsModal";
@@ -49,6 +50,7 @@ const Sidebar = () => {
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
+    setSelectedUser(null); // Default to Home
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
@@ -80,7 +82,6 @@ const Sidebar = () => {
   useEffect(() => { getGroups(); }, [getGroups]);
 
   const filteredChannels = filterList(groups.filter(g => g.type === 'channel'));
-  const filteredTeams = filterList(groups.filter(g => g.type !== 'channel')); // Non-channel groups are "Team" groups
   const filteredMembers = filterList(orgMembers.filter(m => m._id !== authUser?._id)); // Exclude self
 
   if (isUsersLoading) return <SidebarSkeleton />;
@@ -118,13 +119,16 @@ const Sidebar = () => {
 
       {isCollapsed ? (
         <div className="flex-1 flex flex-col items-center py-6 gap-8 overflow-y-auto custom-scrollbar">
+          {/* Home Icon */}
+          <div className="group relative flex justify-center w-full cursor-pointer" title="Home" onClick={() => { setIsCollapsed(false); setSelectedUser(null); }}>
+            <House className="w-6 h-6 text-gray-500 group-hover:text-white transition-colors" />
+          </div>
+
           <div className="group relative flex justify-center w-full cursor-pointer" title="Projects" onClick={() => { setIsCollapsed(false); toggleSection('projects'); }}>
             <img src="/Projects.png" alt="Projects" className="w-6 h-6 object-contain invert brightness-0 opacity-70 group-hover:opacity-100 transition-opacity" />
           </div>
 
-          <div className="group relative flex justify-center w-full cursor-pointer" title="Team" onClick={() => { setIsCollapsed(false); toggleSection('team'); }}>
-            <img src="/group.png" alt="Team" className="w-6 h-6 object-contain invert brightness-0 opacity-70 group-hover:opacity-100 transition-opacity" />
-          </div>
+          {/* Team Removed */}
 
           <div className="group relative flex justify-center w-full cursor-pointer" title="Announcements" onClick={() => { setIsCollapsed(false); toggleSection('channels'); }}>
             <img src="/announcement.png" alt="Announcements" className="w-6 h-6 object-contain invert brightness-0 opacity-70 group-hover:opacity-100 transition-opacity" />
@@ -132,6 +136,11 @@ const Sidebar = () => {
 
           <div className="group relative flex justify-center w-full cursor-pointer" title="People" onClick={() => { setIsCollapsed(false); toggleSection('directMessages'); }}>
             <img src="/chat.png" alt="People" className="w-6 h-6 object-contain invert brightness-0 opacity-70 group-hover:opacity-100 transition-opacity" />
+          </div>
+
+          {/* Meeting Icon */}
+          <div className="group relative flex justify-center w-full cursor-pointer" title="Meetings" onClick={() => { setIsCollapsed(false); toast('Meeting feature coming soon!'); }}>
+            <img src="/meeting.png" alt="Meetings" className="w-6 h-6 object-contain invert brightness-0 opacity-70 group-hover:opacity-100 transition-opacity" />
           </div>
         </div>
       ) : (
@@ -152,6 +161,14 @@ const Sidebar = () => {
 
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto px-2 custom-scrollbar space-y-6 py-2">
+
+            {/* HOME */}
+            <div onClick={() => setSelectedUser(null)} className={`group flex items-center gap-3 px-2 py-1.5 rounded-md cursor-pointer transition-all border border-transparent ${!selectedUser ? "bg-indigo-500/10 text-indigo-300 border-indigo-500/20" : "text-gray-400 hover:bg-white/5 hover:text-gray-200"}`}>
+              <div className={`size-7 rounded-md flex items-center justify-center shrink-0 ${!selectedUser ? "bg-indigo-500/20" : "bg-gray-800/50 group-hover:bg-gray-800"}`}>
+                <House className={`size-3.5 ${!selectedUser ? "text-indigo-400" : "text-gray-500 group-hover:text-gray-400"}`} />
+              </div>
+              <span className={`text-[13px] ${!selectedUser ? "font-medium" : "font-normal"}`}>Home</span>
+            </div>
 
             {/* PROJECTS SECTION */}
             <div className="space-y-0.5">
@@ -184,36 +201,7 @@ const Sidebar = () => {
               )}
             </div>
 
-            {/* TEAM SECTION */}
-            <div className="space-y-0.5">
-              <div className="group flex items-center justify-between px-2 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-300 cursor-pointer" onClick={() => toggleSection('team')}>
-                <div className="flex items-center gap-1">
-                  {sections.team ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
-                  Team
-                </div>
-                <button onClick={(e) => { e.stopPropagation(); setActiveModal('createGroup'); }} className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-gray-800 rounded text-gray-400 hover:text-white transition-all">
-                  <CirclePlus className="size-3.5" />
-                </button>
-              </div>
-
-              {sections.team && (
-                <div className="space-y-0.5">
-                  {filteredTeams.map(group => (
-                    <ListItem
-                      key={group._id}
-                      item={{ ...group, fullName: group.name }}
-                      type="group"
-                      icon={Users}
-                      isSelected={selectedUser?._id === group._id}
-                      onClick={() => setSelectedUser(group, 'group')}
-                    />
-                  ))}
-                  {filteredTeams.length === 0 && (
-                    <div className="px-4 py-2 text-xs text-gray-600 italic">No teams created</div>
-                  )}
-                </div>
-              )}
-            </div>
+            {/* TEAM SECTION REMOVED */}
 
             {/* CHANNELS SECTION */}
             <div className="space-y-0.5">
@@ -263,11 +251,6 @@ const Sidebar = () => {
               {sections.directMessages && (
                 <div className="space-y-0.5">
                   {filteredMembers.map(member => {
-                    // Member object usually has { _id, userId: {fullName...}, role } if populated from OrgMembers
-                    // Or if it's the raw user object?
-                    // Standardize: useOrgStore.orgMembers stores populated members.
-                    // Structure: { _id, userId: { _id, fullName, ... }, role }
-                    // The `item` passed to ListItem should be the User part with Role merged ideally
                     const userObj = member.userId || member;
                     const role = member.designation || member.accessLevel || member.role;
 
@@ -294,6 +277,14 @@ const Sidebar = () => {
                   )}
                 </div>
               )}
+            </div>
+
+            {/* MEETING OPTION */}
+            <div onClick={() => toast('Meeting feature coming soon!')} className="group flex items-center gap-3 px-2 py-1.5 rounded-md cursor-pointer transition-all border border-transparent text-gray-400 hover:bg-white/5 hover:text-gray-200">
+              <div className="size-7 rounded-md flex items-center justify-center shrink-0 bg-gray-800/50 group-hover:bg-gray-800">
+                <Video className="size-3.5 text-gray-500 group-hover:text-gray-400" />
+              </div>
+              <span className="text-[13px] font-normal">Meetings</span>
             </div>
 
           </div>

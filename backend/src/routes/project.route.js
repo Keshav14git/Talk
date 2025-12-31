@@ -1,7 +1,7 @@
 import express from "express";
 import { protectRoute } from "../middleware/auth.middleware.js";
 import { createProject, getOrgProjects, updateProjectStatus, addProjectMember } from "../controllers/project.controller.js";
-import { createTask, getProjectTasks, updateTaskStatus, addTaskComment, deleteTaskComments } from "../controllers/task.controller.js";
+import { createTask, getProjectTasks, updateTaskStatus, addTaskComment, deleteTaskComments, getUserTasks } from "../controllers/task.controller.js";
 
 const router = express.Router();
 
@@ -10,6 +10,7 @@ router.get("/", protectRoute, getOrgProjects);
 router.patch("/:projectId/status", protectRoute, updateProjectStatus);
 
 // Task Routes
+router.get("/tasks/me", protectRoute, getUserTasks); // New Route
 router.post("/:projectId/tasks", protectRoute, createTask);
 router.get("/:projectId/tasks", protectRoute, getProjectTasks);
 router.patch("/tasks/:taskId/status", protectRoute, updateTaskStatus);

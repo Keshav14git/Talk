@@ -1,6 +1,7 @@
 import Task from "../models/task.model.js";
 import Project from "../models/project.model.js";
 import Notification from "../models/notification.model.js";
+import { io, getReceiverSocketId } from "../lib/socket.js";
 
 // Create a new task
 export const createTask = async (req, res) => {
@@ -25,6 +26,14 @@ export const createTask = async (req, res) => {
 
         // Populate assignee details for immediate frontend display
         await task.populate("assignee", "fullName profilePic");
+
+        // Socket.io: Notify assignee
+        if (assignee) {
+            const receiverSocketId = getReceiverSocketId(assignee);
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit("newTaskAssigned", task);
+            }
+        }
 
         res.status(201).json(task);
     } catch (error) {
@@ -64,6 +73,15 @@ export const updateTaskStatus = async (req, res) => {
             { status },
             { new: true }
         ).populate("assignee", "fullName profilePic");
+
+        // Socket.io: Notify assignee of status change (if someone else changed it, or just to sync)
+        if (task.assignee) { // assignee is populated now so it's an object with _id
+            const assigneeId = task.assignee._id.toString();
+            const receiverSocketId = getReceiverSocketId(assigneeId);
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit("taskUpdated", task);
+            }
+        }
 
         res.status(200).json(task);
     } catch (error) {

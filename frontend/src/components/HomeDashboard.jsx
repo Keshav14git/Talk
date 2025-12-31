@@ -30,38 +30,34 @@ const localizer = dateFnsLocalizer({
 
 const HomeDashboard = () => {
     const { userTasks, userEvents, fetchUserDashboardData, isLoading } = useHomeStore();
-    const [view, setView] = useState("week"); // Default to week for better task visibility
+    const [view, setView] = useState("month");
     const [date, setDate] = useState(new Date());
 
     // Calculate initial range based on view/date
     const [range, setRange] = useState({
-        start: startOfWeek(new Date()),
-        end: endOfDay(new Date(new Date().setDate(new Date().getDate() + 6)))
+        start: startOfMonth(new Date()),
+        end: endOfMonth(new Date())
     });
 
     useEffect(() => {
         fetchUserDashboardData();
     }, [fetchUserDashboardData]);
 
-    const onRangeChange = useCallback((rangeOrDates, view) => {
-        if (Array.isArray(rangeOrDates)) {
-            if (rangeOrDates.length === 1) {
-                setRange({ start: startOfDay(rangeOrDates[0]), end: endOfDay(rangeOrDates[0]) }); // Day
-            } else {
-                setRange({ start: startOfDay(rangeOrDates[0]), end: endOfDay(rangeOrDates[rangeOrDates.length - 1]) }); // Week
-            }
-        } else {
-            setRange({ start: rangeOrDates.start, end: rangeOrDates.end }); // Month
-        }
+    // Handle Drilldown (Clicking a date in Month/Week view)
+    const handleDrillDown = useCallback((drillDate) => {
+        setDate(drillDate);
+        setView("day");
+        // Range update will be handled by the effect below
     }, []);
 
+    // Also update range when view/date manually changes if needed
     useEffect(() => {
         let start, end;
         if (view === 'month') {
             start = startOfMonth(date);
             end = endOfMonth(date);
         } else if (view === 'week') {
-            start = startOfWeek(date);
+            start = startOfWeek(date, { weekStartsOn: 0 }); // Sunday start to match en-US
             const endDate = new Date(start);
             endDate.setDate(start.getDate() + 6);
             end = endOfDay(endDate);
@@ -127,19 +123,23 @@ const HomeDashboard = () => {
                     <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-200 to-indigo-400">
                         {view === 'month' && format(date, "MMMM yyyy")}
                         {view === 'week' && "Weekly Overview"}
-                        {view === 'day' && "Daily Focus"}
+                        {view === 'day' && format(date, "EEEE, MMM do")}
                     </h1>
                     <p className="text-gray-500 text-sm mt-1 flex items-center gap-2">
                         <CalendarIcon className="size-4" />
-                        <span>Manage your schedule and tasks efficiently</span>
+                        <span>
+                            {view === 'day' ? "Focusing on today's agenda" : "Manage your schedule efficiently"}
+                        </span>
                     </p>
                 </div>
 
-                {/* Stats Row */}
+                {/* Stats Row - Animated */}
                 <div className="flex gap-3">
-                    <StatBadge icon={ListTodo} value={totalTasks} label="Total" color="bg-indigo-500/10 text-indigo-400 border-indigo-500/20" />
-                    <StatBadge icon={Clock} value={inProgressTasks} label="Active" color="bg-amber-500/10 text-amber-400 border-amber-500/20" />
-                    <StatBadge icon={CheckCircle2} value={completedTasks} label="Done" color="bg-emerald-500/10 text-emerald-400 border-emerald-500/20" />
+                    <AnimatePresence mode="wait">
+                        <StatBadge key={`total-${totalTasks}`} icon={ListTodo} value={totalTasks} label="Total" color="bg-indigo-500/10 text-indigo-400 border-indigo-500/20" />
+                        <StatBadge key={`active-${inProgressTasks}`} icon={Clock} value={inProgressTasks} label="Active" color="bg-amber-500/10 text-amber-400 border-amber-500/20" />
+                        <StatBadge key={`done-${completedTasks}`} icon={CheckCircle2} value={completedTasks} label="Done" color="bg-emerald-500/10 text-emerald-400 border-emerald-500/20" />
+                    </AnimatePresence>
                 </div>
             </div>
 
@@ -149,8 +149,10 @@ const HomeDashboard = () => {
                 {/* Left: Task List */}
                 <div className="lg:w-1/3 flex flex-col bg-[#09090b] rounded-2xl border border-[#27272a] overflow-hidden shrink-0 h-[400px] lg:h-auto">
                     <div className="p-4 border-b border-[#27272a] flex items-center justify-between bg-[#0c0c0e]">
-                        <h2 className="font-semibold text-gray-200 text-sm">Tasks for this view</h2>
-                        <div className="tooltip" title="Tasks filtered by the calendar range">
+                        <h2 className="font-semibold text-gray-200 text-sm">
+                            {view === 'day' ? "Tasks for Today" : "Tasks for this View"}
+                        </h2>
+                        <div className="tooltip" title={`Tasks filtered by: ${view}`}>
                             <Info className="size-3.5 text-gray-500" />
                         </div>
                     </div>
@@ -162,7 +164,7 @@ const HomeDashboard = () => {
                             ) : filteredTasks.length === 0 ? (
                                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center h-full text-gray-600 space-y-2">
                                     <ListTodo className="size-8 opacity-20" />
-                                    <p className="text-xs">No tasks found for this period</p>
+                                    <p className="text-xs">No tasks found</p>
                                 </motion.div>
                             ) : (
                                 filteredTasks.map((task) => (
@@ -203,7 +205,10 @@ const HomeDashboard = () => {
                             onView={setView}
                             onNavigate={setDate}
                             onSelectEvent={handleSelectEvent}
-                            onRangeChange={onRangeChange}
+                            onDrillDown={handleDrillDown} // Enable click-to-day
+                            scrollToTime={new Date(1970, 1, 1, 8, 0, 0)} // Scroll to 8 AM default
+                            step={60} // 1 hour steps to save space and show more day
+                            timeslots={1}
                             components={{
                                 event: EventComponent,
                                 toolbar: CustomToolbar
@@ -228,13 +233,18 @@ const HomeDashboard = () => {
 // Sub-components
 
 const StatBadge = ({ icon: Icon, value, label, color }) => (
-    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${color}`}>
+    <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${color}`}
+    >
         <Icon className="size-3.5" />
         <div className="flex items-baseline gap-1.5">
             <span className="text-lg font-bold leading-none">{value}</span>
             <span className="text-[10px] opacity-80 uppercase tracking-wide font-medium">{label}</span>
         </div>
-    </div>
+    </motion.div>
 );
 
 const CustomToolbar = (toolbar) => {

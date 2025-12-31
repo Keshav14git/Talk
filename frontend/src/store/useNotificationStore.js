@@ -11,10 +11,12 @@ export const useNotificationStore = create((set, get) => ({
         set({ isLoading: true });
         try {
             const res = await axiosInstance.get("/notifications");
-            // Assume backend returns sorted list
-            const notifications = res.data;
-            const unreadCount = notifications.filter(n => !n.isRead).length;
-            set({ notifications, unreadCount });
+            // Only keep unread notifications
+            const unreadNotifications = res.data.filter(n => !n.isRead);
+            set({
+                notifications: unreadNotifications,
+                unreadCount: unreadNotifications.length
+            });
         } catch (error) {
             console.error("Error fetching notifications:", error);
         } finally {
@@ -26,12 +28,11 @@ export const useNotificationStore = create((set, get) => ({
         try {
             await axiosInstance.put(`/notifications/${id}/read`);
             set(state => {
-                const updated = state.notifications.map(n =>
-                    n._id === id ? { ...n, isRead: true } : n
-                );
+                // Remove the read notification from the list
+                const updated = state.notifications.filter(n => n._id !== id);
                 return {
                     notifications: updated,
-                    unreadCount: updated.filter(n => !n.isRead).length
+                    unreadCount: updated.length
                 };
             });
         } catch (error) {
@@ -42,10 +43,10 @@ export const useNotificationStore = create((set, get) => ({
     markAllAsRead: async () => {
         try {
             await axiosInstance.put("/notifications/read-all");
-            set(state => ({
-                notifications: state.notifications.map(n => ({ ...n, isRead: true })),
+            set({
+                notifications: [],
                 unreadCount: 0
-            }));
+            });
             toast.success("All notifications marked as read");
         } catch (error) {
             console.error("Error marking all read:", error);

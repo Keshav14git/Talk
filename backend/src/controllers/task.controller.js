@@ -155,3 +155,17 @@ export const deleteTaskComments = async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 };
+
+// Get tasks assigned to the current user
+export const getUserTasks = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const tasks = await Task.find({ assignee: userId })
+            .populate("projectId", "name") // Useful to know which project
+            .sort({ dueDate: 1 }); // Sort by due date ascending
+        res.status(200).json(tasks);
+    } catch (error) {
+        console.error("Error fetching user tasks:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};

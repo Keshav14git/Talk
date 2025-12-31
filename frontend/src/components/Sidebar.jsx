@@ -370,4 +370,3 @@ const ListItem = ({ item, type, icon: Icon, isSelected, isOnline, onClick, useAv
 };
 
 export default Sidebar;
-```

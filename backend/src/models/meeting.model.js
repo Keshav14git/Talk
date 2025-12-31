@@ -30,10 +30,22 @@ const meetingSchema = new mongoose.Schema(
             enum: ["online", "offline"],
             default: "online",
         },
-        link: { // Video Call Link (Jitsi/Zoom/Daily)
+        // Online Spec
+        platform: {
+            type: String,
+            enum: ["external", "internal"], // 'external' = Google Meet/Zoom, 'internal' = Our App
+            default: "internal"
+        },
+        link: { // External Link
             type: String,
         },
-        location: String, // For offline
+        joinId: { // Internal Meeting ID
+            type: String,
+        },
+
+        // Offline Spec
+        location: String,
+
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",

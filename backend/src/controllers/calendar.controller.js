@@ -33,8 +33,15 @@ export const getCalendarEvents = async (req, res) => {
                 title: m.title,
                 start: m.startTime,
                 end: m.endTime,
-                type: "meeting",
+                type: "meeting", // Event Type for Calendar
+
+                // Detailed Props
+                meetingType: m.type, // online/offline
+                platform: m.platform,
                 link: m.link,
+                joinId: m.joinId,
+                location: m.location,
+
                 color: "#10b981" // green
             }))
         ];

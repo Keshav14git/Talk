@@ -19,7 +19,11 @@ export const useHomeStore = create((set) => ({
                 userEvents: eventsRes.data.map(event => ({
                     ...event,
                     start: new Date(event.start),
-                    end: new Date(event.end)
+                    end: new Date(event.end),
+                    // Specific fields mapping if necessary, assuming backend sends them flat or we map them here
+                    // If backend sends 'type' as 'online'/'offline', we might want to differentiate from 'meeting'/'task' event.type
+                    // The backend sends normalized events? No, looking at calendar.controller.js it sends normalized events.
+                    // We need to update calendar.controller.js to send these fields too.
                 }))
             });
         } catch (error) {

@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useHomeStore } from "../store/useHomeStore";
 import { useAuthStore } from "../store/useAuthStore";
 import { Calendar, dateFnsLocalizer } from "react-big-calendar";
@@ -125,8 +126,38 @@ const HomeDashboard = () => {
     const completedTasks = filteredTasks.filter(t => t.status === "completed").length;
     const inProgressTasks = filteredTasks.filter(t => t.status === "in-progress").length;
 
+    const navigate = useNavigate();
+
+    // ... (rest of code)
+
     const handleSelectEvent = (event) => {
-        toast.success(`Selected: ${event.title}`);
+        // Handle Tasks
+        if (event.type === 'task') {
+            toast.success(`Task: ${event.title}`);
+            return;
+        }
+
+        // Handle Meetings
+        if (event.type === 'meeting') {
+            if (event.meetingType === 'online') {
+                if (event.platform === 'external' && event.link) {
+                    window.open(event.link, '_blank');
+                } else if (event.platform === 'internal' && event.joinId) {
+                    // Navigate to internal meeting room
+                    // Assuming route structure /meeting/:id exists or will exist
+                    // Since we are inside the workspace layout usually, we might want to stay in context 
+                    // or pop out. For now, let's navigate to a dedicated meeting page.
+                    // Checking existing routes... usually /meeting/:id
+                    navigate(`/meeting/${event.joinId}`);
+                } else {
+                    toast.error("Invalid meeting link or ID");
+                }
+            } else if (event.meetingType === 'offline') {
+                toast(`Location: ${event.location || 'No location specified'}`, {
+                    icon: '📍'
+                });
+            }
+        }
     };
 
     const EventComponent = ({ event }) => (

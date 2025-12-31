@@ -12,7 +12,7 @@ import startOfDay from "date-fns/startOfDay";
 import endOfDay from "date-fns/endOfDay";
 import isWithinInterval from "date-fns/isWithinInterval";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import { CheckCircle2, Clock, Calendar as CalendarIcon, ListTodo, AlertCircle, ArrowUpRight } from "lucide-react";
+import { CheckCircle2, Clock, Calendar as CalendarIcon, ListTodo, AlertCircle, Info, ArrowUpRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 
@@ -30,40 +30,32 @@ const localizer = dateFnsLocalizer({
 
 const HomeDashboard = () => {
     const { userTasks, userEvents, fetchUserDashboardData, isLoading } = useHomeStore();
-    const [view, setView] = useState("month");
+    const [view, setView] = useState("week"); // Default to week for better task visibility
     const [date, setDate] = useState(new Date());
 
     // Calculate initial range based on view/date
     const [range, setRange] = useState({
-        start: startOfMonth(new Date()),
-        end: endOfMonth(new Date())
+        start: startOfWeek(new Date()),
+        end: endOfDay(new Date(new Date().setDate(new Date().getDate() + 6)))
     });
 
     useEffect(() => {
         fetchUserDashboardData();
     }, [fetchUserDashboardData]);
 
-    // Handle Range Changes (Navigation or View Switch)
     const onRangeChange = useCallback((rangeOrDates, view) => {
         if (Array.isArray(rangeOrDates)) {
-            // Day/Week view returns array of dates (or potentially just one for day?)
-            // if it's an array of length 1 (Day), or 7 (Week)
             if (rangeOrDates.length === 1) {
-                setRange({ start: startOfDay(rangeOrDates[0]), end: endOfDay(rangeOrDates[0]) });
+                setRange({ start: startOfDay(rangeOrDates[0]), end: endOfDay(rangeOrDates[0]) }); // Day
             } else {
-                setRange({ start: startOfDay(rangeOrDates[0]), end: endOfDay(rangeOrDates[rangeOrDates.length - 1]) });
+                setRange({ start: startOfDay(rangeOrDates[0]), end: endOfDay(rangeOrDates[rangeOrDates.length - 1]) }); // Week
             }
         } else {
-            // Month view returns { start, end }
-            setRange({ start: rangeOrDates.start, end: rangeOrDates.end });
+            setRange({ start: rangeOrDates.start, end: rangeOrDates.end }); // Month
         }
     }, []);
 
-    // Also update range when view/date manually changes if needed, but onRangeChange usually handles it.
-    // However, react-big-calendar's onRangeChange is sometimes tricky.
-    // A robust way is to calc range from `date` and `view` manually if onRangeChange isn't firing as expected for view changes.
     useEffect(() => {
-        // Recalculate range whenever date or view changes ensuring sync
         let start, end;
         if (view === 'month') {
             start = startOfMonth(date);
@@ -80,205 +72,131 @@ const HomeDashboard = () => {
         setRange({ start, end });
     }, [date, view]);
 
-
-    // Filter Data based on Range
     const filteredTasks = useMemo(() => {
         return userTasks.filter(task => {
-            if (!task.dueDate) return false; // Tasks without due date don't show in calendar timeline
+            if (!task.dueDate) return false;
             const dueDate = new Date(task.dueDate);
             return isWithinInterval(dueDate, { start: range.start, end: range.end });
         });
     }, [userTasks, range]);
 
-    // Derived Stats (Synchronized)
     const totalTasks = filteredTasks.length;
     const completedTasks = filteredTasks.filter(t => t.status === "completed").length;
     const inProgressTasks = filteredTasks.filter(t => t.status === "in-progress").length;
 
-    // Progress Calculation
-    const progressPercentage = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
-
     const handleSelectEvent = (event) => {
         toast.success(`Selected: ${event.title}`);
-        // Logic to open modal can go here
     };
 
-    // Custom Event Component
     const EventComponent = ({ event }) => (
-        <div className="flex items-center gap-1.5 px-1.5 py-0.5 h-full overflow-hidden transition-opacity hover:opacity-80">
-            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${event.type === 'meeting' ? 'bg-emerald-400' : 'bg-blue-400'}`} />
-            <span className="text-[11px] font-medium truncate leading-tight">{event.title}</span>
+        <div className="flex items-center gap-1.5 px-2 py-0.5 h-full w-full overflow-hidden transition-all hover:brightness-110">
+            <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${event.type === 'meeting' ? 'bg-emerald-400' : 'bg-blue-400'}`} />
+            <span className="text-[11px] font-medium truncate leading-tight text-white/90">{event.title}</span>
         </div>
     );
 
     return (
-        <div className="h-full flex flex-col bg-[#0a0a0a] overflow-y-auto custom-scrollbar p-6 space-y-8">
+        <div className="h-full flex flex-col bg-[#050505] text-white p-6 gap-6 overflow-hidden">
+            <style>{`
+                /* Dark Theme Calendar Overrides */
+                .rbc-calendar { font-family: inherit; color: #a1a1aa; }
+                .rbc-header { border-bottom: 1px solid #27272a; padding: 12px 4px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+                .rbc-month-view, .rbc-time-view, .rbc-agenda-view { border: 1px solid #27272a; background: #09090b; border-radius: 12px; overflow: hidden; }
+                .rbc-month-row + .rbc-month-row { border-top: 1px solid #27272a; }
+                .rbc-day-bg + .rbc-day-bg { border-left: 1px solid #27272a; }
+                .rbc-off-range-bg { background: #18181b; }
+                .rbc-today { background: rgba(99, 102, 241, 0.08) !important; }
+                .rbc-event { background: transparent !important; padding: 0 !important; border-radius: 4px; }
+                .rbc-time-content { border-top: 1px solid #27272a; }
+                .rbc-time-header-content { border-left: 1px solid #27272a; }
+                .rbc-timeslot-group { border-bottom: 1px solid #27272a; }
+                .rbc-day-slot .rbc-time-slot { border-top: 1px solid #27272a; opacity: 0.5; }
+                .rbc-time-gutter .rbc-timeslot-group { border-bottom: 1px solid #27272a; }
+                .rbc-label { color: #71717a; font-size: 0.7rem; font-weight: 500; }
+                .rbc-current-time-indicator { background-color: #6366f1; height: 2px; }
+                /* Scrollbar polish */
+                ::-webkit-scrollbar { width: 6px; height: 6px; }
+                ::-webkit-scrollbar-track { background: transparent; }
+                ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
+                ::-webkit-scrollbar-thumb:hover { background: #52525b; }
+            `}</style>
 
             {/* Header */}
-            <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 shrink-0">
                 <div>
-                    <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 tracking-tight">
-                        Dashboard
-                    </h1>
-                    <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                        <CalendarIcon className="size-3.5" />
+                    <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-200 to-indigo-400">
                         {view === 'month' && format(date, "MMMM yyyy")}
-                        {view === 'week' && `Week of ${format(range.start, "MMM do")}`}
-                        {view === 'day' && format(date, "EEEE, MMMM do")}
+                        {view === 'week' && "Weekly Overview"}
+                        {view === 'day' && "Daily Focus"}
+                    </h1>
+                    <p className="text-gray-500 text-sm mt-1 flex items-center gap-2">
+                        <CalendarIcon className="size-4" />
+                        <span>Manage your schedule and tasks efficiently</span>
                     </p>
                 </div>
-            </header>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard
-                    label="Tasks This Period"
-                    value={totalTasks}
-                    icon={ListTodo}
-                    color="text-indigo-400"
-                    gradient="from-indigo-500/20 to-purple-500/5"
-                    borderColor="border-indigo-500/20"
-                />
-                <StatCard
-                    label="In Progress"
-                    value={inProgressTasks}
-                    icon={Clock}
-                    color="text-amber-400"
-                    gradient="from-amber-500/20 to-orange-500/5"
-                    borderColor="border-amber-500/20"
-                />
-                <StatCard
-                    label="Completed"
-                    value={completedTasks}
-                    icon={CheckCircle2}
-                    color="text-emerald-400"
-                    gradient="from-emerald-500/20 to-teal-500/5"
-                    borderColor="border-emerald-500/20"
-                />
-
-                {/* Progress Circle Card */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    key={progressPercentage} // Re-animate on change
-                    transition={{ delay: 0.1 }}
-                    className="bg-[#111] p-4 rounded-xl border border-[#222] flex items-center justify-between relative overflow-hidden group hover:border-[#444] transition-all"
-                >
-                    <div>
-                        <p className="text-gray-500 text-[10px] uppercase tracking-wider font-bold mb-1">Period Progress</p>
-                        <h2 className="text-3xl font-bold text-white tracking-tight">{progressPercentage}%</h2>
-                    </div>
-                    <div className="size-16 relative flex items-center justify-center">
-                        <svg className="size-full -rotate-90" viewBox="0 0 36 36">
-                            <path className="text-gray-800" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" />
-                            <motion.path
-                                initial={{ strokeDasharray: "0, 100" }}
-                                animate={{ strokeDasharray: `${progressPercentage}, 100` }}
-                                transition={{ duration: 1, ease: "easeOut" }}
-                                className="text-indigo-500 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]"
-                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="3"
-                                strokeLinecap="round"
-                            />
-                        </svg>
-                    </div>
-                </motion.div>
+                {/* Stats Row */}
+                <div className="flex gap-3">
+                    <StatBadge icon={ListTodo} value={totalTasks} label="Total" color="bg-indigo-500/10 text-indigo-400 border-indigo-500/20" />
+                    <StatBadge icon={Clock} value={inProgressTasks} label="Active" color="bg-amber-500/10 text-amber-400 border-amber-500/20" />
+                    <StatBadge icon={CheckCircle2} value={completedTasks} label="Done" color="bg-emerald-500/10 text-emerald-400 border-emerald-500/20" />
+                </div>
             </div>
 
-            {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 flex-1 min-h-0">
+            {/* Main Layout */}
+            <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-0">
 
-                {/* Left Col: Task List (Synchronized) */}
-                <motion.div
-                    layout
-                    className="lg:col-span-1 bg-[#111] rounded-2xl border border-[#222] flex flex-col h-[500px] lg:h-auto overflow-hidden shadow-2xl shadow-black/50"
-                >
-                    <div className="p-5 border-b border-[#222] flex items-center justify-between bg-[#151515]/50 backdrop-blur-sm">
-                        <div className="flex items-center gap-2">
-                            <ListTodo className="size-4 text-indigo-400" />
-                            <h2 className="font-semibold text-gray-200">Timeline Tasks</h2>
+                {/* Left: Task List */}
+                <div className="lg:w-1/3 flex flex-col bg-[#09090b] rounded-2xl border border-[#27272a] overflow-hidden shrink-0 h-[400px] lg:h-auto">
+                    <div className="p-4 border-b border-[#27272a] flex items-center justify-between bg-[#0c0c0e]">
+                        <h2 className="font-semibold text-gray-200 text-sm">Tasks for this view</h2>
+                        <div className="tooltip" title="Tasks filtered by the calendar range">
+                            <Info className="size-3.5 text-gray-500" />
                         </div>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">{totalTasks}</span>
                     </div>
-                    <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2.5">
+
+                    <div className="flex-1 overflow-y-auto p-2 space-y-2">
                         <AnimatePresence mode="popLayout">
                             {isLoading ? (
-                                <div className="p-8 text-center text-gray-600 text-sm animate-pulse">Loading...</div>
+                                <div className="p-8 text-center text-gray-600 text-xs animate-pulse">Syncing...</div>
                             ) : filteredTasks.length === 0 ? (
-                                <motion.div
-                                    initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                                    className="flex flex-col items-center justify-center h-full text-center p-8 space-y-3"
-                                >
-                                    <div className="p-3 bg-[#1a1a1a] rounded-full">
-                                        <ListTodo className="size-6 text-gray-600" />
-                                    </div>
-                                    <p className="text-gray-500 text-sm">No tasks for this period.</p>
+                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center h-full text-gray-600 space-y-2">
+                                    <ListTodo className="size-8 opacity-20" />
+                                    <p className="text-xs">No tasks found for this period</p>
                                 </motion.div>
                             ) : (
                                 filteredTasks.map((task) => (
                                     <motion.div
-                                        key={task._id}
-                                        layout
-                                        initial={{ opacity: 0, scale: 0.95 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        exit={{ opacity: 0, scale: 0.95 }}
-                                        transition={{ duration: 0.2 }}
-                                        className="p-3.5 bg-[#181818] hover:bg-[#202020] rounded-xl border border-[#2a2a2a] hover:border-[#3a3a3a] group transition-all cursor-pointer relative overflow-hidden"
+                                        key={task._id} layout
+                                        initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                                        className="p-3 bg-[#121214] hover:bg-[#18181b] border border-[#27272a] rounded-lg cursor-pointer group transition-colors"
                                     >
-                                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-transparent via-indigo-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-
-                                        <div className="flex justify-between items-start mb-2">
-                                            <h3 className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors line-clamp-1 pr-2">{task.title}</h3>
-                                            {task.priority === 'high' && <AlertCircle className="size-3.5 text-red-400 shrink-0" />}
-                                        </div>
-
-                                        <div className="flex items-center justify-between text-[11px] text-gray-500">
-                                            <div className="flex items-center gap-2">
-                                                <span className={`px-1.5 py-0.5 rounded capitalize ${task.status === 'completed' ? 'bg-green-500/10 text-green-400' :
-                                                        task.status === 'in-progress' ? 'bg-amber-500/10 text-amber-400' :
-                                                            'bg-gray-700/50 text-gray-400'
-                                                    }`}>
-                                                    {task.status?.replace('-', ' ')}
-                                                </span>
-                                            </div>
-
-                                            <span className={`${isOverdue(task.dueDate) && task.status !== 'completed' ? 'text-red-400 font-medium flex items-center gap-1' : ''}`}>
-                                                {task.dueDate ? format(new Date(task.dueDate), "MMM d") : "-"}
+                                        <div className="flex justify-between items-start mb-1.5">
+                                            <h3 className="text-sm font-medium text-gray-300 group-hover:text-white line-clamp-1">{task.title}</h3>
+                                            <span className={`text-[10px] px-1.5 py-0.5 rounded capitalize bg-[#27272a] text-gray-400`}>
+                                                {task.status?.replace('-', ' ')}
                                             </span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-[10px] text-gray-500">
+                                            {task.priority === 'high' && <span className="text-red-400 font-medium">High Priority</span>}
+                                            <span className="ml-auto">{format(new Date(task.dueDate), "MMM d, h:mm a")}</span>
                                         </div>
                                     </motion.div>
                                 ))
                             )}
                         </AnimatePresence>
                     </div>
-                </motion.div>
+                </div>
 
-                {/* Right Col: Big Calendar */}
-                <motion.div
-                    layout
-                    className="lg:col-span-2 bg-[#111] rounded-2xl border border-[#222] p-6 flex flex-col min-h-[500px] shadow-2xl shadow-black/50 overflow-hidden"
-                >
-                    <div className="mb-6 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-indigo-500/10 rounded-lg">
-                                <CalendarIcon className="size-5 text-indigo-400" />
-                            </div>
-                            <div>
-                                <h2 className="font-bold text-white text-lg">Schedule</h2>
-                                <p className="text-xs text-gray-500">Interactive Timeline</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex-1 calendar-dark-theme">
+                {/* Right: Calendar */}
+                <div className="lg:w-2/3 flex flex-col bg-[#09090b] rounded-2xl border border-[#27272a] overflow-hidden shadow-2xl relative">
+                    <div className="flex-1 p-1">
                         <Calendar
                             localizer={localizer}
                             events={userEvents}
                             startAccessor="start"
                             endAccessor="end"
-                            style={{ height: "100%", minHeight: 450 }}
+                            style={{ height: "100%" }}
                             views={["month", "week", "day"]}
                             view={view}
                             date={date}
@@ -291,61 +209,55 @@ const HomeDashboard = () => {
                                 toolbar: CustomToolbar
                             }}
                             eventPropGetter={(event) => ({
-                                className: `${event.type === 'meeting' ? 'bg-emerald-500/20 border-l-emerald-500' : 'bg-blue-500/20 border-l-blue-500'} border-l-[3px] rounded text-white border-0 !bg-opacity-20 hover:!bg-opacity-30 transition-all cursor-pointer`
+                                className: `${event.type === 'meeting' ? 'bg-emerald-500/10 border-l-emerald-500' : 'bg-blue-500/10 border-l-blue-500'} border-l-[3px] !bg-opacity-10 hover:!bg-opacity-20 transition-all cursor-pointer rounded-sm my-0.5`
                             })}
                             dayPropGetter={(d) => {
                                 const isToday = new Date().toDateString() === d.toDateString();
                                 return {
-                                    className: isToday ? 'bg-indigo-500/5' : ''
+                                    className: isToday ? 'rbc-today' : ''
                                 };
                             }}
                         />
                     </div>
-                </motion.div>
+                </div>
             </div>
         </div>
     );
 };
 
-// Helper Components & Functions
+// Sub-components
 
-const StatCard = ({ label, value, icon: Icon, color, gradient, borderColor }) => (
-    <motion.div
-        key={`${label}-${value}`} // Re-animate on value change
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        whileHover={{ y: -2 }}
-        className={`bg-[#111] p-4 rounded-xl border border-[#222] hover:${borderColor} relative group overflow-hidden transition-all`}
-    >
-        <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
-
-        <div className="relative z-10 flex items-center gap-4">
-            <div className={`p-3 rounded-xl bg-[#1a1a1a] group-hover:bg-[#0a0a0a] border border-[#333] group-hover:border-[#444] transition-all`}>
-                <Icon className={`size-6 ${color}`} />
-            </div>
-            <div>
-                <p className="text-gray-500 text-[10px] uppercase tracking-wider font-bold mb-0.5">{label}</p>
-                <h2 className="text-2xl font-bold text-white tracking-tight">{value}</h2>
-            </div>
+const StatBadge = ({ icon: Icon, value, label, color }) => (
+    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${color}`}>
+        <Icon className="size-3.5" />
+        <div className="flex items-baseline gap-1.5">
+            <span className="text-lg font-bold leading-none">{value}</span>
+            <span className="text-[10px] opacity-80 uppercase tracking-wide font-medium">{label}</span>
         </div>
-    </motion.div>
+    </div>
 );
 
 const CustomToolbar = (toolbar) => {
     return (
-        <div className="calendar-toolbar flex items-center justify-between mb-4">
-            <div className="flex gap-2">
-                <button type="button" onClick={() => toolbar.onNavigate('PREV')} className="p-1.5 hover:bg-[#222] rounded-md text-gray-400 hover:text-white transition-colors">{'<'}</button>
-                <div className="text-sm font-semibold text-white px-2 py-1.5">{toolbar.label}</div>
-                <button type="button" onClick={() => toolbar.onNavigate('NEXT')} className="p-1.5 hover:bg-[#222] rounded-md text-gray-400 hover:text-white transition-colors">{'>'}</button>
+        <div className="flex items-center justify-between p-3 border-b border-[#27272a] mb-0 bg-[#0c0c0e]">
+            <div className="flex items-center gap-1 bg-[#18181b] p-0.5 rounded-lg border border-[#27272a]">
+                <button onClick={() => toolbar.onNavigate('PREV')} className="p-1.5 hover:bg-[#27272a] rounded-md text-gray-400 hover:text-white transition-colors">
+                    <ArrowUpRight className="size-4 -rotate-90" />
+                </button>
+                <button onClick={() => toolbar.onNavigate('TODAY')} className="px-3 py-1 text-xs font-medium text-gray-400 hover:text-white transition-colors">
+                    Today
+                </button>
+                <button onClick={() => toolbar.onNavigate('NEXT')} className="p-1.5 hover:bg-[#27272a] rounded-md text-gray-400 hover:text-white transition-colors">
+                    <ArrowUpRight className="size-4 rotate-0" />
+                </button>
             </div>
 
-            <div className="flex bg-[#1a1a1a] rounded-lg p-0.5 border border-[#333]">
+            <div className="flex bg-[#18181b] rounded-lg p-0.5 border border-[#27272a]">
                 {['month', 'week', 'day'].map(view => (
                     <button
                         key={view}
                         onClick={() => toolbar.onView(view)}
-                        className={`text-xs px-3 py-1 rounded-md capitalize transition-all ${toolbar.view === view ? 'bg-[#333] text-white font-medium shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}
+                        className={`text-xs px-3 py-1.5 rounded-md capitalize transition-all ${toolbar.view === view ? 'bg-[#27272a] text-white font-medium shadow-sm border border-[#3f3f46]/50' : 'text-gray-500 hover:text-gray-300'}`}
                     >
                         {view}
                     </button>
@@ -354,14 +266,5 @@ const CustomToolbar = (toolbar) => {
         </div>
     );
 }
-
-const isOverdue = (date) => {
-    if (!date) return false;
-    // Check if yesterday or bef
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const d = new Date(date);
-    return d < today;
-};
 
 export default HomeDashboard;

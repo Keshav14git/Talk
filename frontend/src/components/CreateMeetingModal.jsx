@@ -1,14 +1,15 @@
 import { useState, useEffect } from "react";
 import { X, Calendar, Clock, Link as LinkIcon, Users, AlignLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useHomeStore } from "../store/useHomeStore";
 import { useAuthStore } from "../store/useAuthStore";
+import { useOrgStore } from "../store/useOrgStore";
 import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 import format from "date-fns/format";
 
 const CreateMeetingModal = ({ isOpen, onClose, selectedSlot, onSuccess }) => {
     const { authUser } = useAuthStore();
+    const { currentOrg } = useOrgStore();
     const [formData, setFormData] = useState({
         title: "",
         description: "",
@@ -28,6 +29,12 @@ const CreateMeetingModal = ({ isOpen, onClose, selectedSlot, onSuccess }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!currentOrg) {
+            toast.error("Please select an organization first");
+            return;
+        }
+
         setIsLoading(true);
 
         try {
@@ -36,7 +43,7 @@ const CreateMeetingModal = ({ isOpen, onClose, selectedSlot, onSuccess }) => {
             // For now we'll just add the current user (if backend requires it) or leave empty if backend handles it.
             // The backend requires 'attendees' array of userIds.
 
-            await axiosInstance.post("/calendar/meetings", {
+            await axiosInstance.post(`/calendar/${currentOrg._id}/meetings`, {
                 ...formData,
                 startTime: selectedSlot.start,
                 endTime: selectedSlot.end,

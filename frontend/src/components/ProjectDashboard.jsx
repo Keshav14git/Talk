@@ -12,10 +12,13 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 
+import { useNotificationStore } from "../store/useNotificationStore"; // Added import
+
 const ProjectDashboard = ({ project }) => {
     const { authUser } = useAuthStore();
     const { users } = useChatStore();
     const { tasks, fetchTasks, updateTaskStatus, addTaskComment, deleteTaskComments } = useTaskStore();
+    const { notifications, fetchNotifications, unreadCount, markAsRead, markAllAsRead, isLoading } = useNotificationStore(); // Added store
 
     // UI State
     const [subTab, setSubTab] = useState("overview");
@@ -23,6 +26,7 @@ const ProjectDashboard = ({ project }) => {
     const [groupBy, setGroupBy] = useState("status"); // status, assignee, priority, none
     const [showCreateTask, setShowCreateTask] = useState(false);
     const [showAddMember, setShowAddMember] = useState(false);
+    const [showNotifications, setShowNotifications] = useState(false); // Added state
     const [expandedTask, setExpandedTask] = useState(null);
     const [commentText, setCommentText] = useState("");
     const [mentionQuery, setMentionQuery] = useState("");
@@ -70,7 +74,8 @@ const ProjectDashboard = ({ project }) => {
         if (project?._id) {
             fetchTasks(project._id);
         }
-    }, [project?._id, fetchTasks]);
+        fetchNotifications(); // Added fetch
+    }, [project?._id, fetchTasks, fetchNotifications]);
 
     if (!project) return null;
 
@@ -227,6 +232,61 @@ const ProjectDashboard = ({ project }) => {
 
                 {/* Right Actions */}
                 <div className="flex items-center gap-4">
+                    {/* Notification Bell */}
+                    <div className="relative">
+                        <button
+                            onClick={() => setShowNotifications(!showNotifications)}
+                            className="p-2 text-gray-400 hover:text-white hover:bg-[#222] rounded-lg transition-colors relative"
+                        >
+                            <img src="/bell.png" alt="Notifications" className="size-5 object-contain invert brightness-0 opacity-70 hover:opacity-100 transition-opacity" />
+                            {unreadCount > 0 && (
+                                <span className="absolute top-1.5 right-1.5 size-2 bg-red-500 rounded-full border border-[#111]"></span>
+                            )}
+                        </button>
+
+                        {/* Notification Dropdown */}
+                        {showNotifications && (
+                            <div className="absolute right-0 top-full mt-2 w-80 bg-[#161616] border border-[#333] rounded-xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2">
+                                <div className="p-3 border-b border-[#333] flex items-center justify-between">
+                                    <h3 className="text-xs font-bold text-white uppercase tracking-wider">Notifications</h3>
+                                    {unreadCount > 0 && (
+                                        <button onClick={markAllAsRead} className="text-[10px] text-indigo-400 hover:text-indigo-300 font-medium">
+                                            Mark all read
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                                    {isLoading ? (
+                                        <div className="p-4 text-center text-xs text-gray-500">Loading...</div>
+                                    ) : notifications.length === 0 ? (
+                                        <div className="p-8 text-center text-gray-500 text-xs italic">No notifications</div>
+                                    ) : (
+                                        notifications.map(n => (
+                                            <div
+                                                key={n._id}
+                                                className={`p-3 border-b border-[#222] hover:bg-[#1f1f1f] transition-colors cursor-pointer ${!n.isRead ? 'bg-[#1a1a1a]' : ''}`}
+                                                onClick={() => markAsRead(n._id)}
+                                            >
+                                                <div className="flex items-start gap-3">
+                                                    <img src={n.sender?.profilePic || "/avatar.png"} className="size-8 rounded-full object-cover mt-0.5" />
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-xs text-gray-300">
+                                                            <span className="font-bold text-white">{n.sender?.fullName}</span> {n.text}
+                                                        </p>
+                                                        <p className="text-[10px] text-gray-500 mt-1">{new Date(n.createdAt).toLocaleDateString()}</p>
+                                                    </div>
+                                                    {!n.isRead && (
+                                                        <div className="size-1.5 bg-indigo-500 rounded-full mt-2"></div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
                     {isLead && subTab === 'overview' && (
                         <button
                             onClick={() => setShowAddMember(true)}

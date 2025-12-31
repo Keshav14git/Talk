@@ -40,7 +40,8 @@ const Sidebar = () => {
     projects: true,
     channels: true,
     team: true,
-    directMessages: true
+    directMessages: true,
+    meetings: true
   });
 
   const toggleSection = (section) => {
@@ -86,8 +87,6 @@ const Sidebar = () => {
 
   if (isUsersLoading) return <SidebarSkeleton />;
 
-  if (isUsersLoading) return <SidebarSkeleton />;
-
   return (
     <motion.aside
       initial={{ width: 280 }}
@@ -121,7 +120,7 @@ const Sidebar = () => {
         <div className="flex-1 flex flex-col items-center py-6 gap-8 overflow-y-auto custom-scrollbar">
           {/* Home Icon */}
           <div className="group relative flex justify-center w-full cursor-pointer" title="Home" onClick={() => { setIsCollapsed(false); setSelectedUser(null); }}>
-            <House className="w-6 h-6 text-gray-500 group-hover:text-white transition-colors" />
+            <img src="/home.png" alt="Home" className="w-6 h-6 object-contain invert brightness-0 opacity-70 group-hover:opacity-100 transition-opacity" />
           </div>
 
           <div className="group relative flex justify-center w-full cursor-pointer" title="Projects" onClick={() => { setIsCollapsed(false); toggleSection('projects'); }}>
@@ -139,7 +138,7 @@ const Sidebar = () => {
           </div>
 
           {/* Meeting Icon */}
-          <div className="group relative flex justify-center w-full cursor-pointer" title="Meetings" onClick={() => { setIsCollapsed(false); toast('Meeting feature coming soon!'); }}>
+          <div className="group relative flex justify-center w-full cursor-pointer" title="Meetings" onClick={() => { setIsCollapsed(false); toggleSection('meetings'); }}>
             <img src="/meeting.png" alt="Meetings" className="w-6 h-6 object-contain invert brightness-0 opacity-70 group-hover:opacity-100 transition-opacity" />
           </div>
         </div>
@@ -165,7 +164,7 @@ const Sidebar = () => {
             {/* HOME */}
             <div onClick={() => setSelectedUser(null)} className={`group flex items-center gap-3 px-2 py-1.5 rounded-md cursor-pointer transition-all border border-transparent ${!selectedUser ? "bg-indigo-500/10 text-indigo-300 border-indigo-500/20" : "text-gray-400 hover:bg-white/5 hover:text-gray-200"}`}>
               <div className={`size-7 rounded-md flex items-center justify-center shrink-0 ${!selectedUser ? "bg-indigo-500/20" : "bg-gray-800/50 group-hover:bg-gray-800"}`}>
-                <House className={`size-3.5 ${!selectedUser ? "text-indigo-400" : "text-gray-500 group-hover:text-gray-400"}`} />
+                <img src="/home.png" alt="Home" className={`size-3.5 object-contain invert brightness-0 ${!selectedUser ? "opacity-100" : "opacity-70 group-hover:opacity-100"}`} />
               </div>
               <span className={`text-[13px] ${!selectedUser ? "font-medium" : "font-normal"}`}>Home</span>
             </div>
@@ -189,7 +188,7 @@ const Sidebar = () => {
                       key={project._id}
                       item={project}
                       type="project"
-                      icon={Briefcase}
+                      // icon={Briefcase} // REMOVED ICON
                       isSelected={selectedUser?._id === project._id}
                       onClick={() => setSelectedUser(project, 'project')}
                     />
@@ -227,7 +226,7 @@ const Sidebar = () => {
                       key={channel._id}
                       item={{ ...channel, fullName: channel.name }}
                       type="channel"
-                      icon={Hash}
+                      // icon={Hash} // REMOVED ICON
                       isSelected={selectedUser?._id === channel._id}
                       onClick={() => setSelectedUser(channel, 'channel')}
                     />
@@ -279,12 +278,25 @@ const Sidebar = () => {
               )}
             </div>
 
-            {/* MEETING OPTION */}
-            <div onClick={() => toast('Meeting feature coming soon!')} className="group flex items-center gap-3 px-2 py-1.5 rounded-md cursor-pointer transition-all border border-transparent text-gray-400 hover:bg-white/5 hover:text-gray-200">
-              <div className="size-7 rounded-md flex items-center justify-center shrink-0 bg-gray-800/50 group-hover:bg-gray-800">
-                <Video className="size-3.5 text-gray-500 group-hover:text-gray-400" />
+            {/* MEETINGS SECTION */}
+            <div className="space-y-0.5">
+              <div className="flex items-center justify-between px-2 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => toggleSection('meetings')}>
+                <div className="flex items-center gap-1">
+                  {sections.meetings ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+                  Meetings
+                </div>
               </div>
-              <span className="text-[13px] font-normal">Meetings</span>
+
+              {sections.meetings && (
+                <div className="space-y-0.5">
+                  <div onClick={() => toast('Meeting feature coming soon!')} className="group flex items-center gap-3 px-2 py-1.5 rounded-md cursor-pointer transition-all border border-transparent text-gray-400 hover:bg-white/5 hover:text-gray-200">
+                    {/* No Icon as requested */}
+                    <div className="flex-1 min-w-0">
+                      <span className="text-[13px] font-normal pl-2">General Room</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
           </div>
@@ -327,13 +339,17 @@ const ListItem = ({ item, type, icon: Icon, isSelected, isOnline, onClick, useAv
           <img src={item.profilePic || "/avatar.png"} alt={item.fullName} className="size-7 rounded-md object-cover bg-gray-800" />
           {isOnline && <span className="absolute -bottom-0.5 -right-0.5 size-2 bg-green-500 border-2 border-[#0a0a0a] rounded-full" />}
         </div>
-      ) : (
+      ) : Icon ? (
         <div className={`size-7 rounded-md flex items-center justify-center shrink-0 ${isSelected ? "bg-indigo-500/20" : "bg-gray-800/50 group-hover:bg-gray-800"}`}>
           <Icon className={`size-3.5 ${isSelected ? "text-indigo-400" : "text-gray-500 group-hover:text-gray-400"}`} />
         </div>
+      ) : (
+        // If no avatar and no icon, provide an empty div for consistent spacing if needed,
+        // or let the text flow naturally. For now, we'll rely on the parent's gap-3.
+        null
       )}
 
-      <div className="flex-1 min-w-0 flex flex-col justify-center h-full">
+      <div className={`flex-1 min-w-0 flex flex-col justify-center h-full ${!useAvatar && !Icon ? 'pl-2' : ''}`}>
         <div className="flex items-center justify-between">
           <span className={`text-[13px] truncate leading-none ${isSelected ? "font-medium" : "font-normal"}`}>
             {item.fullName || item.name}
@@ -354,3 +370,4 @@ const ListItem = ({ item, type, icon: Icon, isSelected, isOnline, onClick, useAv
 };
 
 export default Sidebar;
+```

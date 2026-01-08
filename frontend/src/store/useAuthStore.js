@@ -83,6 +83,9 @@ export const useAuthStore = create((set, get) => ({
       toast.success(res.data.message || "OTP sent successfully");
       return true; // Indicate success to component
     } catch (error) {
+      console.error("OTP SEND ERROR:", error);
+      console.error("OTP ERROR RESPONSE:", error.response);
+      console.error("OTP ERROR DATA:", error.response?.data);
       toast.error(error.response?.data?.message || "Failed to send OTP");
       return false;
     } finally {

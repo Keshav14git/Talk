@@ -1,5 +1,5 @@
+import "dotenv/config";
 import express from "express";
-import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 
@@ -18,7 +18,7 @@ import calendarRoutes from "./routes/calendar.route.js";
 import notificationRoutes from "./routes/notification.route.js";
 import { app, server } from "./lib/socket.js";
 
-dotenv.config();
+
 
 const PORT = process.env.PORT;
 const __dirname = path.resolve();

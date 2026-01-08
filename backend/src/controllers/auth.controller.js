@@ -62,11 +62,18 @@ export const sendOtp = async (req, res) => {
                 console.log(`[MOCK EMAIL] OTP for ${email}: ${otp}`);
             }
         } catch (emailError) {
-            console.error("Email sending failed (Network Blocked?):", emailError.message);
+            console.error("Email sending failed:", emailError.message);
+
+            // If we have credentials but it failed, return Error to frontend
+            if (process.env.GMAIL_USER) {
+                return res.status(500).json({ message: "Email Error: " + emailError.message });
+            }
+
+            // Only fallback to emergency log if no credentials (dev mode)
             console.log("\n=======================================");
             console.log(`EMERGENCY OTP FOR ${email}: ${otp}`);
             console.log("=======================================\n");
-            // Proceed as if successful so user can login using the log
+            // Proceed as if successful so user can login using the log (DEV ONLY)
         }
 
         res.status(200).json({ message: "OTP sent successfully" });

@@ -8,16 +8,20 @@ import { OAuth2Client } from "google-auth-library";
 
 // Configure Nodemailer (mock for now, or real if env vars exist)
 const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false, // true for 465, false for other ports
+    service: "gmail",
     auth: {
         user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_PASS?.replace(/\s+/g, ''), // Remove spaces from App Password
+        pass: process.env.GMAIL_PASS?.replace(/\s+/g, ''),
     },
-    logger: true, // Log to console
-    debug: true, // Include SMTP traffic in logs
-    connectionTimeout: 10000, // Fail after 10 seconds if hanging
+    tls: {
+        rejectUnauthorized: false // Helps with some cloud proxy issues
+    },
+    logger: true,
+    debug: true,
+    // Force IPv4 to avoid IPv6 timeouts on some networks
+    dns: {
+        family: 4
+    }
 });
 
 export const sendOtp = async (req, res) => {

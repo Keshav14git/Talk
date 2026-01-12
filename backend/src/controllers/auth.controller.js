@@ -7,7 +7,9 @@ import axios from "axios"; // Using axios for Brevo API
 import { OAuth2Client } from "google-auth-library";
 
 // Configure Brevo API
+// Configure Brevo API
 const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
+const LOGO_URL = "https://talknow-hqjj.onrender.com/Orchestr%20(3).png";
 
 // Helper to get key safely
 const getBrevoKey = () => (process.env.BREVO_API_KEY || "").trim();
@@ -25,7 +27,7 @@ const sendEmail = async (toEmail, subject, htmlContent) => {
         const response = await axios.post(
             BREVO_API_URL,
             {
-                sender: { name: "Talk App", email: "keshavjangir114@gmail.com" }, // Using user's verified Brevo account email
+                sender: { name: "Orchestr", email: "keshavjangir114@gmail.com" }, // Using user's verified Brevo account email
                 to: [{ email: toEmail }],
                 subject: subject,
                 htmlContent: htmlContent
@@ -57,34 +59,111 @@ const getEmailTemplate = (otp, type = "login") => {
     <html>
     <head>
         <style>
-            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; }
-            .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e1e1e1; border-radius: 8px; background-color: #f9f9f9; }
-            .header { text-align: center; margin-bottom: 20px; }
-            .header h1 { color: #000; font-size: 24px; margin: 0; }
-            .content { background: #fff; padding: 20px; border-radius: 8px; text-align: center; }
-            .otp-code { font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #4F46E5; margin: 20px 0; display: inline-block; padding: 10px 20px; background: #EEF2FF; border-radius: 8px; }
-            .footer { margin-top: 20px; text-align: center; font-size: 12px; color: #666; }
+            body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #000000; color: #ffffff; padding: 20px; }
+            .container { max-width: 500px; margin: 0 auto; background-color: #0A0A0A; border: 1px solid #222; border-radius: 12px; overflow: hidden; }
+            .header { padding: 30px 20px; text-align: center; border-bottom: 1px solid #222; }
+            .header img { height: 40px; object-fit: contain; }
+            .content { padding: 40px 30px; text-align: center; }
+            .otp-code { font-size: 36px; font-weight: 700; letter-spacing: 8px; color: #ffffff; margin: 30px 0; display: inline-block; padding: 15px 30px; background: #1A1A1A; border-radius: 8px; border: 1px solid #333; }
+            .footer { padding: 20px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #222; background: #050505; }
+            h2 { font-size: 24px; margin-bottom: 10px; font-weight: 600; color: #fff; }
+            p { color: #888; font-size: 14px; line-height: 1.6; margin: 0; }
         </style>
     </head>
     <body>
         <div class="container">
             <div class="header">
-                <h1>Talk App</h1>
+                <img src="${LOGO_URL}" alt="Orchestr" />
             </div>
             <div class="content">
                 <h2>${title}</h2>
                 <p>${text}</p>
                 <div class="otp-code">${otp}</div>
                 <p>This code will expire in 10 minutes.</p>
-                <p>If you didn't request this, please ignore this email.</p>
+                <p style="margin-top: 20px; font-size: 12px; color: #555;">If you didn't request this, you can safely ignore this email.</p>
             </div>
             <div class="footer">
-                &copy; ${new Date().getFullYear()} Talk App. All rights reserved.
+                &copy; ${new Date().getFullYear()} Orchestr. All rights reserved.
             </div>
         </div>
     </body>
     </html>
     `;
+};
+
+const getWelcomeTemplate = (name, role) => {
+    return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #000000; color: #ffffff; padding: 20px; }
+            .container { max-width: 500px; margin: 0 auto; background-color: #0A0A0A; border: 1px solid #222; border-radius: 12px; overflow: hidden; }
+            .header { padding: 30px 20px; text-align: center; border-bottom: 1px solid #222; }
+            .header img { height: 40px; object-fit: contain; }
+            .content { padding: 40px 30px; text-align: center; }
+            .role-badge { display: inline-block; background: #fff; color: #000; font-weight: 600; padding: 8px 16px; border-radius: 50px; margin: 20px 0; font-size: 14px; }
+            .footer { padding: 20px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #222; background: #050505; }
+            h2 { font-size: 24px; margin-bottom: 15px; font-weight: 600; color: #fff; }
+            p { color: #888; font-size: 15px; line-height: 1.6; margin-bottom: 10px; }
+            .button { display: inline-block; margin-top: 20px; background-color: #fff; color: #000; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 14px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                 <img src="${LOGO_URL}" alt="Orchestr" />
+            </div>
+            <div class="content">
+                <h2>Welcome, ${name}!</h2>
+                <p>We are thrilled to have you join us.</p>
+                <div class="role-badge">${role}</div>
+                <p>Your workspace is ready. As a <b>${role}</b>, you have successfully initialized your professional identity on Orchestr.</p>
+                <a href="#" class="button">Go to Workspace</a>
+            </div>
+            <div class="footer">
+                &copy; ${new Date().getFullYear()} Orchestr. All rights reserved.
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+};
+
+// ... (sendOtp, verifyOtp, googleAuth remain unchanged) ...
+
+export const updateProfile = async (req, res) => {
+    try {
+        const { profilePic, fullName, role } = req.body;
+        const userId = req.user._id;
+
+        const updateData = {};
+        if (fullName) updateData.fullName = fullName;
+        if (role) updateData.role = role;
+
+        if (profilePic) {
+            const uploadResponse = await cloudinary.uploader.upload(profilePic);
+            updateData.profilePic = uploadResponse.secure_url;
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true });
+
+        // Send Welcome Email if Role is Set and Updated
+        if (role) {
+            // Trigger asynchronously, don't block response
+            sendEmail(
+                updatedUser.email,
+                "Welcome to Orchestr",
+                getWelcomeTemplate(updatedUser.fullName, role)
+            ).catch(err => console.error("Failed to send welcome email:", err.message));
+        }
+
+        res.status(200).json(updatedUser);
+
+    } catch (error) {
+        console.log("error in update profile controller", error.message);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
 };
 
 export const sendOtp = async (req, res) => {

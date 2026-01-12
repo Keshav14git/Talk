@@ -5,11 +5,25 @@ import { useOrgStore } from "../store/useOrgStore";
 import { useNavigate } from "react-router-dom";
 import {
   Mail, ArrowRight, Loader2, ShieldCheck,
-  Building2, Users, LogIn, CheckCircle2, Lock, ChevronRight, Briefcase
+  Building2, Users, LogIn, CheckCircle2, Lock, ChevronRight, Briefcase, Search
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useGoogleLogin } from "@react-oauth/google";
 import ParticleNetworkPattern from "../components/ParticleNetworkPattern";
+
+const CORPORATE_ROLES = [
+  "Founder", "Co-Founder", "CEO", "CTO", "CFO", "COO", "CMO", "CPO", "CIO",
+  "President", "Managing Director", "Owner", "Director",
+  "VP of Engineering", "VP of Product", "VP of Marketing", "VP of Sales",
+  "Product Manager", "Project Manager", "Engineering Manager",
+  "Software Engineer", "Frontend Engineer", "Backend Engineer", "Full Stack Engineer",
+  "DevOps Engineer", "Data Scientist", "QA Engineer",
+  "Product Designer", "UI/UX Designer", "Creative Director",
+  "Marketing Manager", "Content Strategist", "SEO Specialist",
+  "Sales Representative", "Account Executive", "Business Analyst",
+  "HR Manager", "Recruiter", "Finance Manager", "Accountant",
+  "Legal Counsel", "Consultant", "Intern", "Other"
+];
 
 const SignUpPage = () => {
   const navigate = useNavigate();
@@ -36,6 +50,8 @@ const SignUpPage = () => {
   // Track verified states to "lock" UI sections
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [isRoleSelected, setIsRoleSelected] = useState(false);
+  const [roleSearch, setRoleSearch] = useState("");
+  const [showRoleSuggestions, setShowRoleSuggestions] = useState(false);
 
   // Data
   const [formData, setFormData] = useState({
@@ -117,17 +133,23 @@ const SignUpPage = () => {
   // 3. Role Selection
   const handleSelectRole = async (role) => {
     setFormData(prev => ({ ...prev, role }));
+    setRoleSearch(role); // Update search input to show selected
+    setShowRoleSuggestions(false); // Hide details
     await updateProfile({ role });
     setIsRoleSelected(true);
     setCurrentStep("ORG_ACTION");
   };
+
+  const filteredRoles = CORPORATE_ROLES.filter(r =>
+    r.toLowerCase().includes(roleSearch.toLowerCase())
+  );
 
   // 4. Org Action
   const handleOrgAction = async (e) => {
     e.preventDefault();
 
     // Determine action type based on role
-    const isCxO = ["ceo", "founder", "md", "president", "owner"].includes(formData.role.toLowerCase());
+    const isCxO = ["ceo", "founder", "co-founder", "md", "managing director", "president", "owner", "cfo", "cto", "coo", "cmo", "cpo", "cio"].includes(formData.role.toLowerCase());
 
     if (isCxO) {
       // Create Logic
@@ -161,7 +183,7 @@ const SignUpPage = () => {
   };
 
   // --- Render Helpers ---
-  const isCxO = ["ceo", "founder", "md", "president", "owner"].includes(formData.role.toLowerCase());
+  const isCxO = ["ceo", "founder", "co-founder", "md", "managing director", "president", "owner", "cfo", "cto", "coo", "cmo", "cpo", "cio"].includes(formData.role.toLowerCase());
 
 
   // --- BLANK / INTRO PHASES ---
@@ -295,16 +317,54 @@ const SignUpPage = () => {
                 <span className="text-xs font-medium text-[#666] uppercase tracking-wider">Your Role</span>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                {["Founder", "CEO", "CTO", "Product Manager", "Engineer", "Designer", "Marketer", "Other"].map((r) => (
-                  <button
-                    key={r}
-                    onClick={() => handleSelectRole(r)}
-                    className={`p-3 rounded-lg border text-left text-sm transition-all duration-300 ${formData.role === r ? 'bg-white text-black border-white ring-2 ring-white/20' : 'bg-[#0A0A0A] border-[#222] text-[#888] hover:border-[#444] hover:text-[#ccc]'} `}
-                  >
-                    {r}
-                  </button>
-                ))}
+              <div className="relative">
+                <input
+                  value={roleSearch}
+                  onChange={(e) => {
+                    setRoleSearch(e.target.value);
+                    setShowRoleSuggestions(true);
+                    setIsRoleSelected(false); // Re-open if they type
+                  }}
+                  onFocus={() => setShowRoleSuggestions(true)}
+                  className="w-full bg-[#0A0A0A] border border-[#222] rounded-lg p-3 pl-10 text-sm focus:border-white/20 focus:outline-none transition-colors"
+                  placeholder="Search your position (e.g. Founder, Engineer...)"
+                />
+                <Search className="absolute left-3 top-3.5 size-4 text-[#444]" />
+
+                {/* Suggestions Dropdown */}
+                {showRoleSuggestions && roleSearch && (
+                  <div className="absolute z-50 w-full mt-2 bg-[#0A0A0A] border border-[#222] rounded-lg max-h-60 overflow-y-auto shadow-xl scrollbar-hide">
+                    {filteredRoles.length > 0 ? (
+                      filteredRoles.map(r => (
+                        <button
+                          key={r}
+                          onClick={() => handleSelectRole(r)}
+                          className="w-full text-left px-4 py-3 text-sm text-[#ccc] hover:bg-[#1A1A1A] hover:text-white transition-colors border-b border-[#222]/50 last:border-0"
+                        >
+                          {r}
+                        </button>
+                      ))
+                    ) : (
+                      <div className="px-4 py-3 text-sm text-[#555]">No matching roles found</div>
+                    )}
+                  </div>
+                )}
+
+                {/* Initial Quick Select (Only show if search is empty to guide user) */}
+                {!roleSearch && showRoleSuggestions && (
+                  <div className="absolute z-50 w-full mt-2 bg-[#0A0A0A] border border-[#222] rounded-lg p-2 grid grid-cols-2 gap-2 shadow-xl">
+                    {["Founder", "CEO", "Product Manager", "Engineer", "Designer", "Marketer"].map(r => (
+                      <button
+                        key={r}
+                        onClick={() => handleSelectRole(r)}
+                        className="text-left px-3 py-2 text-xs text-[#888] hover:bg-[#1A1A1A] hover:text-[#ccc] rounded transition-colors"
+                      >
+                        {r}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
               </div>
             </div>
           )}

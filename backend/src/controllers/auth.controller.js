@@ -8,12 +8,18 @@ import { OAuth2Client } from "google-auth-library";
 
 // Configure Brevo API
 const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
-const BREVO_API_KEY = process.env.BREVO_API_KEY;
+
+// Helper to get key safely
+const getBrevoKey = () => (process.env.BREVO_API_KEY || "").trim();
 
 const sendEmail = async (toEmail, subject, htmlContent) => {
-    if (!BREVO_API_KEY) {
+    const apiKey = getBrevoKey();
+    if (!apiKey) {
         throw new Error("Missing BREVO_API_KEY in environment variables");
     }
+
+    // DEBUG: Check key format (do not log full key)
+    console.log(`[Brevo] Using Key: ${apiKey.substring(0, 5)}... (Length: ${apiKey.length})`);
 
     try {
         const response = await axios.post(
@@ -26,7 +32,7 @@ const sendEmail = async (toEmail, subject, htmlContent) => {
             },
             {
                 headers: {
-                    "api-key": BREVO_API_KEY,
+                    "api-key": apiKey,
                     "Content-Type": "application/json",
                     "accept": "application/json"
                 }

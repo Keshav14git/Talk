@@ -3,26 +3,52 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../lib/utils.js";
 import cloudinary from "../lib/cloudinary.js";
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import { OAuth2Client } from "google-auth-library";
 
-// Configure Nodemailer (mock for now, or real if env vars exist)
-const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_PASS?.replace(/\s+/g, ''),
-    },
-    tls: {
-        rejectUnauthorized: false // Helps with some cloud proxy issues
-    },
-    logger: true,
-    debug: true,
-    // Force IPv4 to avoid IPv6 timeouts on some networks
-    dns: {
-        family: 4
-    }
-});
+// Configure Resend
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+const getEmailTemplate = (otp, type = "login") => {
+    const title = type === "login" ? "Your Login Code" : "Verify Email Change";
+    const text = type === "login"
+        ? "Use the code below to log in to your account."
+        : "Use the code below to verify your new email address.";
+
+    return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e1e1e1; border-radius: 8px; background-color: #f9f9f9; }
+            .header { text-align: center; margin-bottom: 20px; }
+            .header h1 { color: #000; font-size: 24px; margin: 0; }
+            .content { background: #fff; padding: 20px; border-radius: 8px; text-align: center; }
+            .otp-code { font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #4F46E5; margin: 20px 0; display: inline-block; padding: 10px 20px; background: #EEF2FF; border-radius: 8px; }
+            .footer { margin-top: 20px; text-align: center; font-size: 12px; color: #666; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Talk App</h1>
+            </div>
+            <div class="content">
+                <h2>${title}</h2>
+                <p>${text}</p>
+                <div class="otp-code">${otp}</div>
+                <p>This code will expire in 10 minutes.</p>
+                <p>If you didn't request this, please ignore this email.</p>
+            </div>
+            <div class="footer">
+                &copy; ${new Date().getFullYear()} Talk App. All rights reserved.
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+};
 
 export const sendOtp = async (req, res) => {
     const { email } = req.body;
@@ -32,12 +58,6 @@ export const sendOtp = async (req, res) => {
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
 
-        // Upsert user (find or create temporary doc if needed, or just update existing)
-        // For simplicity in this flow: We find by email. If not found, we create a temporary placeholder or Just-In-Time creation during verification.
-        // Better Linear approach: Just separate OTP store or store on User.
-        // If user doesn't exist, we can create them now OR wait for verify.
-        // Let's create/update the user record with the OTP.
-        // ... existing code ...
         console.log("Preparing to send OTP to:", email);
 
         // Upsert user
@@ -50,34 +70,29 @@ export const sendOtp = async (req, res) => {
         await user.save();
         console.log("User updated in DB with OTP.");
 
-        // Send Email
+        // Send Email via Resend
         try {
-            if (process.env.GMAIL_USER) {
-                console.log("Attempting to send email via Nodemailer...");
-                await transporter.sendMail({
-                    from: '"Talk App" <' + process.env.GMAIL_USER + '>',
-                    to: email,
-                    subject: "Your Login Code",
-                    text: `Your backend verification code is: ${otp}`,
-                    html: `<b>Your verification code is: ${otp}</b>`
-                });
-                console.log(`OTP sent to ${email}`);
-            } else {
-                console.log(`[MOCK EMAIL] OTP for ${email}: ${otp}`);
+            console.log("Attempting to send email via Resend...");
+            if (!process.env.RESEND_API_KEY) {
+                throw new Error("Missing RESEND_API_KEY in environment variables");
             }
+
+            const data = await resend.emails.send({
+                from: "Talk App <onboarding@resend.dev>",
+                to: email, // Free tier limit: must match account email
+                subject: "Your Login Code",
+                html: getEmailTemplate(otp, "login")
+            });
+
+            if (data.error) {
+                console.error("Resend API Error:", data.error);
+                return res.status(500).json({ message: "Email Error: " + data.error.message });
+            }
+
+            console.log(`OTP sent to ${email} | ID: ${data.data?.id}`);
         } catch (emailError) {
-            console.error("Email sending failed:", emailError.message);
-
-            // If we have credentials but it failed, return Error to frontend
-            if (process.env.GMAIL_USER) {
-                return res.status(500).json({ message: "Email Error: " + emailError.message });
-            }
-
-            // Only fallback to emergency log if no credentials (dev mode)
-            console.log("\n=======================================");
-            console.log(`EMERGENCY OTP FOR ${email}: ${otp}`);
-            console.log("=======================================\n");
-            // Proceed as if successful so user can login using the log (DEV ONLY)
+            console.error("Email sending exception:", emailError);
+            return res.status(500).json({ message: "Email Error: " + emailError.message });
         }
 
         res.status(200).json({ message: "OTP sent successfully" });
@@ -112,38 +127,6 @@ export const verifyOtp = async (req, res) => {
         user.otpExpires = undefined;
         await user.save();
 
-        // Enterprise: Provision Default Org if needed
-        /*
-        let activeOrgId = user.lastActiveOrgId;
-        if (!activeOrgId) {
-            // Check if they have any orgs
-            const existingMember = await import("../models/orgMember.model.js").then(m => m.default.findOne({ userId: user._id }));
-
-            if (existingMember) {
-                user.lastActiveOrgId = existingMember.orgId;
-                activeOrgId = existingMember.orgId;
-                await user.save();
-            } else {
-                // Determine Org Name
-                const orgName = (user.fullName || user.email.split('@')[0]) + "'s Workspace";
-                const slug = orgName.toLowerCase().replace(/[^a-z0-9]/g, "-") + "-" + Date.now().toString().slice(-4);
-
-                const Organization = (await import("../models/organization.model.js")).default;
-                const OrgMember = (await import("../models/orgMember.model.js")).default;
-                const Channel = (await import("../models/channel.model.js")).default;
-
-                const newOrg = new Organization({ name: orgName, slug, ownerId: user._id });
-                await newOrg.save();
-
-                await new OrgMember({ userId: user._id, orgId: newOrg._id, role: "owner" }).save();
-                await new Channel({ orgId: newOrg._id, name: "General", slug: "general", createdBy: user._id }).save();
-
-                user.lastActiveOrgId = newOrg._id;
-                activeOrgId = newOrg._id;
-                await user.save();
-            }
-        }
-        */
         let activeOrgId = user.lastActiveOrgId;
 
         generateToken(user._id, res);
@@ -196,36 +179,6 @@ export const googleAuth = async (req, res) => {
             await user.save();
         }
 
-        // Enterprise: Provision Default Org if needed
-        /*
-        let activeOrgId = user.lastActiveOrgId;
-        if (!activeOrgId) {
-            const existingMember = await import("../models/orgMember.model.js").then(m => m.default.findOne({ userId: user._id }));
-
-            if (existingMember) {
-                user.lastActiveOrgId = existingMember.orgId;
-                activeOrgId = existingMember.orgId;
-                await user.save();
-            } else {
-                const orgName = (user.fullName || "My") + " Workspace";
-                const slug = orgName.toLowerCase().replace(/[^a-z0-9]/g, "-") + "-" + Date.now().toString().slice(-4);
-
-                const Organization = (await import("../models/organization.model.js")).default;
-                const OrgMember = (await import("../models/orgMember.model.js")).default;
-                const Channel = (await import("../models/channel.model.js")).default;
-
-                const newOrg = new Organization({ name: orgName, slug, ownerId: user._id });
-                await newOrg.save();
-
-                await new OrgMember({ userId: user._id, orgId: newOrg._id, role: "owner" }).save();
-                await new Channel({ orgId: newOrg._id, name: "General", slug: "general", createdBy: user._id }).save();
-
-                user.lastActiveOrgId = newOrg._id;
-                activeOrgId = newOrg._id;
-                await user.save();
-            }
-        }
-        */
         let activeOrgId = user.lastActiveOrgId;
 
         generateToken(user._id, res);
@@ -323,22 +276,31 @@ export const requestEmailChange = async (req, res) => {
         user.emailChangeOtpExpires = otpExpires;
         await user.save();
 
-        // Send Email to NEW address
+        // Send Email to NEW address via Resend
         try {
-            if (process.env.GMAIL_USER) {
-                await transporter.sendMail({
-                    from: '"Talk App" <' + process.env.GMAIL_USER + '>',
-                    to: newEmail,
-                    subject: "Verify Email Change",
-                    text: `Your verification code for email change is: ${otp}`,
-                    html: `<b>Your verification code is: ${otp}</b>`
-                });
-                console.log(`Email change OTP sent to ${newEmail}`);
-            } else {
-                console.log(`[MOCK] Email Change OTP for ${newEmail}: ${otp}`);
+            if (!process.env.RESEND_API_KEY) {
+                throw new Error("Missing RESEND_API_KEY");
             }
+
+            const data = await resend.emails.send({
+                from: "Talk App <onboarding@resend.dev>",
+                to: newEmail,
+                subject: "Verify Email Change",
+                html: getEmailTemplate(otp, "email_change")
+            });
+
+            if (data.error) {
+                console.error("Resend API Error details:", data.error);
+                if (data.error.message?.includes("resend.dev")) {
+                    console.log("DEV NOTE: Free tier Resend only sends to verified email.");
+                }
+                // Strict fail: notify frontend
+                return res.status(500).json({ message: "Email Error: " + data.error.message });
+            }
+            console.log(`Email change OTP sent to ${newEmail} | ID: ${data.data?.id}`);
         } catch (emailError) {
-            console.log(`EMERGENCY OTP (Email Change) for ${newEmail}: ${otp}`);
+            console.log("Error sending email change OTP:", emailError);
+            return res.status(500).json({ message: "Email Error: " + emailError.message });
         }
 
         res.status(200).json({ message: "OTP sent to new email" });

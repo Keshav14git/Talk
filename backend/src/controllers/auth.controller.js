@@ -3,11 +3,42 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../lib/utils.js";
 import cloudinary from "../lib/cloudinary.js";
-import { Resend } from "resend";
+import axios from "axios"; // Using axios for Brevo API
 import { OAuth2Client } from "google-auth-library";
 
-// Configure Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Configure Brevo API
+const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
+
+const sendEmail = async (toEmail, subject, htmlContent) => {
+    if (!BREVO_API_KEY) {
+        throw new Error("Missing BREVO_API_KEY in environment variables");
+    }
+
+    try {
+        const response = await axios.post(
+            BREVO_API_URL,
+            {
+                sender: { name: "Talk App", email: "assessiqinterview@gmail.com" }, // Using user's verified email or a safe sender
+                to: [{ email: toEmail }],
+                subject: subject,
+                htmlContent: htmlContent
+            },
+            {
+                headers: {
+                    "api-key": BREVO_API_KEY,
+                    "Content-Type": "application/json",
+                    "accept": "application/json"
+                }
+            }
+        );
+        return { success: true, messageId: response.data.messageId };
+    } catch (error) {
+        console.error("Brevo API Error:", error.response?.data || error.message);
+        throw new Error(error.response?.data?.message || error.message);
+    }
+};
+
 
 const getEmailTemplate = (otp, type = "login") => {
     const title = type === "login" ? "Your Login Code" : "Verify Email Change";
@@ -70,26 +101,15 @@ export const sendOtp = async (req, res) => {
         await user.save();
         console.log("User updated in DB with OTP.");
 
-        // Send Email via Resend
+        // Send Email via Brevo
         try {
-            console.log("Attempting to send email via Resend...");
-            if (!process.env.RESEND_API_KEY) {
-                throw new Error("Missing RESEND_API_KEY in environment variables");
-            }
-
-            const data = await resend.emails.send({
-                from: "Talk App <onboarding@resend.dev>",
-                to: email, // Free tier limit: must match account email
-                subject: "Your Login Code",
-                html: getEmailTemplate(otp, "login")
-            });
-
-            if (data.error) {
-                console.error("Resend API Error:", data.error);
-                return res.status(500).json({ message: "Email Error: " + data.error.message });
-            }
-
-            console.log(`OTP sent to ${email} | ID: ${data.data?.id}`);
+            console.log("Attempting to send email via Brevo...");
+            const result = await sendEmail(
+                email,
+                "Your Login Code",
+                getEmailTemplate(otp, "login")
+            );
+            console.log(`OTP sent to ${email} | ID: ${result.messageId}`);
         } catch (emailError) {
             console.error("Email sending exception:", emailError);
             return res.status(500).json({ message: "Email Error: " + emailError.message });
@@ -144,8 +164,6 @@ export const verifyOtp = async (req, res) => {
         res.status(500).json({ message: "Server error during verification" });
     }
 };
-
-import axios from "axios";
 
 export const googleAuth = async (req, res) => {
     try {
@@ -276,28 +294,15 @@ export const requestEmailChange = async (req, res) => {
         user.emailChangeOtpExpires = otpExpires;
         await user.save();
 
-        // Send Email to NEW address via Resend
+        // Send Email to NEW address via Brevo
         try {
-            if (!process.env.RESEND_API_KEY) {
-                throw new Error("Missing RESEND_API_KEY");
-            }
-
-            const data = await resend.emails.send({
-                from: "Talk App <onboarding@resend.dev>",
-                to: newEmail,
-                subject: "Verify Email Change",
-                html: getEmailTemplate(otp, "email_change")
-            });
-
-            if (data.error) {
-                console.error("Resend API Error details:", data.error);
-                if (data.error.message?.includes("resend.dev")) {
-                    console.log("DEV NOTE: Free tier Resend only sends to verified email.");
-                }
-                // Strict fail: notify frontend
-                return res.status(500).json({ message: "Email Error: " + data.error.message });
-            }
-            console.log(`Email change OTP sent to ${newEmail} | ID: ${data.data?.id}`);
+            console.log("Attempting to send email via Brevo...");
+            const result = await sendEmail(
+                newEmail,
+                "Verify Email Change",
+                getEmailTemplate(otp, "email_change")
+            );
+            console.log(`Email change OTP sent to ${newEmail} | ID: ${result.messageId}`);
         } catch (emailError) {
             console.log("Error sending email change OTP:", emailError);
             return res.status(500).json({ message: "Email Error: " + emailError.message });

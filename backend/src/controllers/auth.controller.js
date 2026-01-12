@@ -313,28 +313,7 @@ export const logout = (req, res) => {
     }
 }
 
-export const updateProfile = async (req, res) => {
-    try {
-        const { profilePic, fullName, role } = req.body;
-        const userId = req.user._id;
 
-        const updateData = {};
-        if (fullName) updateData.fullName = fullName;
-        if (role) updateData.role = role;
-
-        if (profilePic) {
-            const uploadResponse = await cloudinary.uploader.upload(profilePic);
-            updateData.profilePic = uploadResponse.secure_url;
-        }
-
-        const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true });
-        res.status(200).json(updatedUser);
-
-    } catch (error) {
-        console.log("error in update profile controller", error.message);
-        res.status(500).json({ message: "Internal Server Error" });
-    }
-};
 
 export const checkAuth = async (req, res) => {
     try {

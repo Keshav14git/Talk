@@ -25,7 +25,7 @@ const sendEmail = async (toEmail, subject, htmlContent) => {
         const response = await axios.post(
             BREVO_API_URL,
             {
-                sender: { name: "Talk App", email: "assessiqinterview@gmail.com" }, // Using user's verified email or a safe sender
+                sender: { name: "Talk App", email: "keshavjangir114@gmail.com" }, // Using user's verified Brevo account email
                 to: [{ email: toEmail }],
                 subject: subject,
                 htmlContent: htmlContent

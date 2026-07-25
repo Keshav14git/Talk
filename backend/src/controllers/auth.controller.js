@@ -3,47 +3,48 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../lib/utils.js";
 import cloudinary from "../lib/cloudinary.js";
-import axios from "axios"; // Using axios for Brevo API
 import { OAuth2Client } from "google-auth-library";
+import nodemailer from "nodemailer";
 
-// Configure Brevo API
-// Configure Brevo API
+
 const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
 const LOGO_URL = "https://talknow-hqjj.onrender.com/Orchestr%20(3).png";
 
-// Helper to get key safely
-const getBrevoKey = () => (process.env.BREVO_API_KEY || "").trim();
+
+let transporter = null;
 
 const sendEmail = async (toEmail, subject, htmlContent) => {
-    const apiKey = getBrevoKey();
-    if (!apiKey) {
-        throw new Error("Missing BREVO_API_KEY in environment variables");
+    // If you want to use Gmail, you must add EMAIL_USER and EMAIL_PASS to your .env file
+    // Note: You must use an "App Password" from your Google Account settings, not your normal password.
+    
+    if (!transporter) {
+        if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+            console.log(`[Email] Using SMTP account: ${process.env.EMAIL_USER}`);
+            transporter = nodemailer.createTransport({
+                service: "gmail",
+                auth: {
+                    user: process.env.EMAIL_USER,
+                    pass: process.env.EMAIL_PASS,
+                },
+            });
+        } else {
+            throw new Error("Missing EMAIL_USER and EMAIL_PASS in .env file. Cannot send real emails.");
+        }
     }
 
-    // DEBUG: Check key format (do not log full key)
-    console.log(`[Brevo] Using Key: ${apiKey.substring(0, 5)}... (Length: ${apiKey.length})`);
-
     try {
-        const response = await axios.post(
-            BREVO_API_URL,
-            {
-                sender: { name: "Orchestr", email: "keshavjangir114@gmail.com" }, // Using user's verified Brevo account email
-                to: [{ email: toEmail }],
-                subject: subject,
-                htmlContent: htmlContent
-            },
-            {
-                headers: {
-                    "api-key": apiKey,
-                    "Content-Type": "application/json",
-                    "accept": "application/json"
-                }
-            }
-        );
-        return { success: true, messageId: response.data.messageId };
+        const info = await transporter.sendMail({
+            from: `"Orchestr" <${process.env.EMAIL_USER}>`, // sender address
+            to: toEmail, // receiver
+            subject: subject, // Subject line
+            html: htmlContent, // html body
+        });
+        
+        console.log(`Email sent successfully to ${toEmail} | ID: ${info.messageId}`);
+        return { success: true, messageId: info.messageId };
     } catch (error) {
-        console.error("Brevo API Error:", error.response?.data || error.message);
-        throw new Error(error.response?.data?.message || error.message);
+        console.error("Nodemailer Error:", error.message);
+        throw new Error("Failed to send email. Check your EMAIL_USER and EMAIL_PASS.");
     }
 };
 
@@ -186,15 +187,14 @@ export const sendOtp = async (req, res) => {
         await user.save();
         console.log("User updated in DB with OTP.");
 
-        // Send Email via Brevo
+        // Send Email
         try {
-            console.log("Attempting to send email via Brevo...");
-            const result = await sendEmail(
+            console.log("Attempting to send email...");
+            await sendEmail(
                 email,
                 "Your Login Code",
                 getEmailTemplate(otp, "login")
             );
-            console.log(`OTP sent to ${email} | ID: ${result.messageId}`);
         } catch (emailError) {
             console.error("Email sending exception:", emailError);
             return res.status(500).json({ message: "Email Error: " + emailError.message });
@@ -241,6 +241,7 @@ export const verifyOtp = async (req, res) => {
             fullName: user.fullName,
             profilePic: user.profilePic,
             lastActiveOrgId: activeOrgId, // Send this to frontend
+            devices: user.devices.map(d => ({ deviceId: d.deviceId, deviceName: d.deviceName, lastLoginAt: d.lastLoginAt })),
             isNewUser: user.fullName === "New User"
         });
 
@@ -250,52 +251,93 @@ export const verifyOtp = async (req, res) => {
     }
 };
 
-export const googleAuth = async (req, res) => {
+export const registerDevice = async (req, res) => {
     try {
-        const { token } = req.body; // Access Token from frontend
-        if (!token) {
-            return res.status(400).json({ message: "Token is required" });
+        const { deviceId, pin, deviceName } = req.body;
+        const userId = req.user._id;
+
+        if (!deviceId || !pin) {
+            return res.status(400).json({ message: "Device ID and PIN are required" });
         }
 
-        // Fetch user info from Google
-        const response = await axios.get(`https://www.googleapis.com/oauth2/v3/userinfo?access_token=${token}`);
-        const { sub, name, email, picture } = response.data;
+        if (pin.length < 4) {
+            return res.status(400).json({ message: "PIN must be at least 4 characters" });
+        }
 
-        // Check if user exists
-        let user = await User.findOne({ email });
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: "User not found" });
 
-        if (user) {
-            // If user exists but doesn't have googleId, update it
-            if (!user.googleId) {
-                user.googleId = sub;
-                // user.profilePic = picture; // Optional: update pic? maybe not to overwrite custom one
-                await user.save();
-            }
+        // Hash the PIN
+        const salt = await bcrypt.genSalt(10);
+        const hashedPin = await bcrypt.hash(pin, salt);
+
+        // Check if device already registered, if so update it, else add it
+        const existingDeviceIndex = user.devices.findIndex(d => d.deviceId === deviceId);
+        
+        if (existingDeviceIndex !== -1) {
+            user.devices[existingDeviceIndex].hashedPin = hashedPin;
+            user.devices[existingDeviceIndex].deviceName = deviceName || user.devices[existingDeviceIndex].deviceName;
+            user.devices[existingDeviceIndex].lastLoginAt = Date.now();
         } else {
-            // Create new user
-            user = new User({
-                email,
-                fullName: name,
-                profilePic: picture,
-                googleId: sub,
+            user.devices.push({
+                deviceId,
+                hashedPin,
+                deviceName: deviceName || "Unknown Device",
+                lastLoginAt: Date.now()
             });
-            await user.save();
         }
+
+        await user.save();
+        res.status(200).json({ message: "Device registered successfully for fast login" });
+
+    } catch (error) {
+        console.error("Error in registerDevice:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+export const loginWithPin = async (req, res) => {
+    try {
+        const { email, deviceId, pin } = req.body;
+
+        if (!email || !deviceId || !pin) {
+            return res.status(400).json({ message: "Email, Device ID, and PIN are required" });
+        }
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(401).json({ message: "Invalid credentials" });
+        }
+
+        const device = user.devices.find(d => d.deviceId === deviceId);
+        if (!device) {
+            return res.status(401).json({ message: "Device not registered for fast login. Please use Email verification." });
+        }
+
+        const isPinCorrect = await bcrypt.compare(pin, device.hashedPin);
+        if (!isPinCorrect) {
+            return res.status(401).json({ message: "Invalid PIN" });
+        }
+
+        // Update last login
+        device.lastLoginAt = Date.now();
+        await user.save();
 
         let activeOrgId = user.lastActiveOrgId;
-
         generateToken(user._id, res);
+
         res.status(200).json({
             _id: user._id,
             email: user.email,
             fullName: user.fullName,
             profilePic: user.profilePic,
             lastActiveOrgId: activeOrgId,
+            devices: user.devices.map(d => ({ deviceId: d.deviceId, deviceName: d.deviceName, lastLoginAt: d.lastLoginAt }))
         });
 
     } catch (error) {
-        console.log("Error in googleAuth:", error);
-        res.status(500).json({ message: error.message });
+        console.error("Error in loginWithPin:", error);
+        res.status(500).json({ message: "Internal server error" });
     }
 };
 
@@ -328,7 +370,14 @@ export const checkAuth = async (req, res) => {
             if (!user) {
                 return res.status(200).json(null);
             }
-            res.status(200).json(user);
+            const userObj = user.toObject();
+            if (userObj.devices) {
+                userObj.devices = userObj.devices.map(d => {
+                    const { hashedPin, ...rest } = d;
+                    return rest;
+                });
+            }
+            res.status(200).json(userObj);
         } catch (error) {
             // Token invalid or expired
             return res.status(200).json(null);
@@ -358,15 +407,14 @@ export const requestEmailChange = async (req, res) => {
         user.emailChangeOtpExpires = otpExpires;
         await user.save();
 
-        // Send Email to NEW address via Brevo
+        // Send Email to NEW address
         try {
-            console.log("Attempting to send email via Brevo...");
-            const result = await sendEmail(
+            console.log("Attempting to send email...");
+            await sendEmail(
                 newEmail,
                 "Verify Email Change",
                 getEmailTemplate(otp, "email_change")
             );
-            console.log(`Email change OTP sent to ${newEmail} | ID: ${result.messageId}`);
         } catch (emailError) {
             console.log("Error sending email change OTP:", emailError);
             return res.status(500).json({ message: "Email Error: " + emailError.message });
@@ -409,5 +457,23 @@ export const verifyEmailChange = async (req, res) => {
     } catch (error) {
         console.log("Error verifying email change:", error);
         res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+export const revokeDevice = async (req, res) => {
+    try {
+        const { deviceId } = req.params;
+        const userId = req.user._id;
+
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        user.devices = user.devices.filter(d => d.deviceId !== deviceId);
+        await user.save();
+
+        res.status(200).json({ message: "Device access revoked successfully", devices: user.devices });
+    } catch (error) {
+        console.error("Error in revokeDevice:", error);
+        res.status(500).json({ message: "Internal server error" });
     }
 };

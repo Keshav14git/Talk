@@ -8,14 +8,22 @@ import toast from "react-hot-toast";
 
 const ProfileMenu = ({ collapsed }) => {
     const { authUser, logout, updateProfile, isUpdatingProfile } = useAuthStore();
-    const { currentOrg } = useOrgStore();
+    const { currentOrg, orgMembers } = useOrgStore();
+    
+    // Find current member info for the active org
+    const myMember = currentOrg?.orgMembers?.find?.(m => (m.userId?._id || m._id) === authUser?._id) 
+        || orgMembers?.find(m => (m.userId?._id || m._id) === authUser?._id);
+        
     const [isOpen, setIsOpen] = useState(false);
     const buttonRef = useRef(null);
     const fileInputRef = useRef(null);
     const navigate = useNavigate();
 
     // Portal Position State
-    const [position, setPosition] = useState({ top: 0, left: 0 });
+    const [position, setPosition] = useState({ bottom: 0, left: 0 });
+
+    const deviceId = localStorage.getItem("orchestr_deviceId");
+    const hasCurrentDevicePin = authUser?.devices?.some(d => d.deviceId === deviceId);
 
     const handleLogout = async () => {
         await logout();
@@ -48,21 +56,11 @@ const ProfileMenu = ({ collapsed }) => {
     useEffect(() => {
         if (isOpen && buttonRef.current) {
             const rect = buttonRef.current.getBoundingClientRect();
-            // Position above the button, slightly to the right or aligned left
-            const MENU_HEIGHT = 420; // Approx height
-            const MENU_WIDTH = 384; // w-96 = 24rem = 384px
-
-            let top = rect.top - MENU_HEIGHT - 10;
+            // Position above the button, aligned left
+            let bottom = window.innerHeight - rect.top + 10;
             let left = rect.left;
 
-            // Adjust if going off screen top
-            if (top < 10) top = 10;
-
-            // Adjust if going off screen right is handled by not making it too wide relative to button, 
-            // but if button is far right, left - width might work. 
-            // Here being sidebar (left side usually), left aligned is fine.
-
-            setPosition({ top, left });
+            setPosition({ bottom, left });
         }
     }, [isOpen]);
 
@@ -108,11 +106,17 @@ const ProfileMenu = ({ collapsed }) => {
                         <span className="text-xs text-gray-500 max-w-[140px] truncate">{currentOrg?.name || "No Org"}</span>
                     </div>
                 )}
-                <div className="size-10 shrink-0 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold shadow-lg text-lg ring-2 ring-[#222]">
-                    {authUser.profilePic ? (
-                        <img src={authUser.profilePic} alt="Profile" className="w-full h-full rounded-full object-cover" />
-                    ) : (
-                        authUser.fullName?.charAt(0).toUpperCase() || "U"
+                <div className="relative">
+                    <div className="size-10 shrink-0 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold shadow-lg text-lg ring-2 ring-[#3f3f3f]">
+                        {authUser.profilePic ? (
+                            <img src={authUser.profilePic} alt="Profile" className="w-full h-full rounded-full object-cover" />
+                        ) : (
+                            authUser.fullName?.charAt(0).toUpperCase() || "U"
+                        )}
+                    </div>
+                    {/* Red Alert Badge if no DTPin on this device */}
+                    {!hasCurrentDevicePin && (
+                        <div className="absolute -top-1 -right-1 size-3.5 bg-red-500 border-2 border-[#171717] rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]" title="Device PIN not setup" />
                     )}
                 </div>
             </button>
@@ -121,9 +125,9 @@ const ProfileMenu = ({ collapsed }) => {
             {isOpen && createPortal(
                 <div
                     id="profile-menu-dropdown"
-                    className="fixed z-[9999] w-96 bg-[#0a0a0a] border border-[#222] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 slide-in-from-bottom-2"
+                    className="fixed z-[9999] w-96 bg-[#171717] border border-[#3f3f3f] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 slide-in-from-bottom-2"
                     style={{
-                        top: position.top,
+                        bottom: position.bottom,
                         left: position.left,
                         transformOrigin: 'bottom left'
                     }}
@@ -143,7 +147,7 @@ const ProfileMenu = ({ collapsed }) => {
                     <div className="px-6 relative -mt-10 pb-4">
                         <div className="flex items-end justify-between mb-4">
                             <div className="relative group">
-                                <div className="size-20 rounded-full bg-[#111] p-1 ring-4 ring-[#0a0a0a] shadow-xl">
+                                <div className="size-20 rounded-full bg-[#2f2f2f] p-1 ring-4 ring-[#171717] shadow-xl">
                                     <div className="w-full h-full rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-3xl text-white font-bold overflow-hidden relative">
                                         {authUser.profilePic ? (
                                             <img src={authUser.profilePic} alt="Profile" className="w-full h-full object-cover" />
@@ -195,12 +199,17 @@ const ProfileMenu = ({ collapsed }) => {
                         <div>
                             <h3 className="text-xl font-bold text-white">{authUser.fullName}</h3>
                             <p className="text-sm text-gray-500">{authUser.email}</p>
+                            {myMember?.employeeId && (
+                                <p className="text-xs mt-1 text-indigo-400 font-medium tracking-wide">
+                                    ID: {myMember.employeeId}
+                                </p>
+                            )}
                         </div>
                     </div>
 
                     {/* Details Section */}
                     <div className="px-3 pb-3">
-                        <div className="bg-[#111] rounded-xl p-1 space-y-0.5 border border-[#1a1a1a]">
+                        <div className="bg-[#2f2f2f] rounded-xl p-1 space-y-0.5 border border-[#1a1a1a]">
                             {/* Organization */}
                             <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors group">
                                 <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500 group-hover:bg-blue-500/20 transition-colors">
@@ -226,11 +235,30 @@ const ProfileMenu = ({ collapsed }) => {
                             )}
                         </div>
 
+                        {/* Security Alert */}
+                        {!hasCurrentDevicePin && (
+                            <div className="mt-3 bg-red-500/10 border border-red-500/20 rounded-xl p-3 flex flex-col gap-2">
+                                <div className="flex items-start gap-2">
+                                    <ShieldCheck className="size-4 text-red-400 shrink-0 mt-0.5" />
+                                    <div>
+                                        <h4 className="text-xs font-bold text-red-400 leading-tight">Device Not Secured</h4>
+                                        <p className="text-[10px] text-red-400/70 mt-0.5 leading-tight">Set up a Fast PIN (DTPin) to secure this device and enable instant login.</p>
+                                    </div>
+                                </div>
+                                <button 
+                                    onClick={() => { setIsOpen(false); navigate('/settings?tab=security'); }}
+                                    className="w-full py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-300 text-[11px] font-bold rounded-lg transition-colors"
+                                >
+                                    Set Up PIN Now
+                                </button>
+                            </div>
+                        )}
+
                         {/* Actions */}
                         <div className="mt-3 flex gap-2">
                             <button
                                 onClick={() => { setIsOpen(false); navigate('/settings'); }}
-                                className="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl bg-[#1a1a1a] hover:bg-[#222] border border-[#222] text-gray-300 transition-colors text-xs font-bold"
+                                className="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl bg-[#353535] hover:bg-[#222] border border-[#3f3f3f] text-gray-300 transition-colors text-xs font-bold"
                             >
                                 <User className="size-4" />
                                 Edit Profile

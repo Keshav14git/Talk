@@ -5,10 +5,10 @@ import SidebarSkeleton from "./skeletons/SidebarSkeleton";
 import {
   Users, CirclePlus, MessageSquare, Archive,
   Search, Bell, Settings, LogOut, Briefcase, Hash, ChevronDown, ChevronRight, Lock,
-  PanelLeftClose, PanelLeftOpen, Megaphone, House, Video
+  PanelLeftClose, PanelLeftOpen, Megaphone, House, Video, FileText, UserPlus
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import AddFriendModal from "./AddFriendModal";
 import FriendRequestsModal from "./FriendRequestsModal";
 import CreateGroupModal from "./CreateGroupModal";
@@ -34,6 +34,27 @@ const Sidebar = () => {
   const [activeModal, setActiveModal] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isApprovalsPage = location.pathname.includes('/approvals');
+  const isTeamPage = location.pathname.includes('/team');
+  const isNonChatPage = isApprovalsPage || isTeamPage;
+  const isHomeSelected = !isNonChatPage && !selectedUser;
+
+  const handleHomeClick = () => {
+      if (isNonChatPage && currentOrg) {
+          navigate(`/workspace/${currentOrg._id}/chat`);
+      }
+      setSelectedUser(null);
+  };
+
+  const handleItemSelect = (item, type) => {
+      if (isNonChatPage && currentOrg) {
+          navigate(`/workspace/${currentOrg._id}/chat`);
+      }
+      setSelectedUser(item, type);
+  };
 
   // Section Toggle States
   const [sections, setSections] = useState({
@@ -92,10 +113,10 @@ const Sidebar = () => {
       initial={{ width: 280 }}
       animate={{ width: isCollapsed ? 80 : 280 }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="h-full flex flex-col border-r border-[#222] bg-[#0a0a0a] flex-shrink-0 relative z-20 font-sans overflow-hidden"
+      className="h-full flex flex-col border-r border-[#2f2f2f] bg-[#171717] flex-shrink-0 relative z-20 font-sans overflow-hidden"
     >
       {/* Workspace Header - Collapsed vs Expanded */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-[#222] shrink-0">
+      <div className="h-16 flex items-center justify-between px-4 border-b border-[#2f2f2f] shrink-0">
         {!isCollapsed ? (
           <>
             <div className="flex items-center gap-3 overflow-hidden">
@@ -162,12 +183,28 @@ const Sidebar = () => {
           <div className="flex-1 overflow-y-auto px-2 custom-scrollbar space-y-6 py-2">
 
             {/* HOME */}
-            <div onClick={() => setSelectedUser(null)} className={`group flex items-center gap-3 px-2 py-1.5 rounded-md cursor-pointer transition-all border border-transparent ${!selectedUser ? "bg-indigo-500/10 text-indigo-300 border-indigo-500/20" : "text-gray-400 hover:bg-white/5 hover:text-gray-200"}`}>
-              <div className={`size-7 rounded-md flex items-center justify-center shrink-0 ${!selectedUser ? "bg-indigo-500/20" : "bg-gray-800/50 group-hover:bg-gray-800"}`}>
-                <img src="/home.png" alt="Home" className={`size-3.5 object-contain invert brightness-0 ${!selectedUser ? "opacity-100" : "opacity-70 group-hover:opacity-100"}`} />
+            <div onClick={handleHomeClick} className={`group flex items-center gap-3 px-2 py-1.5 rounded-md cursor-pointer transition-all border border-transparent ${isHomeSelected ? "bg-indigo-500/10 text-indigo-300 border-indigo-500/20" : "text-gray-400 hover:bg-white/5 hover:text-gray-200"}`}>
+              <div className={`size-7 rounded-md flex items-center justify-center shrink-0 ${isHomeSelected ? "bg-indigo-500/20" : "bg-gray-800/50 group-hover:bg-gray-800"}`}>
+                <img src="/home.png" alt="Home" className={`size-3.5 object-contain invert brightness-0 ${isHomeSelected ? "opacity-100" : "opacity-70 group-hover:opacity-100"}`} />
               </div>
-              <span className={`text-[13px] ${!selectedUser ? "font-medium" : "font-normal"}`}>Home</span>
+              <span className={`text-[13px] ${isHomeSelected ? "font-medium" : "font-normal"}`}>Home</span>
             </div>
+
+            {/* APPROVAL CENTER */}
+            <Link to={`/workspace/${currentOrg?._id}/approvals`} className={`group flex items-center gap-3 px-2 py-1.5 rounded-md cursor-pointer transition-all border border-transparent ${isApprovalsPage ? "bg-indigo-500/10 text-indigo-300 border-indigo-500/20" : "text-gray-400 hover:bg-white/5 hover:text-gray-200"}`}>
+              <div className={`size-7 rounded-md flex items-center justify-center shrink-0 ${isApprovalsPage ? "bg-indigo-500/20" : "bg-gray-800/50 group-hover:bg-gray-800"}`}>
+                <FileText className={`size-3.5 ${isApprovalsPage ? "text-indigo-400 opacity-100" : "opacity-70 group-hover:opacity-100"}`} />
+              </div>
+              <span className={`text-[13px] ${isApprovalsPage ? "font-medium" : "font-normal"}`}>Approval Center</span>
+            </Link>
+
+            {/* TEAM DASHBOARD */}
+            <Link to={`/workspace/${currentOrg?._id}/team`} className={`group flex items-center gap-3 px-2 py-1.5 rounded-md cursor-pointer transition-all border border-transparent ${isTeamPage ? "bg-indigo-500/10 text-indigo-300 border-indigo-500/20" : "text-gray-400 hover:bg-white/5 hover:text-gray-200"}`}>
+              <div className={`size-7 rounded-md flex items-center justify-center shrink-0 ${isTeamPage ? "bg-indigo-500/20" : "bg-gray-800/50 group-hover:bg-gray-800"}`}>
+                <Users className={`size-3.5 ${isTeamPage ? "text-indigo-400 opacity-100" : "opacity-70 group-hover:opacity-100"}`} />
+              </div>
+              <span className={`text-[13px] ${isTeamPage ? "font-medium" : "font-normal"}`}>My Team</span>
+            </Link>
 
             {/* PROJECTS SECTION */}
             <div className="space-y-0.5">
@@ -189,8 +226,8 @@ const Sidebar = () => {
                       item={project}
                       type="project"
                       // icon={Briefcase} // REMOVED ICON
-                      isSelected={selectedUser?._id === project._id}
-                      onClick={() => setSelectedUser(project, 'project')}
+                      isSelected={!isNonChatPage && selectedUser?._id === project._id}
+                      onClick={() => handleItemSelect(project, 'project')}
                     />
                   ))}
                   {filteredProjects.length === 0 && (
@@ -227,8 +264,8 @@ const Sidebar = () => {
                       item={{ ...channel, fullName: channel.name }}
                       type="channel"
                       // icon={Hash} // REMOVED ICON
-                      isSelected={selectedUser?._id === channel._id}
-                      onClick={() => setSelectedUser(channel, 'channel')}
+                      isSelected={!isNonChatPage && selectedUser?._id === channel._id}
+                      onClick={() => handleItemSelect(channel, 'channel')}
                     />
                   ))}
                   {filteredChannels.length === 0 && (
@@ -259,8 +296,8 @@ const Sidebar = () => {
                         item={{ ...userObj, role }} // Merge role for display
                         type="user"
                         isOnline={onlineUsers.includes(userObj._id)}
-                        isSelected={selectedUser?._id === userObj._id}
-                        onClick={() => setSelectedUser(userObj, 'user')}
+                        isSelected={!isNonChatPage && selectedUser?._id === userObj._id}
+                        onClick={() => handleItemSelect(userObj, 'user')}
                         useAvatar={true}
                       />
                     );
@@ -305,7 +342,7 @@ const Sidebar = () => {
       )}
 
       {/* User Footer */}
-      <div className="p-3 border-t border-gray-800 bg-[#0f0f0f]">
+      <div className="p-3 border-t border-[#2f2f2f] bg-[#171717]">
         <ProfileMenu collapsed={isCollapsed} />
       </div>
 

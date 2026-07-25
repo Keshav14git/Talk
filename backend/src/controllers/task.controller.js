@@ -187,3 +187,32 @@ export const getUserTasks = async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 };
+
+// Delete a task
+export const deleteTask = async (req, res) => {
+    try {
+        const { taskId } = req.params;
+        const userId = req.user._id;
+
+        const task = await Task.findById(taskId);
+        if (!task) return res.status(404).json({ message: "Task not found" });
+
+        const project = await Project.findById(task.projectId);
+        if (!project) return res.status(404).json({ message: "Project not found" });
+
+        const isLead = project.lead.toString() === userId.toString();
+        const isAdmin = project.admins.includes(userId);
+        const isCreator = task.createdBy.toString() === userId.toString();
+        const isAssignee = task.assignee?.toString() === userId.toString();
+
+        if (!isLead && !isAdmin && !isCreator && !isAssignee) {
+            return res.status(403).json({ message: "Unauthorized to delete this task." });
+        }
+
+        await Task.findByIdAndDelete(taskId);
+        res.status(200).json({ message: "Task deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting task:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};

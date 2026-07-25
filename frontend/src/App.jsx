@@ -2,18 +2,19 @@ import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
 import HomePage from './pages/HomePage';
 import SignUpPage from './pages/SignUpPage';
+import LoginPage from './pages/LoginPage';
 
 import SettingsPage from './pages/SettingsPage';
-import ProfilePage from './pages/ProfilePage';
+
 
 import WorkspaceLayout from './components/WorkspaceLayout';
 import { useAuthStore } from './store/useAuthStore';
 import { useChatStore } from './store/useChatStore';
 import { Loader } from "lucide-react";
 import { Toaster } from "react-hot-toast";
-import { GoogleOAuthProvider } from '@react-oauth/google';
 import CalendarPage from './pages/CalendarPage';
-
+import ApprovalCenter from './components/ApprovalCenter';
+import TeamDashboard from './components/TeamDashboard';
 
 const App = () => {
   const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
@@ -37,12 +38,12 @@ const App = () => {
   );
 
   return (
-    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+    <>
       <Routes>
         {/* Public Routes - Unified Auth */}
-        <Route path="/auth" element={!authUser || !authUser.lastActiveOrgId ? <SignUpPage /> : <Navigate to="/" />} />
-        <Route path="/login" element={<Navigate to="/auth" />} />
-        <Route path="/signup" element={<Navigate to="/auth" />} />
+        <Route path="/auth" element={<SignUpPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignUpPage />} />
 
         {/* Protected Workspace Layout */}
         <Route path="/" element={authUser ? (authUser.lastActiveOrgId ? <WorkspaceLayout /> : <Navigate to="/auth" />) : <Navigate to="/auth" />}>
@@ -52,8 +53,11 @@ const App = () => {
           <Route path="workspace/:orgId/chat" element={<HomePage />} />
           {/* Calendar Route Placeholder */}
           <Route path="workspace/:orgId/calendar" element={<CalendarPage />} />
+          {/* Approval Center Route */}
+          <Route path="workspace/:orgId/approvals" element={<ApprovalCenter />} />
+          {/* Team Dashboard Route */}
+          <Route path="workspace/:orgId/team" element={<TeamDashboard />} />
 
-          <Route path="profile" element={<ProfilePage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
       </Routes>
@@ -87,7 +91,7 @@ const App = () => {
           }
         }}
       />
-    </GoogleOAuthProvider>
+    </>
   );
 };
 

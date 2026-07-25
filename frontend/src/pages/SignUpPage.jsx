@@ -1,15 +1,12 @@
-
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useOrgStore } from "../store/useOrgStore";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
-  Mail, ArrowRight, Loader2, ShieldCheck,
-  Building2, Users, LogIn, CheckCircle2, Lock, ChevronRight, Briefcase, Search
+  Mail, ArrowRight, Loader2,
+  Building2, CheckCircle2, Lock, Briefcase, Search
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { useGoogleLogin } from "@react-oauth/google";
-import ParticleNetworkPattern from "../components/ParticleNetworkPattern";
 
 const CORPORATE_ROLES = [
   "Founder", "Co-Founder", "CEO", "CTO", "CFO", "COO", "CMO", "CPO", "CIO",
@@ -28,32 +25,23 @@ const CORPORATE_ROLES = [
 const SignUpPage = () => {
   const navigate = useNavigate();
   const {
-    login, signup, isSigningUp, isLoggingIn, authUser,
-    sendOtp, verifyOtp, updateProfile, googleLogin, checkAuth
+    authUser, isSigningUp, sendOtp, verifyOtp, updateProfile, checkAuth
   } = useAuthStore();
 
   const { createOrg, joinOrg, isCreatingOrg, isJoiningOrg } = useOrgStore();
 
-  // --- Animation Phases ---
-  const [introPhase, setIntroPhase] = useState("BLANK"); // BLANK -> LOGO -> SPLIT
-
-  // --- Progressive Form State ---
   // Steps: 
-  // 1. INPUT_EMAIL (Start)
-  // 2. VERIFY_OTP (Shown after email submit)
-  // 3. SELECT_ROLE (Shown after OTP success)
-  // 4. ORG_ACTION (Shown after Role selected)
-  // 5. COMPLETED (All done)
+  // 1. INPUT_EMAIL
+  // 2. VERIFY_OTP
+  // 3. SELECT_ROLE
+  // 4. ORG_ACTION
 
   const [currentStep, setCurrentStep] = useState("INPUT_EMAIL");
-
-  // Track verified states to "lock" UI sections
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [isRoleSelected, setIsRoleSelected] = useState(false);
   const [roleSearch, setRoleSearch] = useState("");
   const [showRoleSuggestions, setShowRoleSuggestions] = useState(false);
 
-  // Data
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -61,52 +49,24 @@ const SignUpPage = () => {
     otp: "",
     role: "",
     orgName: "",
-    regNumber: "", // For joining by Reg Number
+    regNumber: "",
     searchOrgName: ""
   });
 
-  const [generatedRegNum, setGeneratedRegNum] = useState(null); // To show after creation
+  const [generatedRegNum, setGeneratedRegNum] = useState(null);
 
-  // --- Intro Timing ---
+  // Redirect if already authenticated and has a workspace, but ONLY if they are not in the middle of setup
   useEffect(() => {
-    const t1 = setTimeout(() => setIntroPhase("LOGO"), 1500);
-    const t2 = setTimeout(() => setIntroPhase("SPLIT"), 4500);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, []);
-
-  // --- Auto-Redirect if Done ---
-
-
-  // --- Handlers ---
+    if (authUser && authUser.lastActiveOrgId && currentStep !== "ORG_ACTION" && currentStep !== "SELECT_ROLE" && currentStep !== "VERIFY_OTP") {
+      navigate("/");
+    }
+  }, [authUser, currentStep, navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // 1. Google Auth (Top)
-  const loginGoogle = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      const user = await googleLogin(tokenResponse.access_token);
-      // If user is new/needs org setup, the logic below or useEffect will handle it.
-      // If Google login returns a user with an org, auto-redirect happens via useEffect.
-      if (user && !user.lastActiveOrgId) {
-        // If they signed up via Google but have no org, jump to Role/Org step
-        // Prefill name/email from what we got (usually handled in backend, but we can sync local state if needed)
-        setIsEmailVerified(true);
-        if (!user.role) {
-          setCurrentStep("SELECT_ROLE");
-        } else {
-          setFormData(prev => ({ ...prev, role: user.role }));
-          setIsRoleSelected(true);
-          setCurrentStep("ORG_ACTION");
-        }
-      }
-    },
-    onError: () => toast.error("Google Login Cancelled")
-  });
-
-  // 2. Email Verification Flow
   const handleRequestOtp = async (e) => {
     e.preventDefault();
     if (!formData.email || !formData.firstName || !formData.lastName) return toast.error("Please fill all details");
@@ -122,7 +82,6 @@ const SignUpPage = () => {
     const user = await verifyOtp({ email: formData.email, otp: formData.otp });
     if (user) {
       setIsEmailVerified(true);
-      // Update Name
       const fullName = (formData.firstName + " " + formData.lastName).trim();
       await updateProfile({ fullName });
       setCurrentStep("SELECT_ROLE");
@@ -130,11 +89,10 @@ const SignUpPage = () => {
     }
   };
 
-  // 3. Role Selection
   const handleSelectRole = async (role) => {
     setFormData(prev => ({ ...prev, role }));
-    setRoleSearch(role); // Update search input to show selected
-    setShowRoleSuggestions(false); // Hide details
+    setRoleSearch(role);
+    setShowRoleSuggestions(false);
     await updateProfile({ role });
     setIsRoleSelected(true);
     setCurrentStep("ORG_ACTION");
@@ -144,30 +102,22 @@ const SignUpPage = () => {
     r.toLowerCase().includes(roleSearch.toLowerCase())
   );
 
-  // 4. Org Action
   const handleOrgAction = async (e) => {
     e.preventDefault();
-
-    // Determine action type based on role
     const isCxO = ["ceo", "founder", "co-founder", "md", "managing director", "president", "owner", "cfo", "cto", "coo", "cmo", "cpo", "cio"].includes(formData.role.toLowerCase());
 
     if (isCxO) {
-      // Create Logic
       if (!formData.orgName) return toast.error("Org Name is required");
       const newOrg = await createOrg(formData.orgName);
       if (newOrg && newOrg.registrationNumber) {
         setGeneratedRegNum(newOrg.registrationNumber);
         toast.success("Organization Created Successfully!");
-
         await checkAuth();
         setTimeout(() => navigate("/"), 2000);
       }
     } else {
-      // Join Logic
       if (!formData.regNumber && !formData.searchOrgName) return toast.error("Enter Registration Number or Name");
-
       let success = false;
-      // Prioritize Reg Number
       if (formData.regNumber) {
         success = await joinOrg({ registrationNumber: formData.regNumber });
       } else {
@@ -182,289 +132,254 @@ const SignUpPage = () => {
     }
   };
 
-  // --- Render Helpers ---
-  const isCxO = ["ceo", "founder", "co-founder", "md", "managing director", "president", "owner", "cfo", "cto", "coo", "cmo", "cpo", "cio"].includes(formData.role.toLowerCase());
-
-
-  // --- BLANK / INTRO PHASES ---
-  if (introPhase === "BLANK") return <div className="h-screen w-screen bg-black" />;
-
-  if (introPhase === "LOGO") {
-    return (
-      <div className="h-screen w-screen bg-black flex items-center justify-center animate-in fade-in duration-1000">
-        <img src="/Orchestr (3).png" alt="Logo" className="w-160 opacity-100 animate-pulse" />
-      </div>
-    );
-  }
+  const isCxO = formData.role ? ["ceo", "founder", "co-founder", "md", "managing director", "president", "owner", "cfo", "cto", "coo", "cmo", "cpo", "cio"].includes(formData.role.toLowerCase()) : false;
 
   return (
-    <div className="min-h-screen bg-black flex relative overflow-hidden font-sans text-white selection:bg-white/20">
-
-      {/* Cinematic Background */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[1000px] h-[1000px] bg-white/[0.02] rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[800px] h-[800px] bg-purple-900/[0.05] rounded-full blur-[120px]" />
-      </div>
-
-      {/* Main Layout: Split 50/50 */}
-      <div className={`w-full lg:w-1/2 h-full flex flex-col px-8 lg:px-24 pt-20 z-10 transition-all duration-1000 ${introPhase === 'SPLIT' ? 'translate-x-0 opacity-100' : '-translate-x-20 opacity-0'} `}>
-
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-medium tracking-tight mb-2">Initialize Workspace</h1>
-          <p className="text-[#666]">One identity for all your professional workflows.</p>
+    <div className="min-h-screen w-full bg-[#0A0A0A] flex flex-col items-center justify-center p-4">
+      
+      <div className="w-full max-w-[420px] flex flex-col z-10">
+        
+        {/* Logo Header */}
+        <div className="mb-10 text-center flex flex-col items-center gap-4">
+           <img src="/Orchestr (3).png" alt="Orchestr" className="w-48 mb-2" />
         </div>
 
-        {/* --- SECTION 1: GOOGLE AUTH (ALWAYS VISIBLE) --- */}
-        <div className={`transition-all duration-500 ${isEmailVerified ? 'opacity-50 pointer-events-none grayscale' : 'opacity-100'} `}>
-          <button
-            onClick={() => loginGoogle()}
-            className="w-full h-12 bg-[#1A1A1A] hover:bg-[#222] border border-[#333] hover:border-[#444] rounded-lg flex items-center justify-center gap-3 transition-all group"
-          >
-            <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="size-5 filter grayscale group-hover:grayscale-0 transition-all" />
-            <span className="text-sm font-medium text-[#ccc] group-hover:text-white">Continue with Google</span>
-          </button>
-        </div>
+        {/* Card */}
+        <div className="w-full bg-[#111] rounded-2xl border border-[#222] p-8 shadow-2xl relative">
+          
+          <div className="mb-8 text-center">
+            <h2 className="text-xl font-medium text-white tracking-tight">Initialize Workspace</h2>
+            <p className="text-sm text-gray-500 mt-1">One identity for all workflows</p>
+          </div>
 
-        <div className="relative flex items-center justify-center my-6">
-          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-[#222]"></div></div>
-          <div className="relative bg-black px-3 text-[10px] text-[#444] uppercase tracking-widest font-medium">Or</div>
-        </div>
-
-        {/* --- SECTION 2: MANUAL INPUT & OTP --- */}
-        <div className="space-y-6">
-          {/* Name & Email Fields */}
-          <div className={`space-y-4 transition-all duration-500 ${isEmailVerified ? 'opacity-60 pointer-events-none' : 'opacity-100'} `}>
-            {!isEmailVerified && (
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs text-[#666] font-medium ml-1">First Name</label>
-                  <input
-                    name="firstName" value={formData.firstName} onChange={handleInputChange}
-                    className="w-full bg-[#0A0A0A] border border-[#222] rounded-lg p-3 text-sm focus:border-white/20 focus:outline-none transition-colors"
-                    placeholder="John"
-                  />
+          <div className="space-y-6">
+            
+            {/* Step 1: Name & Email */}
+            <div className={`space-y-4 transition-opacity duration-300 ${isEmailVerified ? 'opacity-50 pointer-events-none' : 'opacity-100'} `}>
+              {!isEmailVerified && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-gray-400 ml-1">First Name</label>
+                    <input
+                      name="firstName" value={formData.firstName} onChange={handleInputChange}
+                      className="w-full h-11 bg-[#1A1A1A] border border-[#333] rounded-lg px-3 text-white placeholder-gray-600 focus:outline-none focus:border-white/30 text-sm"
+                      placeholder="John"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-gray-400 ml-1">Last Name</label>
+                    <input
+                      name="lastName" value={formData.lastName} onChange={handleInputChange}
+                      className="w-full h-11 bg-[#1A1A1A] border border-[#333] rounded-lg px-3 text-white placeholder-gray-600 focus:outline-none focus:border-white/30 text-sm"
+                      placeholder="Doe"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs text-[#666] font-medium ml-1">Last Name</label>
+              )}
+
+              <div className="space-y-1.5 relative">
+                 <label className="text-xs font-medium text-gray-400 ml-1">Work Email</label>
+                <div className="relative">
                   <input
-                    name="lastName" value={formData.lastName} onChange={handleInputChange}
-                    className="w-full bg-[#0A0A0A] border border-[#222] rounded-lg p-3 text-sm focus:border-white/20 focus:outline-none transition-colors"
-                    placeholder="Doe"
+                    type="email" name="email" value={formData.email} onChange={handleInputChange}
+                    readOnly={isEmailVerified}
+                    className={`w-full h-12 bg-[#1A1A1A] border ${isEmailVerified ? 'border-green-900/50 text-green-500' : 'border-[#333] text-white'} rounded-lg pl-10 pr-24 text-sm focus:outline-none focus:border-white/30`}
+                    placeholder="name@company.com"
                   />
+                  <Mail className={`absolute left-3 top-4 size-4 ${isEmailVerified ? 'text-green-500' : 'text-gray-500'} `} />
+
+                  <div className="absolute right-2 top-2">
+                    {isEmailVerified ? (
+                      <CheckCircle2 className="size-5 text-green-500 mt-1 mr-1" />
+                    ) : (
+                      formData.email.length > 5 && currentStep === 'INPUT_EMAIL' && (
+                        <button
+                          onClick={handleRequestOtp}
+                          disabled={isSigningUp}
+                          className="bg-white text-black px-3 h-8 rounded text-xs font-semibold hover:bg-gray-200 transition-colors flex items-center justify-center min-w-[70px]"
+                        >
+                          {isSigningUp ? <Loader2 className="animate-spin size-3" /> : "Verify"}
+                        </button>
+                      )
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 2: OTP */}
+            {currentStep === 'VERIFY_OTP' && !isEmailVerified && (
+              <div className="pt-2 animate-in fade-in duration-300">
+                <div className="relative">
+                  <input
+                    name="otp" value={formData.otp} onChange={handleInputChange} autoFocus
+                    maxLength={6}
+                    className="w-full h-12 bg-[#1A1A1A] border border-[#333] rounded-lg pl-10 pr-24 text-white tracking-[0.3em] font-mono focus:outline-none focus:border-white/30 text-center"
+                    placeholder="••••••"
+                  />
+                  <Lock className="absolute left-4 top-4 size-4 text-gray-500" />
+                  <div className="absolute right-2 top-2">
+                    <button
+                      onClick={handleVerifyOtp}
+                      disabled={isSigningUp}
+                      className="bg-white text-black px-4 h-8 rounded text-xs font-semibold hover:bg-gray-200 transition-colors min-w-[80px] flex items-center justify-center"
+                    >
+                      {isSigningUp ? <Loader2 className="animate-spin size-3" /> : "Confirm"}
+                    </button>
+                  </div>
+                </div>
+                <p className="text-[10px] text-gray-500 mt-2 text-center">Code sent to your email.</p>
+              </div>
+            )}
+
+            {/* Step 3: Role Selection */}
+            {isEmailVerified && (
+              <div className={`space-y-4 pt-4 border-t border-[#222] transition-opacity duration-300 ${isRoleSelected ? 'opacity-50 pointer-events-none' : 'opacity-100'} `}>
+                <div className="flex items-center gap-2">
+                  <Briefcase className="size-4 text-gray-500" />
+                  <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Your Role</span>
+                </div>
+
+                <div className="relative">
+                  <input
+                    value={roleSearch}
+                    onChange={(e) => {
+                      setRoleSearch(e.target.value);
+                      setShowRoleSuggestions(true);
+                      setIsRoleSelected(false);
+                    }}
+                    onFocus={() => setShowRoleSuggestions(true)}
+                    className="w-full h-11 bg-[#1A1A1A] border border-[#333] rounded-lg pl-10 px-4 text-white text-sm focus:outline-none focus:border-white/30"
+                    placeholder="Search position (e.g. Founder, Engineer...)"
+                  />
+                  <Search className="absolute left-3 top-3.5 size-4 text-gray-500" />
+
+                  {showRoleSuggestions && roleSearch && (
+                    <div className="absolute z-50 w-full mt-1 bg-[#1A1A1A] border border-[#333] rounded-lg max-h-48 overflow-y-auto shadow-xl scrollbar-hide">
+                      {filteredRoles.length > 0 ? (
+                        filteredRoles.map(r => (
+                          <button
+                            key={r}
+                            onClick={() => handleSelectRole(r)}
+                            className="w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-[#222] hover:text-white transition-colors border-b border-[#333]/50 last:border-0"
+                          >
+                            {r}
+                          </button>
+                        ))
+                      ) : (
+                        <div className="px-4 py-3 text-sm text-gray-500">No matching roles found</div>
+                      )}
+                    </div>
+                  )}
+
+                  {!roleSearch && showRoleSuggestions && (
+                    <div className="absolute z-50 w-full mt-1 bg-[#1A1A1A] border border-[#333] rounded-lg p-2 grid grid-cols-2 gap-1 shadow-xl">
+                      {["Founder", "CEO", "Product Manager", "Engineer", "Designer", "Marketer"].map(r => (
+                        <button
+                          key={r}
+                          onClick={() => handleSelectRole(r)}
+                          className="text-left px-3 py-2 text-xs text-gray-400 hover:bg-[#222] hover:text-white rounded transition-colors"
+                        >
+                          {r}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
 
-            <div className="relative">
-              <input
-                type="email" name="email" value={formData.email} onChange={handleInputChange}
-                readOnly={isEmailVerified}
-                className={`w-full bg-[#0A0A0A] border ${isEmailVerified ? 'border-green-900/30 text-green-500' : 'border-[#222] text-white'} rounded-lg p-3 pl-10 text-sm focus:border-white/20 focus:outline-none transition-colors`}
-                placeholder="work@company.com"
-              />
-              <Mail className={`absolute left-3 top-3.5 size-4 ${isEmailVerified ? 'text-green-500' : 'text-[#444]'} `} />
-
-              {/* Inline Verify Button or Checkmark */}
-              <div className="absolute right-2 top-2">
-                {isEmailVerified ? (
-                  <CheckCircle2 className="size-5 text-green-500 mt-1" />
-                ) : (
-                  formData.email.length > 5 && currentStep === 'INPUT_EMAIL' && (
-                    <button
-                      onClick={handleRequestOtp}
-                      disabled={isSigningUp}
-                      className="bg-white text-black px-3 py-1.5 rounded text-xs font-semibold hover:bg-gray-200 transition-colors flex items-center gap-1"
-                    >
-                      {isSigningUp ? <Loader2 className="animate-spin size-3" /> : "Verify"}
-                    </button>
-                  )
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* OTP Field (Conditionally Revealed) */}
-          {currentStep === 'VERIFY_OTP' && !isEmailVerified && (
-            <div className="animate-in slide-in-from-left-4 fade-in duration-500">
-              <div className="relative">
-                <input
-                  name="otp" value={formData.otp} onChange={handleInputChange} autoFocus
-                  maxLength={6}
-                  className="w-full bg-[#0A0A0A] border border-[#222] rounded-lg p-3 pl-10 text-sm tracking-[0.3em] font-mono focus:border-white/20 focus:outline-none transition-colors text-white"
-                  placeholder=" • • • • • • "
-                />
-                <Lock className="absolute left-3 top-3.5 size-4 text-[#444]" />
-                <div className="absolute right-2 top-2">
-                  <button
-                    onClick={handleVerifyOtp}
-                    disabled={isSigningUp}
-                    className="bg-white text-black px-4 py-1.5 rounded text-xs font-semibold hover:bg-gray-200 transition-colors flex items-center gap-1"
-                  >
-                    {isSigningUp ? <Loader2 className="animate-spin size-3" /> : "Confirm"}
-                  </button>
+            {/* Step 4: Org Setup */}
+            {isRoleSelected && (
+              <div className="space-y-6 pt-4 border-t border-[#222] animate-in fade-in duration-300">
+                <div className="flex items-center gap-2">
+                  <Building2 className="size-4 text-gray-500" />
+                  <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+                    {isCxO ? "Create Organization" : "Join Workspace"}
+                  </span>
                 </div>
-              </div>
-              <p className="text-[10px] text-[#666] mt-2 ml-1">Code sent to your email. Check spam folder if needed.</p>
-            </div>
-          )}
 
-          {/* --- SECTION 3: ROLE SELECTION (Conditionally Revealed) --- */}
-          {isEmailVerified && (
-            <div className={`space-y-4 animate-in slide-in-from-bottom-4 fade-in duration-700 delay-100 ${isRoleSelected ? 'opacity-60 pointer-events-none' : 'opacity-100'} `}>
-              <div className="flex items-center gap-2">
-                <Briefcase className="size-4 text-[#666]" />
-                <span className="text-xs font-medium text-[#666] uppercase tracking-wider">Your Role</span>
-              </div>
+                {isCxO ? (
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-gray-400 ml-1">Organization Name</label>
+                      <input
+                        name="orgName" value={formData.orgName} onChange={handleInputChange} autoFocus
+                        className="w-full h-11 bg-[#1A1A1A] border border-[#333] rounded-lg px-4 text-white text-sm focus:outline-none focus:border-white/30"
+                        placeholder="Acme Corp"
+                      />
+                    </div>
 
-              <div className="relative">
-                <input
-                  value={roleSearch}
-                  onChange={(e) => {
-                    setRoleSearch(e.target.value);
-                    setShowRoleSuggestions(true);
-                    setIsRoleSelected(false); // Re-open if they type
-                  }}
-                  onFocus={() => setShowRoleSuggestions(true)}
-                  className="w-full bg-[#0A0A0A] border border-[#222] rounded-lg p-3 pl-10 text-sm focus:border-white/20 focus:outline-none transition-colors"
-                  placeholder="Search your position (e.g. Founder, Engineer...)"
-                />
-                <Search className="absolute left-3 top-3.5 size-4 text-[#444]" />
-
-                {/* Suggestions Dropdown */}
-                {showRoleSuggestions && roleSearch && (
-                  <div className="absolute z-50 w-full mt-2 bg-[#0A0A0A] border border-[#222] rounded-lg max-h-60 overflow-y-auto shadow-xl scrollbar-hide">
-                    {filteredRoles.length > 0 ? (
-                      filteredRoles.map(r => (
-                        <button
-                          key={r}
-                          onClick={() => handleSelectRole(r)}
-                          className="w-full text-left px-4 py-3 text-sm text-[#ccc] hover:bg-[#1A1A1A] hover:text-white transition-colors border-b border-[#222]/50 last:border-0"
-                        >
-                          {r}
-                        </button>
-                      ))
+                    {generatedRegNum ? (
+                      <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg flex flex-col items-center text-center">
+                        <CheckCircle2 className="size-6 text-green-500 mb-2" />
+                        <h3 className="text-white text-sm font-medium">Organization Created</h3>
+                        <div className="mt-2 bg-black border border-green-500/30 px-3 py-1.5 rounded font-mono text-green-400 text-sm tracking-widest">
+                          {generatedRegNum}
+                        </div>
+                        <p className="text-[10px] text-green-600/70 mt-2">Save this ID for your team</p>
+                      </div>
                     ) : (
-                      <div className="px-4 py-3 text-sm text-[#555]">No matching roles found</div>
+                      <button
+                        onClick={handleOrgAction}
+                        disabled={isCreatingOrg}
+                        className="w-full h-11 bg-white hover:bg-gray-200 text-black font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors"
+                      >
+                        {isCreatingOrg ? <Loader2 className="animate-spin size-4" /> : "Launch Workspace"}
+                        <ArrowRight className="size-4" />
+                      </button>
                     )}
                   </div>
-                )}
-
-                {/* Initial Quick Select (Only show if search is empty to guide user) */}
-                {!roleSearch && showRoleSuggestions && (
-                  <div className="absolute z-50 w-full mt-2 bg-[#0A0A0A] border border-[#222] rounded-lg p-2 grid grid-cols-2 gap-2 shadow-xl">
-                    {["Founder", "CEO", "Product Manager", "Engineer", "Designer", "Marketer"].map(r => (
-                      <button
-                        key={r}
-                        onClick={() => handleSelectRole(r)}
-                        className="text-left px-3 py-2 text-xs text-[#888] hover:bg-[#1A1A1A] hover:text-[#ccc] rounded transition-colors"
-                      >
-                        {r}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-              </div>
-            </div>
-          )}
-
-          {/* --- SECTION 4: ORG SETUP (Conditionally Revealed) --- */}
-          {isRoleSelected && (
-            <div className="space-y-6 animate-in slide-in-from-bottom-8 fade-in duration-700 delay-200 pt-4 border-t border-[#222]/50">
-              <div className="flex items-center gap-2">
-                <Building2 className="size-4 text-[#666]" />
-                <span className="text-xs font-medium text-[#666] uppercase tracking-wider">
-                  {isCxO ? "Create Organization" : "Join Workspace"}
-                </span>
-              </div>
-
-              {/* CXO Flow: Create */}
-              {isCxO ? (
-                <div className="space-y-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs text-[#666] font-medium ml-1">Organization Name</label>
-                    <input
-                      name="orgName" value={formData.orgName} onChange={handleInputChange} autoFocus
-                      className="w-full bg-[#0A0A0A] border border-[#222] rounded-lg p-3 text-sm focus:border-white/20 focus:outline-none transition-colors"
-                      placeholder="Acme Corp"
-                    />
-                  </div>
-
-                  {/* Success State with Reg Number */}
-                  {generatedRegNum && (
-                    <div className="p-4 bg-green-900/10 border border-green-900/30 rounded-lg flex flex-col items-center text-center animate-in zoom-in duration-300">
-                      <CheckCircle2 className="size-8 text-green-500 mb-2" />
-                      <h3 className="text-white font-medium">Organization Created</h3>
-                      <div className="mt-3 bg-black/50 border border-green-500/20 px-4 py-2 rounded font-mono text-green-400 text-lg tracking-wider">
-                        {generatedRegNum}
-                      </div>
-                      <p className="text-xs text-green-600/70 mt-2">Save this ID for your team</p>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-gray-400 ml-1">Registration Number</label>
+                      <input
+                        name="regNumber" value={formData.regNumber} onChange={handleInputChange}
+                        className="w-full h-11 bg-[#1A1A1A] border border-[#333] rounded-lg px-4 text-white text-sm font-mono focus:outline-none focus:border-white/30"
+                        placeholder="ORG-XXXX-XXXX"
+                      />
                     </div>
-                  )}
+                    
+                    <div className="relative flex items-center justify-center my-3">
+                      <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-[#333]"></div></div>
+                      <div className="relative bg-[#111] px-2 text-[10px] text-gray-500 uppercase tracking-widest">OR</div>
+                    </div>
 
-                  {!generatedRegNum && (
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-gray-400 ml-1">Search by Name</label>
+                      <input
+                        name="searchOrgName" value={formData.searchOrgName} onChange={handleInputChange}
+                        className="w-full h-11 bg-[#1A1A1A] border border-[#333] rounded-lg px-4 text-white text-sm focus:outline-none focus:border-white/30"
+                        placeholder="Acme Corp"
+                      />
+                    </div>
+
                     <button
                       onClick={handleOrgAction}
-                      disabled={isCreatingOrg}
-                      className="w-full bg-white text-black font-semibold py-3 rounded-lg hover:bg-gray-200 transition-all flex items-center justify-center gap-2"
+                      disabled={isJoiningOrg}
+                      className="w-full h-11 bg-white hover:bg-gray-200 text-black font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors mt-2"
                     >
-                      {isCreatingOrg ? <Loader2 className="animate-spin size-4" /> : "Launch Workspace"}
-                      <ArrowRight className="size-4" />
+                      {isJoiningOrg ? <Loader2 className="animate-spin size-4" /> : "Join Workspace"}
                     </button>
-                  )}
-                </div>
-              ) : (
-                // Member Flow: Join
-                <div className="space-y-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs text-[#666] font-medium ml-1">Registration Number (Recommended)</label>
-                    <input
-                      name="regNumber" value={formData.regNumber} onChange={handleInputChange}
-                      className="w-full bg-[#0A0A0A] border border-[#222] rounded-lg p-3 text-sm font-mono focus:border-white/20 focus:outline-none transition-colors"
-                      placeholder="ORG-XXXX-XXXX"
-                    />
                   </div>
-                  <div className="relative flex items-center justify-center">
-                    <span className="bg-black px-2 text-[10px] text-[#444] uppercase">OR</span>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs text-[#666] font-medium ml-1">Search by Name</label>
-                    <input
-                      name="searchOrgName" value={formData.searchOrgName} onChange={handleInputChange}
-                      className="w-full bg-[#0A0A0A] border border-[#222] rounded-lg p-3 text-sm focus:border-white/20 focus:outline-none transition-colors"
-                      placeholder="Acme Corp"
-                    />
-                  </div>
-
-                  <button
-                    onClick={handleOrgAction}
-                    disabled={isJoiningOrg}
-                    className="w-full bg-white text-black font-semibold py-3 rounded-lg hover:bg-gray-200 transition-all flex items-center justify-center gap-2 mt-2"
-                  >
-                    {isJoiningOrg ? <Loader2 className="animate-spin size-4" /> : "Join Workspace"}
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-        </div>
-      </div>
-
-      {/* Animated Grid Pattern (Full Screen) */}
-      <div className={`fixed inset-0 w-full h-full pointer-events-none z-0 transition-opacity duration-1000 delay-300 ${introPhase === 'SPLIT' ? 'opacity-100' : 'opacity-0'} `}>
-        {/* Shift grid slightly right to balance with form */}
-        <div className="w-full h-full flex items-center justify-end lg:pr-32 relative">
-          <ParticleNetworkPattern />
-
-          {/* Floating Logo on Right Side */}
-          <div className="absolute top-1/2 left-1/2 lg:left-3/4 transform -translate-x-1/2 -translate-y-1/2 z-10 glass-effect p-8 rounded-full bg-black/50 border border-white/5 backdrop-blur-sm animate-in fade-in zoom-in duration-1000 delay-500">
-            <img src="/Orchestr (3).png" alt="Logo" className="w-98 opacity-90 animate-pulse-slow" />
+                )}
+              </div>
+            )}
           </div>
         </div>
-      </div>
 
+        {/* Footer */}
+        <div className="mt-8 flex flex-col items-center gap-2">
+          <p className="text-sm text-gray-500">
+            Already have an account? <Link to="/login" className="text-white hover:underline font-medium">Log In</Link>
+          </p>
+          <p className="text-xs text-center text-gray-700">
+            Secure, zero-knowledge architectural access.
+          </p>
+        </div>
+
+      </div>
     </div>
   );
 };

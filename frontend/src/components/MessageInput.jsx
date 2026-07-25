@@ -166,7 +166,7 @@ const MessageInput = ({ overrideUser, overrideType }) => {
       {/* Popups Layer - Absolute positioned above input */}
       {showEmoji && (
         <div className="absolute bottom-[80px] left-4 z-50 animate-in fade-in slide-in-from-bottom-2">
-          <div className="bg-[#111] border border-gray-800 rounded-2xl shadow-2xl overflow-hidden relative">
+          <div className="bg-[#2f2f2f] border border-gray-800 rounded-2xl shadow-2xl overflow-hidden relative">
             {/* Close Button Mobile Friendly */}
             <div className="flex items-center justify-between p-2 bg-[#18181b] border-b border-gray-800">
               <span className="text-xs text-gray-400 font-medium ml-2">Emojis</span>
@@ -187,7 +187,7 @@ const MessageInput = ({ overrideUser, overrideType }) => {
 
       {showGifs && (
         <div className="absolute bottom-[80px] left-16 z-50 animate-in fade-in slide-in-from-bottom-2">
-          <div className="bg-[#111] border border-gray-800 rounded-2xl shadow-2xl p-3 w-[320px]">
+          <div className="bg-[#2f2f2f] border border-gray-800 rounded-2xl shadow-2xl p-3 w-[320px]">
             {/* Header & Search */}
             <div className="flex items-center gap-2 mb-3">
               <div className="relative flex-1 bg-gray-900 rounded-lg overflow-hidden border border-gray-800 focus-within:border-gray-600 transition-colors">

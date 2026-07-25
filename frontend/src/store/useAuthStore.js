@@ -60,17 +60,34 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  googleLogin: async (token) => {
+  registerDevicePin: async (data) => {
+    // data: { deviceId, pin, deviceName }
     set({ isLoggingIn: true });
     try {
-      const res = await axiosInstance.post("/auth/google", { token });
+      const res = await axiosInstance.post("/auth/register-device", data);
+      toast.success("Device registered for fast login");
+      return true;
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to register device");
+      return false;
+    } finally {
+      set({ isLoggingIn: false });
+    }
+  },
+
+  loginWithPin: async (data) => {
+    // data: { email, deviceId, pin }
+    set({ isLoggingIn: true });
+    try {
+      const res = await axiosInstance.post("/auth/login-with-pin", data);
       set({ authUser: res.data });
       toast.success("Logged in successfully");
       get().connectSocket();
-      return true;
+      return { success: true };
     } catch (error) {
-      toast.error(error.response?.data?.message || "Google Login failed");
-      return false;
+      const msg = error.response?.data?.message || "Invalid PIN";
+      toast.error(msg);
+      return { success: false, message: msg };
     } finally {
       set({ isLoggingIn: false });
     }
@@ -160,6 +177,23 @@ export const useAuthStore = create((set, get) => ({
       toast.error(error.response?.data?.message || "An error occurred");
     } finally {
       set({ isUpdatingProfile: false });
+    }
+  },
+
+  revokeDevice: async (deviceId) => {
+    try {
+      const res = await axiosInstance.delete(`/auth/devices/${deviceId}`);
+      set((state) => ({
+        authUser: {
+          ...state.authUser,
+          devices: res.data.devices
+        }
+      }));
+      toast.success(res.data.message || "Device access revoked");
+      return true;
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to revoke device access");
+      return false;
     }
   },
 

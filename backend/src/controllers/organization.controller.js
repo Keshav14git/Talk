@@ -2,6 +2,18 @@ import Organization from "../models/organization.model.js";
 import User from "../models/user.model.js";
 import OrgMember from "../models/orgMember.model.js";
 
+// Helper to generate a unique employee ID per org
+const generateEmployeeId = async (orgId) => {
+    let isUnique = false;
+    let newId = "";
+    while (!isUnique) {
+        newId = "EMP-" + Math.floor(1000 + Math.random() * 9000);
+        const exists = await OrgMember.findOne({ orgId, employeeId: newId });
+        if (!exists) isUnique = true;
+    }
+    return newId;
+};
+
 // Create Organization
 export const createOrganization = async (req, res) => {
     try {
@@ -26,10 +38,12 @@ export const createOrganization = async (req, res) => {
         await newOrg.save();
 
         // Add creator as Owner
+        const employeeId = await generateEmployeeId(newOrg._id);
         const member = new OrgMember({
             userId,
             orgId: newOrg._id,
-            role: "owner"
+            role: "owner",
+            employeeId
         });
 
         await member.save();
@@ -71,10 +85,12 @@ export const joinOrganization = async (req, res) => {
             return res.status(400).json({ message: "You are already a member of this organization" });
         }
 
+        const employeeId = await generateEmployeeId(org._id);
         const newMember = new OrgMember({
             userId,
             orgId: org._id,
-            role: "member"
+            role: "member",
+            employeeId
         });
 
         await newMember.save();
@@ -104,15 +120,23 @@ export const getOrganizationData = async (req, res) => {
         const org = await Organization.findById(orgId).populate("projects");
         const members = await OrgMember.find({ orgId }).populate("userId", "fullName email profilePic role");
 
-        // Format members data
-        const formattedMembers = members.map(m => ({
-            _id: m.userId._id,
-            fullName: m.userId.fullName,
-            email: m.userId.email,
-            profilePic: m.userId.profilePic,
-            designation: m.userId.role, // "Product Manager"
-            accessLevel: m.role, // "admin" or "member"
-            joinedAt: m.createdAt
+        // Format members data and self-heal missing employee IDs
+        const formattedMembers = await Promise.all(members.map(async (m) => {
+            if (!m.employeeId) {
+                m.employeeId = await generateEmployeeId(orgId);
+                await m.save();
+            }
+            return {
+                _id: m.userId._id,
+                fullName: m.userId.fullName,
+                email: m.userId.email,
+                profilePic: m.userId.profilePic,
+                designation: m.userId.role, // "Product Manager"
+                accessLevel: m.role, // "admin" or "member"
+                employeeId: m.employeeId,
+                managerId: m.managerId,
+                joinedAt: m.createdAt
+            };
         }));
 
         res.status(200).json({
@@ -137,5 +161,63 @@ export const getMyOrganizations = async (req, res) => {
     } catch (error) {
         console.error("Error fetching orgs:", error);
         res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+// Set Manager
+export const setManager = async (req, res) => {
+    try {
+        const { orgId } = req.params;
+        const { managerEmployeeId } = req.body;
+        const userId = req.user._id;
+
+        const currentMember = await OrgMember.findOne({ userId, orgId });
+        if (!currentMember) {
+            return res.status(404).json({ message: "You are not a member of this organization" });
+        }
+
+        const managerMember = await OrgMember.findOne({ orgId, employeeId: managerEmployeeId });
+        if (!managerMember) {
+            return res.status(404).json({ message: "No employee found with that ID in this organization" });
+        }
+
+        if (managerMember.userId.toString() === userId.toString()) {
+            return res.status(400).json({ message: "You cannot be your own manager" });
+        }
+
+        currentMember.managerId = managerMember.userId;
+        await currentMember.save();
+
+        res.status(200).json({ message: "Manager mapped successfully" });
+    } catch (error) {
+        console.error("Error setting manager:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+// Get My Team (Direct Reports)
+export const getMyTeam = async (req, res) => {
+    try {
+        const { orgId } = req.params;
+        const userId = req.user._id;
+
+        const teamMembers = await OrgMember.find({ orgId, managerId: userId })
+            .populate("userId", "fullName email profilePic role");
+
+        const formattedTeam = teamMembers.map(m => ({
+            _id: m.userId._id,
+            fullName: m.userId.fullName,
+            email: m.userId.email,
+            profilePic: m.userId.profilePic,
+            designation: m.userId.role,
+            accessLevel: m.role,
+            employeeId: m.employeeId,
+            joinedAt: m.createdAt
+        }));
+
+        res.status(200).json(formattedTeam);
+    } catch (error) {
+        console.error("Error fetching team:", error);
+        res.status(500).json({ message: "Internal server error" });
     }
 };

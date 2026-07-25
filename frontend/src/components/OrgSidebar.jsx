@@ -18,7 +18,7 @@ const OrgSidebar = () => {
     }
 
     return (
-        <div className="w-[70px] bg-[#0b0b0b] border-r border-[#222] flex flex-col items-center py-4 gap-4 z-50 flex-shrink-0">
+        <div className="w-[70px] bg-[#171717] border-r border-[#2f2f2f] flex flex-col items-center py-4 gap-4 z-50 flex-shrink-0">
             {/* Orgs List */}
             {orgs.map((org) => (
                 <button
@@ -27,7 +27,7 @@ const OrgSidebar = () => {
                     className={`size-12 rounded-xl flex items-center justify-center transition-all duration-200 group relative
                         ${currentOrg?._id === org._id
                             ? "bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.3)]"
-                            : "bg-[#1a1a1a] text-gray-400 hover:bg-[#2a2a2a] hover:text-white"
+                            : "bg-[#212121] text-gray-400 hover:bg-[#2f2f2f] hover:text-white"
                         }`}
                     title={org.name}
                 >
@@ -47,7 +47,7 @@ const OrgSidebar = () => {
             {/* Add Org */}
             <button
                 onClick={handleCreateOrg}
-                className="size-12 rounded-xl bg-[#1a1a1a] text-gray-400 flex items-center justify-center hover:bg-green-600 hover:text-white transition-all dashed-border hover:border-transparent"
+                className="size-12 rounded-xl bg-[#212121] text-gray-400 flex items-center justify-center hover:bg-green-600 hover:text-white transition-all dashed-border hover:border-transparent"
                 title="Create Workspace"
             >
                 <Plus className="size-6" />

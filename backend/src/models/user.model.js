@@ -47,9 +47,26 @@ const userSchema = new mongoose.Schema(
         emailChangeOtpExpires: {
             type: Date,
         },
-        googleId: {
-            type: String,
-        },
+        // Array of registered devices for fast PIN login
+        devices: [
+            {
+                deviceId: {
+                    type: String,
+                    required: true
+                },
+                hashedPin: {
+                    type: String,
+                    required: true
+                },
+                deviceName: {
+                    type: String, // e.g. "Chrome on Windows"
+                },
+                lastLoginAt: {
+                    type: Date,
+                    default: Date.now
+                }
+            }
+        ],
         // Enterprise Context
         lastActiveOrgId: {
             type: mongoose.Schema.Types.ObjectId,

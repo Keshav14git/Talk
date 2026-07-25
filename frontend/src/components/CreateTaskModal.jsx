@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTaskStore } from "../store/useTaskStore";
-import { X, Check, Calendar, Flag, User } from "lucide-react";
+import { X, Check, Calendar, Flag, User, ChevronDown } from "lucide-react";
 import toast from "react-hot-toast";
 
 const CreateTaskModal = ({ project, onClose }) => {
@@ -11,6 +11,9 @@ const CreateTaskModal = ({ project, onClose }) => {
     const [priority, setPriority] = useState("medium");
     const [dueDate, setDueDate] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    
+    // Custom dropdown state
+    const [openDropdown, setOpenDropdown] = useState(null); // 'assignee', 'priority', or null
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -73,44 +76,78 @@ const CreateTaskModal = ({ project, onClose }) => {
 
                     <div className="grid grid-cols-2 gap-4">
                         {/* Assignee */}
-                        <div className="space-y-1.5">
+                        <div className="space-y-1.5 relative">
                             <label className="text-sm font-medium text-gray-300 ml-1 flex items-center gap-2">
                                 <User className="size-3.5" /> Assignee
                             </label>
-                            <select
-                                value={assignee}
-                                onChange={(e) => setAssignee(e.target.value)}
-                                className="w-full p-2.5 bg-black/40 border border-[#333] rounded-xl text-sm text-gray-300 focus:outline-none focus:border-indigo-500/50"
+                            <div 
+                                onClick={() => setOpenDropdown(openDropdown === 'assignee' ? null : 'assignee')}
+                                className="w-full p-2.5 bg-black/40 border border-[#333] rounded-xl text-sm text-gray-300 focus:outline-none focus:border-indigo-500/50 cursor-pointer flex justify-between items-center"
                             >
-                                <option value="">Unassigned</option>
-                                {project.members?.map(member => {
-                                    const user = member.userId || member; // Handle populated vs raw
-                                    // Check if user is an object to prevent crash if backend didn't populate correctly
-                                    if (typeof user !== 'object') return null;
-                                    return (
-                                        <option key={user._id} value={user._id}>
-                                            {user.fullName}
-                                        </option>
-                                    );
-                                })}
-                            </select>
+                                <span>
+                                    {assignee === "" 
+                                        ? "Unassigned" 
+                                        : project.members?.find(m => (m.userId?._id || m._id) === assignee)?.userId?.fullName 
+                                            || project.members?.find(m => m._id === assignee)?.fullName 
+                                            || "Unknown"}
+                                </span>
+                                <ChevronDown className="size-4 opacity-50" />
+                            </div>
+                            
+                            {openDropdown === 'assignee' && (
+                                <div className="absolute top-full left-0 right-0 mt-1 bg-[#111] border border-[#333] rounded-xl shadow-xl overflow-hidden z-50 py-1 animate-in fade-in zoom-in-95 duration-100">
+                                    <button 
+                                        type="button"
+                                        onClick={() => { setAssignee(""); setOpenDropdown(null); }}
+                                        className="w-full text-left px-3 py-2 text-sm text-gray-400 hover:bg-[#222] hover:text-white transition-colors"
+                                    >
+                                        Unassigned
+                                    </button>
+                                    {project.members?.map(member => {
+                                        const user = member.userId || member;
+                                        if (typeof user !== 'object') return null;
+                                        return (
+                                            <button 
+                                                key={user._id} 
+                                                type="button"
+                                                onClick={() => { setAssignee(user._id); setOpenDropdown(null); }}
+                                                className={`w-full text-left px-3 py-2 text-sm transition-colors ${assignee === user._id ? 'bg-[#222] text-white font-medium' : 'text-gray-400 hover:bg-[#222] hover:text-white'}`}
+                                            >
+                                                {user.fullName}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </div>
 
                         {/* Priority */}
-                        <div className="space-y-1.5">
+                        <div className="space-y-1.5 relative">
                             <label className="text-sm font-medium text-gray-300 ml-1 flex items-center gap-2">
                                 <Flag className="size-3.5" /> Priority
                             </label>
-                            <select
-                                value={priority}
-                                onChange={(e) => setPriority(e.target.value)}
-                                className="w-full p-2.5 bg-black/40 border border-[#333] rounded-xl text-sm text-gray-300 focus:outline-none focus:border-indigo-500/50"
+                            <div 
+                                onClick={() => setOpenDropdown(openDropdown === 'priority' ? null : 'priority')}
+                                className="w-full p-2.5 bg-black/40 border border-[#333] rounded-xl text-sm text-gray-300 focus:outline-none focus:border-indigo-500/50 cursor-pointer flex justify-between items-center"
                             >
-                                <option value="low">Low</option>
-                                <option value="medium">Medium</option>
-                                <option value="high">High</option>
-                                <option value="urgent">Urgent</option>
-                            </select>
+                                <span className="capitalize">{priority}</span>
+                                <ChevronDown className="size-4 opacity-50" />
+                            </div>
+
+                            {openDropdown === 'priority' && (
+                                <div className="absolute top-full left-0 right-0 mt-1 bg-[#111] border border-[#333] rounded-xl shadow-xl overflow-hidden z-50 py-1 animate-in fade-in zoom-in-95 duration-100">
+                                    {['low', 'medium', 'high', 'urgent'].map(p => (
+                                        <button 
+                                            key={p} 
+                                            type="button"
+                                            onClick={() => { setPriority(p); setOpenDropdown(null); }}
+                                            className={`w-full text-left px-3 py-2 text-sm capitalize transition-colors ${priority === p ? 'bg-[#222] text-white font-medium' : 'text-gray-400 hover:bg-[#222] hover:text-white'}`}
+                                        >
+                                            {p}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
 

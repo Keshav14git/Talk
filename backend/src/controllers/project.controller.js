@@ -55,6 +55,7 @@ export const getOrgProjects = async (req, res) => {
 
         const projects = await Project.find({ orgId })
             .populate("lead", "fullName profilePic")
+            .populate("admins", "fullName profilePic")
             .populate("members", "fullName profilePic role");
 
         res.status(200).json(projects);
@@ -112,11 +113,86 @@ export const addProjectMember = async (req, res) => {
         // Return updated project with populated members
         const updatedProject = await Project.findById(projectId)
             .populate("lead", "fullName profilePic")
+            .populate("admins", "fullName profilePic")
             .populate("members", "fullName profilePic role");
 
         res.status(200).json(updatedProject);
     } catch (error) {
         console.error("Error adding project member:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+export const deleteProject = async (req, res) => {
+    try {
+        const { projectId } = req.params;
+        const userId = req.user._id;
+
+        const project = await Project.findById(projectId);
+        if (!project) return res.status(404).json({ message: "Project not found" });
+
+        // RBAC check: only lead or admins can delete
+        const isLead = project.lead.toString() === userId.toString();
+        const isAdmin = project.admins.includes(userId);
+        if (!isLead && !isAdmin) {
+            return res.status(403).json({ message: "Unauthorized. Only project lead or admins can delete this project." });
+        }
+
+        // Delete associated channel
+        if (project.chatId) {
+            await Channel.findByIdAndDelete(project.chatId);
+        }
+
+        // Remove from Organization
+        await Organization.findByIdAndUpdate(project.orgId, {
+            $pull: { projects: projectId }
+        });
+
+        await Project.findByIdAndDelete(projectId);
+
+        res.status(200).json({ message: "Project deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting project:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+export const updateMemberRole = async (req, res) => {
+    try {
+        const { projectId, userId } = req.params;
+        const { role } = req.body; // 'admin' or 'member'
+        const requesterId = req.user._id;
+
+        const project = await Project.findById(projectId);
+        if (!project) return res.status(404).json({ message: "Project not found" });
+
+        // RBAC check: only lead or admins can update roles
+        const isLead = project.lead.toString() === requesterId.toString();
+        const isRequesterAdmin = project.admins.includes(requesterId);
+        if (!isLead && !isRequesterAdmin) {
+            return res.status(403).json({ message: "Unauthorized. Only project lead or admins can update roles." });
+        }
+
+        if (role === 'admin') {
+            if (!project.admins.includes(userId)) {
+                project.admins.push(userId);
+            }
+        } else if (role === 'member') {
+            project.admins = project.admins.filter(id => id.toString() !== userId.toString());
+        } else {
+            return res.status(400).json({ message: "Invalid role specified" });
+        }
+
+        await project.save();
+
+        const updatedProject = await Project.findById(projectId)
+            .populate("lead", "fullName profilePic")
+            .populate("admins", "fullName profilePic")
+            .populate("members", "fullName profilePic role");
+
+        res.status(200).json(updatedProject);
+    } catch (error) {
+        console.error("Error updating member role:", error);
         res.status(500).json({ message: "Internal server error" });
     }
 };

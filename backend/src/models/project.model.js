@@ -27,6 +27,12 @@ const projectSchema = new mongoose.Schema(
                 ref: "User",
             }
         ],
+        admins: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+            }
+        ],
         orgId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Organization",

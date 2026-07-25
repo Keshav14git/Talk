@@ -168,7 +168,7 @@ const HomeDashboard = () => {
     );
 
     return (
-        <div className="h-full flex flex-col bg-[#050505] text-white p-6 gap-6 overflow-hidden">
+        <div className="h-full flex flex-col bg-[#171717] text-white p-6 gap-6 overflow-hidden">
             <style>{`
                 /* Dark Theme Calendar Overrides */
                 .rbc-calendar { font-family: inherit; color: #a1a1aa; }
@@ -237,8 +237,8 @@ const HomeDashboard = () => {
             <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-0">
 
                 {/* Left: Task List */}
-                <div className="lg:w-1/3 flex flex-col bg-[#09090b] rounded-2xl border border-[#27272a] overflow-hidden shrink-0 h-[400px] lg:h-auto">
-                    <div className="p-4 border-b border-[#27272a] flex items-center justify-between bg-[#0c0c0e]">
+                <div className="lg:w-1/3 flex flex-col bg-[#212121] rounded-2xl border border-[#2f2f2f] overflow-hidden shrink-0 h-[400px] lg:h-auto">
+                    <div className="p-4 border-b border-[#2f2f2f] flex items-center justify-between bg-[#212121]">
                         <h2 className="font-semibold text-gray-200 text-sm">
                             {view === 'day' ? "Tasks for Today" : "Tasks for this View"}
                         </h2>
@@ -261,7 +261,7 @@ const HomeDashboard = () => {
                                     <motion.div
                                         key={task._id} layout
                                         initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                                        className="p-3 bg-[#121214] hover:bg-[#18181b] border border-[#27272a] rounded-lg cursor-pointer group transition-colors"
+                                        className="p-3 bg-[#171717] hover:bg-[#2f2f2f] border border-[#2f2f2f] rounded-lg cursor-pointer group transition-colors"
                                     >
                                         <div className="flex justify-between items-start mb-1.5">
                                             <h3 className="text-sm font-medium text-gray-300 group-hover:text-white line-clamp-1">{task.title}</h3>
@@ -281,7 +281,7 @@ const HomeDashboard = () => {
                 </div>
 
                 {/* Right: Calendar */}
-                <div className="lg:w-2/3 flex flex-col bg-[#09090b] rounded-2xl border border-[#27272a] overflow-hidden shadow-2xl relative">
+                <div className="lg:w-2/3 flex flex-col bg-[#212121] rounded-2xl border border-[#2f2f2f] overflow-hidden shadow-2xl relative">
                     <div className="flex-1 p-1 h-full overflow-hidden">
                         <Calendar
                             localizer={localizer}
@@ -349,8 +349,8 @@ const StatBadge = ({ icon: Icon, value, label, color }) => (
 
 const CustomToolbar = (toolbar) => {
     return (
-        <div className="flex items-center justify-between p-3 border-b border-[#27272a] mb-0 bg-[#0c0c0e]">
-            <div className="flex items-center gap-1 bg-[#18181b] p-0.5 rounded-lg border border-[#27272a]">
+        <div className="flex items-center justify-between p-3 border-b border-[#2f2f2f] mb-0 bg-[#212121]">
+            <div className="flex items-center gap-1 bg-[#2f2f2f] p-0.5 rounded-lg border border-[#2f2f2f]">
                 <button onClick={() => toolbar.onNavigate('PREV')} className="p-1.5 hover:bg-[#27272a] rounded-md text-gray-400 hover:text-white transition-colors">
                     <ArrowUpRight className="size-4 -rotate-90" />
                 </button>
@@ -362,7 +362,7 @@ const CustomToolbar = (toolbar) => {
                 </button>
             </div>
 
-            <div className="flex bg-[#18181b] rounded-lg p-0.5 border border-[#27272a]">
+            <div className="flex bg-[#2f2f2f] rounded-lg p-0.5 border border-[#2f2f2f]">
                 {['month', 'week', 'day'].map(view => (
                     <button
                         key={view}

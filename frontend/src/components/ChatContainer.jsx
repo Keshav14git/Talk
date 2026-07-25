@@ -279,7 +279,7 @@ const ChatContainer = ({ overrideUser, overrideType }) => {
                     className={`relative text-[14px] leading-relaxed break-words shadow-sm
                          ${isMe
                         ? `bg-gray-700 text-white border border-gray-600 ${borderRadiusClass}`
-                        : `bg-[#111] text-gray-200 border border-gray-800 ${borderRadiusClass}`
+                        : `bg-[#2f2f2f] text-gray-200 border border-gray-800 ${borderRadiusClass}`
                       }
                       ${message.image ? "p-1" : "px-4 py-2"}
                        `}

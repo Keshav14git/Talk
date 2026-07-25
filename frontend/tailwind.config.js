@@ -9,26 +9,28 @@ export default {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
-        // Pure Black / Monochrome Palette
+        // ChatGPT-Inspired Dark Palette
         gray: {
-          900: '#000000', // Pure Black
-          800: '#0a0a0a', // Almost Black (Surface)
-          700: '#1a1a1a', // Subtle Border
-          600: '#262626', // Hover
-          500: '#525252', // Text secondary
-          400: '#a3a3a3', // Text tertiary
-          300: '#d4d4d4',
-          100: '#ffffff', // Pure White Text
-          50: '#fafafa',
+          950: '#0d0d0d', // Deepest background
+          900: '#171717', // Sidebar / primary bg
+          800: '#212121', // Main content bg
+          700: '#2f2f2f', // Cards / surfaces
+          600: '#424242', // Borders / hover
+          500: '#6e6e6e', // Muted text
+          400: '#b4b4b4', // Secondary text
+          300: '#d1d1d1', // Primary text
+          200: '#ececec', // Bright text
+          100: '#f5f5f5', // Near-white
+          50: '#fafafa',  // Pure white text
         },
         primary: {
-          DEFAULT: '#ffffff', // White is the new "Primary"
-          hover: '#e5e5e5', // Light Gray hover
-          glow: 'rgba(255, 255, 255, 0.1)' // White glow
+          DEFAULT: '#ffffff',
+          hover: '#e5e5e5',
+          glow: 'rgba(255, 255, 255, 0.08)'
         }
       },
       boxShadow: {
-        'glow': '0 0 20px rgba(255, 255, 255, 0.1)', // White glow
+        'glow': '0 0 20px rgba(255, 255, 255, 0.06)',
         'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.5)',
       }
     },
@@ -39,4 +41,4 @@ export default {
     darkTheme: "dark",
     logs: false,
   },
-};
+};

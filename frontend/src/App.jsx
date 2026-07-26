@@ -3,16 +3,14 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import HomePage from './pages/HomePage';
 import SignUpPage from './pages/SignUpPage';
 import LoginPage from './pages/LoginPage';
-
 import SettingsPage from './pages/SettingsPage';
-
-
 import WorkspaceLayout from './components/WorkspaceLayout';
 import { useAuthStore } from './store/useAuthStore';
 import { useChatStore } from './store/useChatStore';
 import { Loader } from "lucide-react";
 import { Toaster } from "react-hot-toast";
 import CalendarPage from './pages/CalendarPage';
+
 import ApprovalCenter from './components/ApprovalCenter';
 import TeamDashboard from './components/TeamDashboard';
 

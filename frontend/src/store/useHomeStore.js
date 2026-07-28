@@ -5,6 +5,9 @@ export const useHomeStore = create((set) => ({
     userTasks: [],
     userEvents: [],
     isLoading: false,
+    focusedTaskId: null,
+
+    setFocusedTaskId: (id) => set({ focusedTaskId: id }),
 
     fetchUserDashboardData: async () => {
         set({ isLoading: true });

@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { X, Calendar, Clock, Link as LinkIcon, Users, AlignLeft, MapPin, Video, MonitorPlay } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { X, Calendar, Clock, Link as LinkIcon, Users, AlignLeft, MapPin, Video, MonitorPlay, Check, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "../store/useAuthStore";
 import { useOrgStore } from "../store/useOrgStore";
@@ -21,6 +21,41 @@ const CreateMeetingModal = ({ isOpen, onClose, selectedSlot, onSuccess }) => {
         location: ""
     });
     const [isLoading, setIsLoading] = useState(false);
+    
+    // Attendee Selection State
+    const { orgMembers } = useOrgStore();
+    const [attendeeSearch, setAttendeeSearch] = useState("");
+    const [showAttendeeDropdown, setShowAttendeeDropdown] = useState(false);
+    const dropdownRef = useRef(null);
+
+    // Close dropdown on outside click
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setShowAttendeeDropdown(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const filteredMembers = (orgMembers || []).filter(
+        (member) =>
+            member._id !== authUser._id &&
+            member.fullName.toLowerCase().includes(attendeeSearch.toLowerCase())
+    );
+
+    const toggleAttendee = (userId) => {
+        setFormData((prev) => {
+            const isSelected = prev.attendees.includes(userId);
+            return {
+                ...prev,
+                attendees: isSelected
+                    ? prev.attendees.filter((id) => id !== userId)
+                    : [...prev.attendees, userId],
+            };
+        });
+    };
 
     // Auto-generate a random Join ID if Internal is selected initially
     const generateJoinId = () => {
@@ -61,7 +96,7 @@ const CreateMeetingModal = ({ isOpen, onClose, selectedSlot, onSuccess }) => {
                 ...formData,
                 startTime: selectedSlot.start,
                 endTime: selectedSlot.end,
-                attendees: [authUser._id] // Auto-add self
+                attendees: [...new Set([...formData.attendees, authUser._id])] // Auto-add self and selected
             });
 
             toast.success("Meeting scheduled successfully");
@@ -264,6 +299,88 @@ const CreateMeetingModal = ({ isOpen, onClose, selectedSlot, onSuccess }) => {
                                 rows={3}
                                 className="w-full bg-[#09090b] border border-[#27272a] rounded-lg px-3 py-2.5 text-sm text-gray-200 focus:outline-none focus:border-indigo-500/50 transition-colors placeholder:text-gray-600 resize-none"
                             />
+                        </div>
+
+                        {/* Attendees Selection */}
+                        <div className="space-y-2 relative" ref={dropdownRef}>
+                            <label className="text-xs font-medium text-gray-400 flex items-center justify-between">
+                                <span className="flex items-center gap-1.5"><Users className="size-3.5" /> Invite Attendees</span>
+                                {formData.attendees.length > 0 && (
+                                    <span className="text-indigo-400 bg-indigo-500/10 px-1.5 py-0.5 rounded text-[10px]">{formData.attendees.length} Selected</span>
+                                )}
+                            </label>
+                            
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Search className="size-4 text-gray-500" />
+                                </div>
+                                <input
+                                    type="text"
+                                    placeholder="Search team members..."
+                                    value={attendeeSearch}
+                                    onChange={(e) => {
+                                        setAttendeeSearch(e.target.value);
+                                        setShowAttendeeDropdown(true);
+                                    }}
+                                    onFocus={() => setShowAttendeeDropdown(true)}
+                                    className="w-full bg-[#09090b] border border-[#27272a] rounded-lg pl-9 pr-3 py-2.5 text-sm text-gray-200 focus:outline-none focus:border-indigo-500/50 transition-colors placeholder:text-gray-600"
+                                />
+                                
+                                <AnimatePresence>
+                                    {showAttendeeDropdown && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -5 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -5 }}
+                                            className="absolute top-full mt-2 w-full max-h-48 overflow-y-auto bg-[#18181b] border border-[#27272a] rounded-lg shadow-xl z-50 p-1 custom-scrollbar"
+                                        >
+                                            {filteredMembers.length === 0 ? (
+                                                <div className="p-3 text-center text-xs text-gray-500">No members found</div>
+                                            ) : (
+                                                filteredMembers.map((member) => {
+                                                    const isSelected = formData.attendees.includes(member._id);
+                                                    return (
+                                                        <button
+                                                            key={member._id}
+                                                            type="button"
+                                                            onClick={() => toggleAttendee(member._id)}
+                                                            className={`w-full flex items-center justify-between p-2 rounded-md transition-colors ${isSelected ? 'bg-indigo-500/10' : 'hover:bg-[#27272a]'}`}
+                                                        >
+                                                            <div className="flex items-center gap-2">
+                                                                <img src={member.profilePic || "/avatar.png"} alt="" className="size-6 rounded-full object-cover" />
+                                                                <div className="text-left">
+                                                                    <div className={`text-sm font-medium ${isSelected ? 'text-indigo-200' : 'text-gray-300'}`}>{member.fullName}</div>
+                                                                    <div className="text-[10px] text-gray-500 capitalize">{member.role}</div>
+                                                                </div>
+                                                            </div>
+                                                            {isSelected && <Check className="size-4 text-indigo-400" />}
+                                                        </button>
+                                                    );
+                                                })
+                                            )}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+
+                            {/* Selected Attendees Chips */}
+                            {formData.attendees.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5 mt-2">
+                                    {formData.attendees.map(id => {
+                                        const member = orgMembers.find(m => m._id === id);
+                                        if (!member) return null;
+                                        return (
+                                            <div key={id} className="flex items-center gap-1.5 bg-[#27272a] border border-[#3f3f46] px-2 py-1 rounded-md">
+                                                <img src={member.profilePic || "/avatar.png"} alt="" className="size-4 rounded-full object-cover" />
+                                                <span className="text-[11px] text-gray-300 font-medium">{member.fullName.split(' ')[0]}</span>
+                                                <button type="button" onClick={() => toggleAttendee(id)} className="text-gray-500 hover:text-white shrink-0 ml-0.5">
+                                                    <X className="size-3" />
+                                                </button>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </div>
 
                         <div className="pt-2 flex justify-end gap-3">

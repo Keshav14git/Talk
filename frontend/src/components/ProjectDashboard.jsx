@@ -3,6 +3,7 @@ import { useChatStore } from "../store/useChatStore";
 import { useOrgStore } from "../store/useOrgStore";
 import { useTaskStore } from "../store/useTaskStore";
 import { useAuthStore } from "../store/useAuthStore";
+import { useHomeStore } from "../store/useHomeStore";
 import ChatContainer from "../components/ChatContainer";
 import AddProjectMemberModal from "../components/AddProjectMemberModal";
 import CreateTaskModal from "../components/CreateTaskModal";
@@ -58,6 +59,20 @@ const ProjectDashboard = ({ project }) => {
   const [showAddMember, setShowAddMember] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false); // Added state
   const [expandedTask, setExpandedTask] = useState(null);
+  
+  const { focusedTaskId, setFocusedTaskId } = useHomeStore();
+
+  useEffect(() => {
+    if (focusedTaskId && tasks.length > 0) {
+      const taskExists = tasks.some(t => t._id === focusedTaskId);
+      if (taskExists) {
+        setExpandedTask(focusedTaskId);
+        setSubTab("overview");
+        setFocusedTaskId(null); // Clear it so it doesn't re-trigger
+      }
+    }
+  }, [focusedTaskId, tasks, setFocusedTaskId]);
+
   const [commentText, setCommentText] = useState("");
   const [mentionQuery, setMentionQuery] = useState("");
   const [showMentionDropdown, setShowMentionDropdown] = useState(false);

@@ -174,13 +174,28 @@ export const deleteTaskComments = async (req, res) => {
     }
 };
 
-// Get tasks assigned to the current user
+// Get tasks assigned to the current user or belonging to projects they manage
 export const getUserTasks = async (req, res) => {
     try {
         const userId = req.user._id;
-        const tasks = await Task.find({ assignee: userId })
+        
+        // 1. Find projects where the user is a manager (lead or admin)
+        const managedProjects = await Project.find({
+            $or: [{ lead: userId }, { admins: userId }]
+        }).select('_id');
+        const managedProjectIds = managedProjects.map(p => p._id);
+
+        // 2. Fetch tasks that are either assigned to the user OR belong to a managed project
+        const tasks = await Task.find({
+            $or: [
+                { assignee: userId },
+                { projectId: { $in: managedProjectIds } }
+            ]
+        })
             .populate("projectId", "name") // Useful to know which project
+            .populate("assignee", "fullName profilePic") // Fetch assignee details for display
             .sort({ dueDate: 1 }); // Sort by due date ascending
+            
         res.status(200).json(tasks);
     } catch (error) {
         console.error("Error fetching user tasks:", error);

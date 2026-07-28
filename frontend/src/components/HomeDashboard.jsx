@@ -2,6 +2,8 @@ import { useEffect, useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useHomeStore } from "../store/useHomeStore";
 import { useAuthStore } from "../store/useAuthStore";
+import { useChatStore } from "../store/useChatStore";
+import { useOrgStore } from "../store/useOrgStore";
 import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import format from "date-fns/format";
 import parse from "date-fns/parse";
@@ -32,8 +34,10 @@ const localizer = dateFnsLocalizer({
 });
 
 const HomeDashboard = () => {
-    const { userTasks, userEvents, fetchUserDashboardData, isLoading } = useHomeStore();
+    const { userTasks, userEvents, fetchUserDashboardData, isLoading, setFocusedTaskId } = useHomeStore();
     const { socket } = useAuthStore();
+    const { setSelectedUser, setSelectedType } = useChatStore();
+    const { orgProjects } = useOrgStore();
     const [view, setView] = useState("month");
     const [date, setDate] = useState(new Date());
 
@@ -257,24 +261,47 @@ const HomeDashboard = () => {
                                     <p className="text-xs">No tasks found</p>
                                 </motion.div>
                             ) : (
-                                filteredTasks.map((task) => (
-                                    <motion.div
-                                        key={task._id} layout
-                                        initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                                        className="p-3 bg-[#171717] hover:bg-[#2f2f2f] border border-[#2f2f2f] rounded-lg cursor-pointer group transition-colors"
-                                    >
-                                        <div className="flex justify-between items-start mb-1.5">
-                                            <h3 className="text-sm font-medium text-gray-300 group-hover:text-white line-clamp-1">{task.title}</h3>
-                                            <span className={`text-[10px] px-1.5 py-0.5 rounded capitalize bg-[#27272a] text-gray-400`}>
-                                                {task.status?.replace('-', ' ')}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-2 text-[10px] text-gray-500">
-                                            {task.priority === 'high' && <span className="text-red-400 font-medium">High Priority</span>}
-                                            <span className="ml-auto">{format(new Date(task.dueDate), "MMM d, h:mm a")}</span>
-                                        </div>
-                                    </motion.div>
-                                ))
+                                filteredTasks.map((task) => {
+                                    // Map task status to semantic colors
+                                    let statusColor = "bg-[#27272a] text-gray-400";
+                                    if (task.status === "completed") statusColor = "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+                                    else if (task.status === "in-progress") statusColor = "bg-amber-500/10 text-amber-400 border border-amber-500/20";
+                                    else if (task.status === "blocked") statusColor = "bg-red-500/10 text-red-400 border border-red-500/20";
+                                    else if (task.status === "in-review") statusColor = "bg-purple-500/10 text-purple-400 border border-purple-500/20";
+
+                                    return (
+                                        <motion.div
+                                            key={task._id} layout
+                                            initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                                            onClick={() => {
+                                                setFocusedTaskId(task._id);
+                                                // Find the full project object from orgProjects
+                                                const fullProject = orgProjects?.find(p => p._id === task.projectId?._id || p._id === task.projectId);
+                                                if (fullProject) {
+                                                    setSelectedUser(fullProject);
+                                                    setSelectedType('project');
+                                                } else {
+                                                    // Fallback to minimal project object
+                                                    setSelectedUser(task.projectId);
+                                                    setSelectedType('project');
+                                                }
+                                            }}
+                                            className="p-3 bg-[#171717] hover:bg-[#2f2f2f] border border-[#2f2f2f] rounded-lg cursor-pointer group transition-colors relative"
+                                        >
+                                            <div className="flex justify-between items-start mb-1.5 pr-6">
+                                                <h3 className="text-sm font-medium text-gray-300 group-hover:text-white line-clamp-1">{task.title}</h3>
+                                                <span className={`text-[10px] px-2 py-0.5 rounded capitalize font-medium ${statusColor}`}>
+                                                    {task.status?.replace('-', ' ')}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-[10px] text-gray-500">
+                                                {task.priority === 'high' && <span className="text-red-400 font-medium">High Priority</span>}
+                                                <span className="ml-auto">{format(new Date(task.dueDate), "MMM d, h:mm a")}</span>
+                                            </div>
+                                            <ArrowUpRight className="size-4 text-gray-600 opacity-0 group-hover:opacity-100 absolute right-3 top-3 transition-opacity" />
+                                        </motion.div>
+                                    );
+                                })
                             )}
                         </AnimatePresence>
                     </div>

@@ -434,14 +434,14 @@ const ProjectDashboard = ({ project }) => {
       </div>
 
       {/* Content Body */}
-      <div className="flex-1 overflow-hidden flex flex-col relative bg-[#0d0d0d]">
+      <div className="flex-1 overflow-hidden flex flex-col relative bg-[#0a0a0a]">
         {subTab === "overview" && (
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
-            <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-6">
+          <div className="flex-1 overflow-y-auto custom-scrollbar px-8 py-10">
+            <div className="max-w-[1400px] mx-auto flex flex-col xl:flex-row gap-8">
               {/* LEFT COLUMN: Stats & Tasks */}
-              <div className="flex-1 min-w-0 space-y-6">
+              <div className="flex-1 min-w-0 flex flex-col space-y-8">
                 {/* Stats Banner - 2 Cols */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {/* Project Health / Completion */}
                   <div className="bg-[#212121] border border-[#2f2f2f] rounded-2xl p-6 flex flex-col justify-between group hover:border-[#424242] transition-colors shadow-sm">
                     <div className="flex items-center gap-2 mb-6">
@@ -521,7 +521,7 @@ const ProjectDashboard = ({ project }) => {
                 </div>
 
                 {/* MAIN TASK BOARD */}
-                <div className="space-y-4">
+                <div className="flex-1 flex flex-col space-y-6">
                   {/* Task Views & Filters */}
                   <div className="flex items-center justify-between">
                     <div className="flex bg-[#212121] p-1 rounded-lg border border-[#2f2f2f]">
@@ -885,23 +885,23 @@ const ProjectDashboard = ({ project }) => {
                       },
                     )}
                     {filteredTaskList.length === 0 && (
-                      <div className="p-12 text-center text-gray-500 border border-dashed border-[#2f2f2f] rounded-2xl">
-                        <div className="size-16 bg-[#2f2f2f] rounded-full flex items-center justify-center mx-auto mb-4">
-                          <Filter className="size-8 text-gray-700" />
+                      <div className="flex-1 flex flex-col items-center justify-center p-12 text-center text-gray-500 border border-dashed border-[#2f2f2f] rounded-2xl min-h-[400px] bg-[#121212]/50">
+                        <div className="size-20 bg-[#212121] rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner ring-1 ring-white/5">
+                          <Filter className="size-10 text-gray-600" />
                         </div>
-                        <p className="font-medium text-gray-400">
+                        <h3 className="text-xl font-bold text-gray-300 mb-2 tracking-tight">
                           No tasks found
-                        </p>
-                        <p className="text-sm mt-1">
-                          Try adjusting your filters or create a new task.
+                        </h3>
+                        <p className="text-sm text-gray-500 max-w-sm">
+                          Try adjusting your filters, or get started by creating a new task to keep your team aligned.
                         </p>
                       </div>
                     )}
                   </div>
                 </div>
-              </div>{" "}
+              </div> 
               {/* RIGHT COLUMN: Sidebar (Team & Activity) */}
-              <div className="w-full lg:w-80 flex-shrink-0 space-y-6">
+              <div className="w-full xl:w-96 flex-shrink-0 space-y-8">
                 {/* Quick Actions & Team Status */}
                 <div className="bg-[#212121] border border-[#2f2f2f] rounded-2xl p-6 flex flex-col justify-between shadow-sm">
                   <div>

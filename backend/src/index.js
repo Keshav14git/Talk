@@ -45,14 +45,8 @@ app.use("/api/channels", channelRoutes);
 app.use("/api/calendar", calendarRoutes);
 app.use("/api/notifications", notificationRoutes);
 
-// Serve static files from the frontend build directory
-const frontendPath = path.join(__dirname, "../frontend/dist");
-app.use(express.static(frontendPath));
-
-// Handle React routing, return all requests to React app
-app.get("*", (req, res) => {
-  res.sendFile(path.join(frontendPath, "index.html"));
-});
+// Backend is deployed separately, so we don't serve frontend static files here.
+// API routes will handle all valid backend requests.
 
 server.listen(PORT, () => {
   console.log("server is running on PORT:" + PORT);

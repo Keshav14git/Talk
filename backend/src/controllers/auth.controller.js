@@ -7,55 +7,25 @@ import { OAuth2Client } from "google-auth-library";
 import nodemailer from "nodemailer";
 
 
-const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
+
 const LOGO_URL = "https://talknow-hqjj.onrender.com/Orchestr%20(3).png";
 
 
 let transporter = null;
 
 const sendEmail = async (toEmail, subject, htmlContent) => {
-    // Render often silently blocks outbound SMTP (port 465/587) for free tier accounts or 
-    // Google blocks the Render IPs. To bypass this, we use Brevo's HTTP API (port 443) if available!
-    if (process.env.BREVO_API_KEY) {
-        console.log(`[Email] Using Brevo HTTP API to bypass SMTP blocks...`);
-        try {
-            const response = await fetch(BREVO_API_URL, {
-                method: "POST",
-                headers: {
-                    "Accept": "application/json",
-                    "Content-Type": "application/json",
-                    "api-key": process.env.BREVO_API_KEY
-                },
-                body: JSON.stringify({
-                    sender: { name: "Orchestr", email: process.env.EMAIL_USER || "no-reply@orchestr.com" },
-                    to: [{ email: toEmail }],
-                    subject: subject,
-                    htmlContent: htmlContent
-                })
-            });
-            if (!response.ok) {
-                const errData = await response.json();
-                throw new Error(JSON.stringify(errData));
-            }
-            console.log(`Email sent successfully via Brevo HTTP API to ${toEmail}`);
-            return { success: true };
-        } catch (error) {
-            console.error("Brevo API Error:", error.message);
-            throw new Error("Failed to send email via Brevo.");
-        }
-    }
+    // We use Nodemailer with Gmail configured for Port 587 (STARTTLS)
+    // This safely bypasses strict port 465 firewalls on cloud providers like Render.
+    // Ensure EMAIL_USER and EMAIL_PASS (Google App Password) are set in .env
 
-    // Fallback to Nodemailer for local dev or if Brevo isn't set up
-    // If you want to use Gmail, you must add EMAIL_USER and EMAIL_PASS to your .env file
-    // Note: You must use an "App Password" from your Google Account settings, not your normal password.
     
     if (!transporter) {
         if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-            console.log(`[Email] Using SMTP account: ${process.env.EMAIL_USER}`);
+            console.log(`[Email] Using SMTP account: ${process.env.EMAIL_USER} on Port 587`);
             transporter = nodemailer.createTransport({
                 host: "smtp.gmail.com",
-                port: 465,
-                secure: true,
+                port: 587,
+                secure: false, // upgrade later with STARTTLS
                 auth: {
                     user: process.env.EMAIL_USER,
                     pass: process.env.EMAIL_PASS,

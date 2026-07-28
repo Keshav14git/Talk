@@ -11,14 +11,46 @@ import nodemailer from "nodemailer";
 const LOGO_URL = "https://talknow-hqjj.onrender.com/Orchestr%20(3).png";
 
 
+const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
+
 let transporter = null;
 
 const sendEmail = async (toEmail, subject, htmlContent) => {
-    // We use Nodemailer with Gmail configured for Port 587 (STARTTLS)
-    // This safely bypasses strict port 465 firewalls on cloud providers like Render.
-    // Ensure EMAIL_USER and EMAIL_PASS (Google App Password) are set in .env
-
+    // RENDER FREE TIER STRICTLY BLOCKS ALL SMTP PORTS (25, 465, 587).
+    // GMAIL SMTP WILL NEVER WORK ON RENDER FREE TIER.
+    // WE MUST USE BREVO'S HTTP API (PORT 443).
     
+    if (process.env.BREVO_API_KEY) {
+        console.log(`[Email] Using Brevo HTTP API...`);
+        try {
+            const response = await fetch(BREVO_API_URL, {
+                method: "POST",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                    "api-key": process.env.BREVO_API_KEY
+                },
+                body: JSON.stringify({
+                    sender: { name: "Orchestr", email: process.env.EMAIL_USER || "no-reply@orchestr.com" },
+                    to: [{ email: toEmail }],
+                    subject: subject,
+                    htmlContent: htmlContent
+                })
+            });
+            if (!response.ok) {
+                const errData = await response.json();
+                console.error("Brevo API Full Error:", errData);
+                throw new Error(errData.message || "Brevo API Error");
+            }
+            console.log(`Email sent successfully via Brevo HTTP API to ${toEmail}`);
+            return { success: true };
+        } catch (error) {
+            console.error("Brevo Catch Error:", error.message);
+            throw new Error(`Email Error: Failed to send via Brevo. (${error.message})`);
+        }
+    }
+
+    // Local Development Fallback (Gmail)
     if (!transporter) {
         if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
             console.log(`[Email] Using SMTP account: ${process.env.EMAIL_USER} on Port 587`);

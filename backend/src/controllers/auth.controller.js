@@ -212,6 +212,9 @@ export const sendOtp = async (req, res) => {
         const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
 
         console.log("Preparing to send OTP to:", email);
+        console.log("==========================================");
+        console.log(`BYPASS: The OTP for ${email} is: ${otp}`);
+        console.log("==========================================");
 
         // Upsert user
         let user = await User.findOne({ email });

@@ -38,7 +38,7 @@ const HomeDashboard = () => {
     const { socket } = useAuthStore();
     const { setSelectedUser, setSelectedType, setSidebarOpen } = useChatStore();
     const { orgProjects } = useOrgStore();
-    const [view, setView] = useState(() => window.innerWidth < 768 ? "agenda" : "month");
+    const [view, setView] = useState("month");
     const [date, setDate] = useState(new Date());
 
     // Modal & Selection State
@@ -103,7 +103,7 @@ const HomeDashboard = () => {
     // Also update range when view/date manually changes if needed
     useEffect(() => {
         let start, end;
-        if (view === 'month' || view === 'agenda') {
+        if (view === 'month') {
             start = startOfMonth(date);
             end = endOfMonth(date);
         } else if (view === 'week') {

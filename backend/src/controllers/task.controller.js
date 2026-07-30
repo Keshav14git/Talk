@@ -27,11 +27,24 @@ export const createTask = async (req, res) => {
         // Populate assignee details for immediate frontend display
         await task.populate("assignee", "fullName profilePic");
 
-        // Socket.io: Notify assignee
-        if (assignee) {
+        // Socket.io & Notification: Notify assignee
+        if (assignee && assignee.toString() !== userId.toString()) {
+            // Save to DB
+            const notification = new Notification({
+                recipient: assignee,
+                sender: userId,
+                type: "assignment",
+                referenceId: task._id,
+                referenceType: "Task",
+                text: `assigned you a new task: ${task.title}`
+            });
+            await notification.save();
+            await notification.populate("sender", "fullName profilePic");
+
             const receiverSocketId = getReceiverSocketId(assignee);
             if (receiverSocketId) {
                 io.to(receiverSocketId).emit("newTaskAssigned", task);
+                io.to(receiverSocketId).emit("newNotification", notification);
             }
         }
 
@@ -74,12 +87,32 @@ export const updateTaskStatus = async (req, res) => {
             { new: true }
         ).populate("assignee", "fullName profilePic");
 
+        const userId = req.user._id;
+
         // Socket.io: Notify assignee of status change (if someone else changed it, or just to sync)
-        if (task.assignee) { // assignee is populated now so it's an object with _id
+        if (task.assignee) {
             const assigneeId = task.assignee._id.toString();
-            const receiverSocketId = getReceiverSocketId(assigneeId);
-            if (receiverSocketId) {
-                io.to(receiverSocketId).emit("taskUpdated", task);
+            
+            if (assigneeId !== userId.toString()) {
+                const notification = new Notification({
+                    recipient: task.assignee._id,
+                    sender: userId,
+                    type: "task_status",
+                    referenceId: task._id,
+                    referenceType: "Task",
+                    text: `updated the status of task '${task.title}' to ${status}`
+                });
+                await notification.save();
+                await notification.populate("sender", "fullName profilePic");
+
+                const receiverSocketId = getReceiverSocketId(assigneeId);
+                if (receiverSocketId) {
+                    io.to(receiverSocketId).emit("taskUpdated", task);
+                    io.to(receiverSocketId).emit("newNotification", notification);
+                }
+            } else {
+                 const receiverSocketId = getReceiverSocketId(assigneeId);
+                 if (receiverSocketId) io.to(receiverSocketId).emit("taskUpdated", task);
             }
         }
 

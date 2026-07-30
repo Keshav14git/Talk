@@ -1,5 +1,7 @@
 import Task from "../models/task.model.js";
 import Meeting from "../models/meeting.model.js";
+import Notification from "../models/notification.model.js";
+import { io, getReceiverSocketId } from "../lib/socket.js";
 
 export const getCalendarEvents = async (req, res) => {
     try {
@@ -70,8 +72,33 @@ export const createMeeting = async (req, res) => {
         });
 
         await newMeeting.save();
-        res.status(201).json(newMeeting);
 
+        // Notifications & Sockets
+        const userId = req.user._id;
+        if (attendees && attendees.length > 0) {
+            for (const attendeeId of attendees) {
+                if (attendeeId.toString() !== userId.toString()) {
+                    const notification = new Notification({
+                        recipient: attendeeId,
+                        sender: userId,
+                        type: "meeting",
+                        referenceId: newMeeting._id,
+                        referenceType: "Meeting",
+                        text: `scheduled a new meeting: ${newMeeting.title}`
+                    });
+                    await notification.save();
+                    await notification.populate("sender", "fullName profilePic");
+
+                    const receiverSocketId = getReceiverSocketId(attendeeId.toString());
+                    if (receiverSocketId) {
+                        io.to(receiverSocketId).emit("newMeetingScheduled", newMeeting);
+                        io.to(receiverSocketId).emit("newNotification", notification);
+                    }
+                }
+            }
+        }
+
+        res.status(201).json(newMeeting);
     } catch (error) {
         console.error("Create Meeting Error:", error);
         res.status(500).json({ message: "Internal Server Error" });

@@ -14,17 +14,17 @@ const notificationSchema = new mongoose.Schema(
         },
         type: {
             type: String,
-            enum: ["mention", "assignment", "reply", "system"],
+            enum: ["mention", "assignment", "reply", "system", "meeting", "approval", "task_status", "message"],
             required: true,
         },
         referenceId: {
             type: mongoose.Schema.Types.ObjectId,
             required: true,
-            // Could link to Task, Project, Message, etc.
+            // Could link to Task, Project, Message, Meeting, ApprovalRequest etc.
         },
         referenceType: {
             type: String,
-            enum: ["Task", "Project", "Message"],
+            enum: ["Task", "Project", "Message", "Meeting", "ApprovalRequest", "OrgMember"],
             required: true,
         },
         text: {

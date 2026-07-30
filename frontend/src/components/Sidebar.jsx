@@ -18,10 +18,11 @@ import CreateChannelModal from "./CreateChannelModal";
 import { useOrgStore } from "../store/useOrgStore";
 import { motion, AnimatePresence } from "framer-motion";
 import ProfileMenu from "./ProfileMenu";
+import NotificationDropdown from "./NotificationDropdown";
 
 const Sidebar = () => {
   const {
-    selectedUser, setSelectedUser,
+    selectedUser, setSelectedUser, setSelectedType,
     isUsersLoading,
     deleteConversation,
     isSidebarOpen, toggleSidebar, setSidebarOpen
@@ -66,7 +67,8 @@ const Sidebar = () => {
       if (isNonChatPage && currentOrg) {
           navigate(`/workspace/${currentOrg._id}/chat`);
       }
-      setSelectedUser(item, type);
+      setSelectedUser(item);
+      setSelectedType(type);
       if (isMobile) setSidebarOpen(false);
   };
 
@@ -157,9 +159,12 @@ const Sidebar = () => {
                 <h1 className="font-bold text-gray-200 truncate leading-tight tracking-wide">{currentOrg?.name || "Workspace"}</h1>
               </div>
             </div>
-            <button onClick={() => setIsCollapsed(true)} className="p-1.5 text-gray-500 hover:text-white transition-colors">
-              <PanelLeftClose className="size-4" />
-            </button>
+            <div className="flex items-center gap-2">
+              <NotificationDropdown />
+              <button onClick={() => isMobile ? setSidebarOpen(false) : setIsCollapsed(true)} className="p-1.5 text-gray-500 hover:text-white transition-colors">
+                <PanelLeftClose className="size-4" />
+              </button>
+            </div>
           </>
         ) : (
           <div className="w-full flex justify-center">

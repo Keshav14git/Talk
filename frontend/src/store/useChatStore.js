@@ -24,7 +24,7 @@ export const useChatStore = create((set, get) => ({
 
   // UI State
   viewType: "chats", // "chats" | "groups" | "archived"
-  isSidebarOpen: true, // Default open on desktop, should handle mobile separately if needed
+  isSidebarOpen: typeof window !== 'undefined' ? window.innerWidth >= 768 : true,
 
   setViewType: (type) => set({ viewType: type }),
   toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),

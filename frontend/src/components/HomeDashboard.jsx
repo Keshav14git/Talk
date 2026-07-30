@@ -55,33 +55,6 @@ const HomeDashboard = () => {
         fetchUserDashboardData();
     }, [fetchUserDashboardData]);
 
-    // Real-time Updates via Socket
-    useEffect(() => {
-        if (!socket) return;
-
-        const handleUpdate = () => {
-            fetchUserDashboardData();
-        };
-
-        const handleTaskAssigned = (task) => {
-            toast.success(`New task assigned: ${task.title}`);
-            fetchUserDashboardData();
-        };
-
-        const handleMeetingScheduled = (meeting) => {
-            fetchUserDashboardData();
-        }
-
-        socket.on("newTaskAssigned", handleTaskAssigned);
-        socket.on("taskUpdated", handleUpdate);
-        socket.on("newMeetingScheduled", handleMeetingScheduled);
-
-        return () => {
-            socket.off("newTaskAssigned", handleTaskAssigned);
-            socket.off("taskUpdated", handleUpdate);
-            socket.off("newMeetingScheduled", handleMeetingScheduled);
-        };
-    }, [socket, fetchUserDashboardData]);
 
     // Handle Drilldown (Clicking a date in Month/Week view)
     const handleDrillDown = useCallback((drillDate) => {

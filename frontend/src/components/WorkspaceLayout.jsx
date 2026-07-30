@@ -2,8 +2,10 @@ import { useEffect } from "react";
 import { Outlet, Navigate, useParams, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
 import { useOrgStore } from "../store/useOrgStore";
+import { useNotificationStore } from "../store/useNotificationStore";
 import OrgSidebar from "./OrgSidebar";
 import Sidebar from "./Sidebar"; // Chat Sidebar
+import { useHomeStore } from "../store/useHomeStore";
 import ProfileMenu from "./ProfileMenu";
 import DTPinReminder from "./DTPinReminder";
 import ManagerMappingModal from "./ManagerMappingModal";
@@ -30,8 +32,9 @@ const WorkspaceLayout = () => {
 
     // Fetch Orgs on Mount
     useEffect(() => {
-        if (authUser && orgs.length === 0) {
-            fetchOrgs();
+        if (authUser) {
+            if (orgs.length === 0) fetchOrgs();
+            useNotificationStore.getState().fetchNotifications();
         }
     }, [authUser, fetchOrgs, orgs.length]);
 
@@ -67,12 +70,39 @@ const WorkspaceLayout = () => {
             });
         };
 
+        const handleTaskAssigned = (task) => {
+            toast.success(`New task assigned: ${task.title}`);
+            useHomeStore.getState().fetchUserDashboardData();
+        };
+
+        const handleTaskUpdated = (task) => {
+            toast.success(`Task '${task.title}' was updated`);
+            useHomeStore.getState().fetchUserDashboardData();
+        };
+
+        const handleMeetingScheduled = (meeting) => {
+            toast.success(`New meeting scheduled: ${meeting.title}`);
+            useHomeStore.getState().fetchUserDashboardData();
+        };
+
+        const handleNewNotification = (notification) => {
+            useNotificationStore.getState().addNotification(notification);
+        };
+
         socket.on("request_deleted", handleRequestDeleted);
         socket.on("request_deleted_admin", handleRequestDeleted);
+        socket.on("newTaskAssigned", handleTaskAssigned);
+        socket.on("taskUpdated", handleTaskUpdated);
+        socket.on("newMeetingScheduled", handleMeetingScheduled);
+        socket.on("newNotification", handleNewNotification);
 
         return () => {
             socket.off("request_deleted", handleRequestDeleted);
             socket.off("request_deleted_admin", handleRequestDeleted);
+            socket.off("newTaskAssigned", handleTaskAssigned);
+            socket.off("taskUpdated", handleTaskUpdated);
+            socket.off("newMeetingScheduled", handleMeetingScheduled);
+            socket.off("newNotification", handleNewNotification);
         };
     }, [socket]);
 

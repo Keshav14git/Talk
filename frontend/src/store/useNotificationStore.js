@@ -52,5 +52,16 @@ export const useNotificationStore = create((set, get) => ({
             console.error("Error marking all read:", error);
             toast.error("Failed to mark all as read");
         }
+    },
+
+    addNotification: (notification) => {
+        set(state => {
+            const updated = [notification, ...state.notifications];
+            return {
+                notifications: updated,
+                unreadCount: state.unreadCount + 1
+            };
+        });
+        toast(`New update: ${notification.text}`, { icon: '🔔' });
     }
 }));

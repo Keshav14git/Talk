@@ -27,6 +27,7 @@ import {
   ArrowUpRight,
   Shield,
   Menu,
+  Activity,
 } from "lucide-react";
 import toast from "react-hot-toast";
 

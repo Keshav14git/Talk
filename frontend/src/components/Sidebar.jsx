@@ -22,7 +22,7 @@ import NotificationDropdown from "./NotificationDropdown";
 
 const Sidebar = () => {
   const {
-    selectedUser, setSelectedUser, setSelectedType,
+    selectedUser, setSelectedUser,
     isUsersLoading,
     deleteConversation,
     isSidebarOpen, toggleSidebar, setSidebarOpen
@@ -67,8 +67,7 @@ const Sidebar = () => {
       if (isNonChatPage && currentOrg) {
           navigate(`/workspace/${currentOrg._id}/chat`);
       }
-      setSelectedUser(item);
-      setSelectedType(type);
+      setSelectedUser(item, type);
       if (isMobile) setSidebarOpen(false);
   };
 

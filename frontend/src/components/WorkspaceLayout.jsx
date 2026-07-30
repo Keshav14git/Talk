@@ -100,8 +100,8 @@ const WorkspaceLayout = () => {
             <DTPinReminder />
 
             {/* Manager Mapping Popup */}
-            {needsManager && (
-                <ManagerMappingModal onClose={() => setSkipManagerModal(true)} />
+            {needsManager && currentOrg && (
+                <ManagerMappingModal onClose={() => setSkipManagerModal(true)} orgId={currentOrg._id} />
             )}
         </div>
     );

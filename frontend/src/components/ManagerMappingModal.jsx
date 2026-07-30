@@ -4,8 +4,7 @@ import { useParams } from "react-router-dom";
 import { UserPlus, Briefcase, ChevronRight } from "lucide-react";
 import toast from "react-hot-toast";
 
-const ManagerMappingModal = ({ onClose }) => {
-    const { orgId } = useParams();
+const ManagerMappingModal = ({ onClose, orgId }) => {
     const { setManager } = useOrgStore();
     const [managerId, setManagerId] = useState("");
     const [isLoading, setIsLoading] = useState(false);

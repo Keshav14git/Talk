@@ -103,7 +103,7 @@ const HomeDashboard = () => {
     // Also update range when view/date manually changes if needed
     useEffect(() => {
         let start, end;
-        if (view === 'month') {
+        if (view === 'month' || view === 'agenda') {
             start = startOfMonth(date);
             end = endOfMonth(date);
         } else if (view === 'week') {

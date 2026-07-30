@@ -16,7 +16,7 @@ import startOfDay from "date-fns/startOfDay";
 import endOfDay from "date-fns/endOfDay";
 import isWithinInterval from "date-fns/isWithinInterval";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import { CheckCircle2, Clock, Calendar as CalendarIcon, ListTodo, AlertCircle, Info, ArrowUpRight } from "lucide-react";
+import { CheckCircle2, Clock, Calendar as CalendarIcon, ListTodo, AlertCircle, Info, ArrowUpRight, Menu } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import CreateMeetingModal from "./CreateMeetingModal";
@@ -36,9 +36,9 @@ const localizer = dateFnsLocalizer({
 const HomeDashboard = () => {
     const { userTasks, userEvents, fetchUserDashboardData, isLoading, setFocusedTaskId } = useHomeStore();
     const { socket } = useAuthStore();
-    const { setSelectedUser, setSelectedType } = useChatStore();
+    const { setSelectedUser, setSelectedType, setSidebarOpen } = useChatStore();
     const { orgProjects } = useOrgStore();
-    const [view, setView] = useState("month");
+    const [view, setView] = useState(() => window.innerWidth < 768 ? "agenda" : "month");
     const [date, setDate] = useState(new Date());
 
     // Modal & Selection State
@@ -212,23 +212,29 @@ const HomeDashboard = () => {
             `}</style>
 
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 shrink-0">
-                <div>
-                    <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-200 to-indigo-400">
-                        {view === 'month' && format(date, "MMMM yyyy")}
-                        {view === 'week' && "Weekly Overview"}
-                        {view === 'day' && format(date, "EEEE, MMM do")}
-                    </h1>
-                    <p className="text-gray-500 text-sm mt-1 flex items-center gap-2">
-                        <CalendarIcon className="size-4" />
-                        <span>
-                            {view === 'day' ? "Focusing on today's agenda" : "Manage your schedule efficiently"}
-                        </span>
-                    </p>
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 shrink-0 mt-4 md:mt-0">
+                <div className="flex items-start gap-3">
+                    <button onClick={() => setSidebarOpen(true)} className="md:hidden p-2 -ml-2 text-gray-400 hover:text-white transition-colors">
+                        <Menu className="size-6" />
+                    </button>
+                    <div>
+                        <h1 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-200 to-indigo-400">
+                            {view === 'month' && format(date, "MMMM yyyy")}
+                            {view === 'week' && "Weekly Overview"}
+                            {view === 'day' && format(date, "EEEE, MMM do")}
+                            {view === 'agenda' && "Agenda"}
+                        </h1>
+                        <p className="text-gray-500 text-xs md:text-sm mt-1 flex items-center gap-2">
+                            <CalendarIcon className="size-4 hidden md:block" />
+                            <span>
+                                {view === 'day' ? "Focusing on today's agenda" : "Manage your schedule efficiently"}
+                            </span>
+                        </p>
+                    </div>
                 </div>
 
-                {/* Stats Row - Animated */}
-                <div className="flex gap-3">
+                {/* Stats Row - Swipeable on mobile */}
+                <div className="flex gap-3 overflow-x-auto pb-2 md:pb-0 hide-scrollbar w-full md:w-auto snap-x">
                     <AnimatePresence mode="wait">
                         <StatBadge key={`total-${totalTasks}`} icon={ListTodo} value={totalTasks} label="Total" color="bg-indigo-500/10 text-indigo-400 border-indigo-500/20" />
                         <StatBadge key={`active-${inProgressTasks}`} icon={Clock} value={inProgressTasks} label="Active" color="bg-amber-500/10 text-amber-400 border-amber-500/20" />

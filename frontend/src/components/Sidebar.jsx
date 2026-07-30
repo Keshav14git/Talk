@@ -35,6 +35,18 @@ const Sidebar = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
+  // Handle window resize for isMobile state
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      if (window.innerWidth >= 768) {
+        setSidebarOpen(false); // Reset mobile sidebar state if resizing to desktop
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [setSidebarOpen]);
+
   const location = useLocation();
   const navigate = useNavigate();
   const isApprovalsPage = location.pathname.includes('/approvals');
@@ -47,6 +59,7 @@ const Sidebar = () => {
           navigate(`/workspace/${currentOrg._id}/chat`);
       }
       setSelectedUser(null);
+      if (isMobile) setSidebarOpen(false);
   };
 
   const handleItemSelect = (item, type) => {
@@ -54,6 +67,7 @@ const Sidebar = () => {
           navigate(`/workspace/${currentOrg._id}/chat`);
       }
       setSelectedUser(item, type);
+      if (isMobile) setSidebarOpen(false);
   };
 
   // Section Toggle States
@@ -109,12 +123,29 @@ const Sidebar = () => {
   if (isUsersLoading) return <SidebarSkeleton />;
 
   return (
-    <motion.aside
-      initial={{ width: 280 }}
-      animate={{ width: isCollapsed ? 80 : 280 }}
-      transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="h-full flex flex-col border-r border-[#2f2f2f] bg-[#171717] flex-shrink-0 relative z-20 font-sans overflow-hidden"
-    >
+    <>
+      {/* Mobile Backdrop */}
+      {isMobile && isSidebarOpen && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/60 z-40 md:hidden backdrop-blur-sm transition-opacity" 
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      <motion.aside
+        initial={{ width: 280, x: isMobile ? -280 : 0 }}
+        animate={{ 
+          width: isMobile ? 280 : (isCollapsed ? 80 : 280),
+          x: isMobile ? (isSidebarOpen ? 0 : -280) : 0
+        }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+        className={`h-full flex flex-col border-r border-[#2f2f2f] bg-[#171717] flex-shrink-0 z-50 font-sans overflow-hidden
+          ${isMobile ? "fixed inset-y-0 left-0 shadow-2xl" : "relative"}
+        `}
+      >
       {/* Workspace Header - Collapsed vs Expanded */}
       <div className="h-16 flex items-center justify-between px-4 border-b border-[#2f2f2f] shrink-0">
         {!isCollapsed ? (
@@ -355,6 +386,7 @@ const Sidebar = () => {
         {activeModal === 'explore' && <ExploreChannelsModal key="explore" onClose={() => setActiveModal(null)} onCreate={() => setActiveModal('createChannel')} />}
       </AnimatePresence>
     </motion.aside>
+    </>
   );
 };
 

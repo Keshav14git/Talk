@@ -24,9 +24,9 @@ import {
   User,
   Settings,
   Layout,
-  Activity,
   ArrowUpRight,
   Shield,
+  Menu,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -34,7 +34,7 @@ import { useNotificationStore } from "../store/useNotificationStore"; // Added i
 
 const ProjectDashboard = ({ project }) => {
   const { authUser } = useAuthStore();
-  const { users } = useChatStore();
+  const { users, setSidebarOpen } = useChatStore();
   const {
     tasks,
     fetchTasks,
@@ -273,11 +273,14 @@ const ProjectDashboard = ({ project }) => {
   return (
     <div className="flex-1 flex flex-col h-full bg-[#0d0d0d] overflow-hidden">
       {/* Project Header - Control Strip */}
-      <div className="h-16 border-b border-[#2f2f2f] flex items-center justify-between px-6 bg-[#212121] shrink-0">
-        <div className="flex items-center gap-6">
+      <div className="h-16 border-b border-[#2f2f2f] flex items-center justify-between px-4 md:px-6 bg-[#212121] shrink-0">
+        <div className="flex items-center gap-3 md:gap-6">
+          <button onClick={() => setSidebarOpen(true)} className="md:hidden p-2 -ml-2 text-gray-400 hover:text-white transition-colors shrink-0">
+            <Menu className="size-6" />
+          </button>
           {/* Identity */}
-          <div className="flex items-center gap-4">
-            <div className="size-12 bg-indigo-500/10 rounded-xl flex items-center justify-center text-indigo-500 ring-1 ring-inset ring-indigo-500/20">
+          <div className="flex items-center gap-3 md:gap-4">
+            <div className="hidden sm:flex size-12 bg-indigo-500/10 rounded-xl items-center justify-center text-indigo-500 ring-1 ring-inset ring-indigo-500/20 shrink-0">
               <Briefcase className="size-6" />
             </div>
             <div>
@@ -448,13 +451,12 @@ const ProjectDashboard = ({ project }) => {
         </div>
       </div>
 
-      {/* Content Body */}
       <div className="flex-1 overflow-hidden flex flex-col relative bg-[#0a0a0a]">
         {subTab === "overview" && (
-          <div className="flex-1 overflow-y-auto custom-scrollbar px-8 py-10">
-            <div className="max-w-[1400px] mx-auto flex flex-col xl:flex-row gap-8">
+          <div className="flex-1 overflow-y-auto custom-scrollbar px-4 py-4 md:px-8 md:py-10">
+            <div className="max-w-[1400px] mx-auto flex flex-col xl:flex-row gap-4 md:gap-8">
               {/* LEFT COLUMN: Stats & Tasks */}
-              <div className="flex-1 min-w-0 flex flex-col space-y-8">
+              <div className="flex-1 min-w-0 flex flex-col space-y-4 md:space-y-8">
                 {/* Stats Banner - 2 Cols */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {/* Project Health / Completion */}

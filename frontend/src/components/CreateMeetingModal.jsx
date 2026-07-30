@@ -120,7 +120,7 @@ const CreateMeetingModal = ({ isOpen, onClose, selectedSlot, onSuccess }) => {
                     initial={{ opacity: 0, scale: 0.95, y: 20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                    className="bg-[#121214] border border-[#27272a] rounded-xl shadow-2xl w-full max-w-md overflow-hidden relative max-h-[90vh] overflow-y-auto"
+                    className="bg-[#121214] border border-[#27272a] rounded-xl shadow-2xl w-full max-w-md overflow-hidden relative max-h-[90dvh] md:max-h-[90vh] overflow-y-auto custom-scrollbar"
                 >
                     {/* Header */}
                     <div className="p-5 border-b border-[#27272a] flex justify-between items-center bg-[#18181b] sticky top-0 z-10">

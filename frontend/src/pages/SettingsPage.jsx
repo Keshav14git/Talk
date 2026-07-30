@@ -399,44 +399,42 @@ const SettingsPage = () => {
 
   return (
     <div className="h-full w-full bg-[#212121] flex flex-col">
-      {/* Mobile Header */}
-      {!showMobileContent && (
-        <div className="p-4 border-b border-[#3f3f3f] bg-[#171717]/80 backdrop-blur-md sticky top-0 z-10 md:hidden flex items-center gap-3">
-          <button onClick={() => navigate(currentOrg ? `/workspace/${currentOrg._id}/chat` : "/")} className="p-2 -ml-2 text-gray-400 hover:text-white rounded-full"><ArrowLeft className="size-5" /></button>
-          <h1 className="text-lg font-bold text-white">Settings</h1>
-        </div>
-      )}
-      {showMobileContent && (
-        <div className="p-4 border-b border-[#3f3f3f] bg-[#171717]/80 backdrop-blur-md sticky top-0 z-10 md:hidden flex items-center gap-3">
-          <button onClick={() => setShowMobileContent(false)} className="p-2 -ml-2 text-gray-400 hover:text-white rounded-full"><ArrowLeft className="size-5" /></button>
-          <h1 className="text-lg font-bold text-white">{tabs.find(t => t.id === activeTab)?.label}</h1>
-        </div>
-      )}
+      {/* Universal Mobile Header */}
+      <div className="p-4 border-b border-[#3f3f3f] bg-[#171717]/80 backdrop-blur-md sticky top-0 z-10 md:hidden flex items-center gap-3">
+        <button onClick={() => navigate(currentOrg ? `/workspace/${currentOrg._id}/chat` : "/")} className="p-2 -ml-2 text-gray-400 hover:text-white rounded-full"><ArrowLeft className="size-5" /></button>
+        <h1 className="text-lg font-bold text-white">Settings</h1>
+      </div>
 
-      <div className="flex-1 overflow-hidden flex w-full">
-        {/* Sidebar */}
-        <div className={`w-full md:w-72 border-r border-[#3f3f3f] bg-[#171717] flex-col overflow-y-auto ${showMobileContent ? "hidden md:flex" : "flex"}`}>
+      <div className="flex-1 overflow-hidden flex flex-col md:flex-row w-full">
+        {/* Navigation Sidebar (Desktop) / Horizontal Swipe (Mobile) */}
+        <div className="w-full md:w-72 border-b md:border-b-0 md:border-r border-[#3f3f3f] bg-[#171717] flex flex-row md:flex-col overflow-x-auto md:overflow-y-auto shrink-0 hide-scrollbar">
           <div className="p-5 hidden md:flex items-center gap-3 cursor-pointer group" onClick={() => navigate(currentOrg ? `/workspace/${currentOrg._id}/chat` : "/")}>
             <div className="p-2 bg-[#353535] rounded-xl group-hover:bg-[#222] transition-colors"><ArrowLeft className="size-4 text-gray-400 group-hover:text-white" /></div>
             <h1 className="text-xl font-bold text-white">Settings</h1>
           </div>
-          <div className="px-3 space-y-1 flex-1 mt-2 md:mt-0">
+          <div className="flex md:flex-col gap-2 p-2 md:px-3 md:py-0 w-max md:w-auto">
             {tabs.map(tab => (
-              <button key={tab.id} onClick={() => handleTabClick(tab.id)}
-                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left ${activeTab === tab.id ? "bg-[#353535] border border-[#3f3f3f]" : "hover:bg-[#2f2f2f] border border-transparent"}`}>
-                <div className={`p-2 rounded-lg transition-colors ${activeTab === tab.id ? "bg-white text-black" : "bg-[#353535] text-gray-500"}`}><tab.icon className="size-4" /></div>
-                <div className="flex-1 min-w-0">
-                  <h3 className={`text-sm ${activeTab === tab.id ? "text-white font-semibold" : "text-gray-300"}`}>{tab.label}</h3>
-                  <p className="text-[11px] text-gray-600 truncate">{tab.desc}</p>
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:p-3 rounded-full md:rounded-xl transition-all text-left shrink-0 ${activeTab === tab.id ? "bg-[#353535] border border-[#3f3f3f]" : "hover:bg-[#2f2f2f] border border-transparent"}`}>
+                
+                <div className={`p-2 rounded-lg transition-colors hidden md:block ${activeTab === tab.id ? "bg-white text-black" : "bg-[#353535] text-gray-500"}`}>
+                  <tab.icon className="size-4" />
                 </div>
-                <ChevronRight className={`size-3.5 ${activeTab === tab.id ? "text-white" : "text-gray-700"}`} />
+                
+                <div className="flex items-center gap-2 md:block min-w-0">
+                  <tab.icon className={`size-4 md:hidden ${activeTab === tab.id ? "text-white" : "text-gray-400"}`} />
+                  <h3 className={`text-[13px] md:text-sm whitespace-nowrap ${activeTab === tab.id ? "text-white font-semibold" : "text-gray-400"}`}>{tab.label}</h3>
+                  <p className="text-[11px] text-gray-600 truncate hidden md:block">{tab.desc}</p>
+                </div>
+                
+                <ChevronRight className={`size-3.5 hidden md:block ${activeTab === tab.id ? "text-white" : "text-gray-700"}`} />
               </button>
             ))}
           </div>
         </div>
 
         {/* Content */}
-        <div className={`flex-1 bg-[#212121] overflow-y-auto p-5 md:p-8 lg:p-10 ${!showMobileContent ? "hidden md:block" : "block"}`}>
+        <div className="flex-1 bg-[#212121] overflow-y-auto p-4 md:p-8 lg:p-10">
           {contentMap[activeTab]?.()}
         </div>
       </div>

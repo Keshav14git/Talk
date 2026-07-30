@@ -1,11 +1,11 @@
 import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
-import { Phone, Video, Info, ArrowLeft, MoreHorizontal, Search, Archive, CheckSquare } from "lucide-react";
+import { Phone, Video, Info, ArrowLeft, MoreHorizontal, Search, Archive, CheckSquare, Menu } from "lucide-react";
 import { useState } from "react";
 import GroupDetailsModal from "./GroupDetailsModal";
 
 const ChatHeader = ({ isSelectionMode, setIsSelectionMode }) => {
-  const { selectedUser, setSelectedUser, selectedType, messageSearchQuery, setMessageSearchQuery, toggleArchive } = useChatStore();
+  const { selectedUser, setSelectedUser, selectedType, messageSearchQuery, setMessageSearchQuery, toggleArchive, setSidebarOpen } = useChatStore();
   const { onlineUsers } = useAuthStore();
   const [showDetails, setShowDetails] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -49,10 +49,18 @@ const ChatHeader = ({ isSelectionMode, setIsSelectionMode }) => {
       ) : (
         <>
           <div className="flex items-center gap-3">
+            {/* Hamburger Menu (Mobile Only) */}
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="md:hidden p-2 -ml-2 text-gray-400 hover:text-white transition-colors shrink-0"
+            >
+              <Menu className="size-5" />
+            </button>
+
             {/* Back Button (Mobile Only) */}
             <button
               onClick={() => setSelectedUser(null)}
-              className="md:hidden p-2 -ml-2 text-gray-400"
+              className="md:hidden p-2 -ml-2 text-gray-400 hover:text-white transition-colors shrink-0"
             >
               <ArrowLeft className="size-5" />
             </button>

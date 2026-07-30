@@ -132,39 +132,41 @@ const ProjectDashboard = ({ project }) => {
 
   if (!project) return null;
 
-  // Derived State
-  const myTasks = tasks.filter(
+  // Derived State (Defensive)
+  const safeTasks = Array.isArray(tasks) ? tasks : [];
+  
+  const myTasks = safeTasks.filter(
     (t) => t.assignee?._id === authUser?._id && t.status !== "completed",
   );
-  const completedTasks = tasks.filter((t) => t.status === "completed").length;
+  const completedTasks = safeTasks.filter((t) => t.status === "completed").length;
   const progress =
-    tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
+    safeTasks.length > 0 ? Math.round((completedTasks / safeTasks.length) * 100) : 0;
   const isLead =
     project.lead === authUser._id || project.lead?._id === authUser._id;
   const isAdmin = project.admins?.some(admin => (admin._id || admin) === authUser._id);
   const hasManageAccess = isLead || isAdmin;
 
   // Recent Activity (Derived)
-  const recentActivity = [...tasks]
+  const recentActivity = [...safeTasks]
     .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
     .slice(0, 5);
 
   // Filter Tasks based on View
   const getFilteredTasks = () => {
-    let filtered = tasks;
+    let filtered = safeTasks;
     if (taskView === "my") {
-      filtered = tasks.filter((t) => t.assignee?._id === authUser?._id);
+      filtered = safeTasks.filter((t) => t.assignee?._id === authUser?._id);
     } else if (taskView === "overdue") {
-      filtered = tasks.filter(
+      filtered = safeTasks.filter(
         (t) =>
           t.dueDate &&
           new Date(t.dueDate) < new Date() &&
           t.status !== "completed",
       );
     } else if (taskView === "completed") {
-      filtered = tasks.filter((t) => t.status === "completed");
+      filtered = safeTasks.filter((t) => t.status === "completed");
     } else if (taskView === "blocked") {
-      filtered = tasks.filter((t) => t.status === "blocked");
+      filtered = safeTasks.filter((t) => t.status === "blocked");
     }
     return filtered;
   };
@@ -273,181 +275,202 @@ const ProjectDashboard = ({ project }) => {
   return (
     <div className="flex-1 flex flex-col h-full bg-[#0d0d0d] overflow-hidden">
       {/* Project Header - Control Strip */}
-      <div className="h-16 border-b border-[#2f2f2f] flex items-center justify-between px-4 md:px-6 bg-[#212121] shrink-0">
-        <div className="flex items-center gap-3 md:gap-6">
-          <button onClick={() => setSidebarOpen(true)} className="md:hidden p-2 -ml-2 text-gray-400 hover:text-white transition-colors shrink-0">
-            <Menu className="size-6" />
-          </button>
-          {/* Identity */}
-          <div className="flex items-center gap-3 md:gap-4">
-            <div className="hidden sm:flex size-12 bg-indigo-500/10 rounded-xl items-center justify-center text-indigo-500 ring-1 ring-inset ring-indigo-500/20 shrink-0">
-              <Briefcase className="size-6" />
-            </div>
-            <div>
-              <div className="flex items-center gap-3 mb-1">
-                <h1 className="text-xl font-bold text-white leading-none tracking-tight">
-                  {project.name}
-                </h1>
-                <span
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-                    project.status === "active"
-                      ? "bg-green-500/10 text-green-500 border-green-500/20"
-                      : project.status === "archived"
-                        ? "bg-gray-500/10 text-gray-500 border-gray-500/20"
-                        : "bg-yellow-500/10 text-yellow-500 border-yellow-500/20"
-                  }`}
-                >
-                  {project.status || "Active"}
-                </span>
-              </div>
-              <div className="flex items-center gap-4 text-xs text-gray-500 font-medium">
-                <span className="flex items-center gap-1.5 hover:text-gray-300 transition-colors cursor-default">
-                  <Clock className="size-3.5" /> Updated{" "}
-                  {new Date(project.updatedAt).toLocaleDateString()}
-                </span>
-                {project.lead && (
-                  <div className="flex items-center gap-1.5 pl-4 border-l border-[#424242]">
-                    <span className="text-gray-600">Lead:</span>
-                    <div className="flex items-center gap-1.5">
-                      <img
-                        src={
-                          project.lead.profilePic ||
-                          project.lead?.profilePic ||
-                          "/avatar.png"
-                        }
-                        className="size-4 rounded-full"
-                      />
-                      <span className="text-gray-300">
-                        {project.lead.fullName || project.lead?.fullName}
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Actions */}
-        <div className="flex items-center gap-4">
-          {/* Notification Bell */}
-          <div className="relative">
-            <button
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="p-2 text-gray-400 hover:text-white hover:bg-[#2f2f2f] rounded-lg transition-colors relative"
-            >
-              <img
-                src="/bell.png"
-                alt="Notifications"
-                className="size-5 object-contain invert brightness-0 opacity-70 hover:opacity-100 transition-opacity"
-              />
-              {unreadCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 size-2 bg-red-500 rounded-full border border-[#111]"></span>
-              )}
-            </button>
-
-            {/* Notification Dropdown */}
-            {showNotifications && (
-              <div className="absolute right-0 top-full mt-2 w-80 bg-[#212121] border border-[#424242] rounded-xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2">
-                <div className="p-3 border-b border-[#424242] flex items-center justify-between">
-                  <h3 className="text-xs font-bold text-white uppercase tracking-wider">
-                    Notifications
-                  </h3>
-                  {unreadCount > 0 && (
-                    <button
-                      onClick={markAllAsRead}
-                      className="text-[10px] text-indigo-400 hover:text-indigo-300 font-medium"
-                    >
-                      Mark all read
-                    </button>
-                  )}
+      <div className="border-b border-[#2f2f2f] bg-[#212121] shrink-0">
+        <div className="flex flex-col md:flex-row md:items-center justify-between p-4 md:px-6 md:h-16 gap-4 md:gap-0">
+          
+          <div className="flex items-center justify-between w-full md:w-auto">
+            <div className="flex items-center gap-3 md:gap-6">
+              <button onClick={() => setSidebarOpen(true)} className="md:hidden p-2 -ml-2 text-gray-400 hover:text-white transition-colors shrink-0">
+                <Menu className="size-6" />
+              </button>
+              {/* Identity */}
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="hidden sm:flex size-10 md:size-12 bg-indigo-500/10 rounded-xl items-center justify-center text-indigo-500 ring-1 ring-inset ring-indigo-500/20 shrink-0">
+                  <Briefcase className="size-5 md:size-6" />
                 </div>
-                <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
-                  {isLoading ? (
-                    <div className="p-4 text-center text-xs text-gray-500">
-                      Loading...
-                    </div>
-                  ) : notifications.length === 0 ? (
-                    <div className="p-8 text-center text-gray-500 text-xs italic">
-                      No notifications
-                    </div>
-                  ) : (
-                    notifications.map((n) => (
-                      <div
-                        key={n._id}
-                        className={`p-3 border-b border-[#2f2f2f] hover:bg-[#1f1f1f] transition-colors cursor-pointer ${!n.isRead ? "bg-[#2f2f2f]" : ""}`}
-                        onClick={() => markAsRead(n._id)}
-                      >
-                        <div className="flex items-start gap-3">
+                <div>
+                  <div className="flex items-center gap-2 md:gap-3 mb-0.5 md:mb-1">
+                    <h1 className="text-lg md:text-xl font-bold text-white leading-none tracking-tight line-clamp-1 max-w-[150px] sm:max-w-[200px] md:max-w-none">
+                      {project.name}
+                    </h1>
+                    <span
+                      className={`px-1.5 py-0.5 md:px-2 md:py-0.5 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-wider border shrink-0 ${
+                        project.status === "active"
+                          ? "bg-green-500/10 text-green-500 border-green-500/20"
+                          : project.status === "archived"
+                            ? "bg-gray-500/10 text-gray-500 border-gray-500/20"
+                            : "bg-yellow-500/10 text-yellow-500 border-yellow-500/20"
+                      }`}
+                    >
+                      {project.status || "Active"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 md:gap-4 text-[10px] md:text-xs text-gray-500 font-medium">
+                    <span className="flex items-center gap-1 md:gap-1.5 hover:text-gray-300 transition-colors cursor-default">
+                      <Clock className="size-3 md:size-3.5" /> Updated{" "}
+                      {new Date(project.updatedAt).toLocaleDateString()}
+                    </span>
+                    {project.lead && (
+                      <div className="hidden xs:flex items-center gap-1.5 pl-3 border-l border-[#424242]">
+                        <span className="text-gray-600">Lead:</span>
+                        <div className="flex items-center gap-1.5">
                           <img
-                            src={n.sender?.profilePic || "/avatar.png"}
-                            className="size-8 rounded-full object-cover mt-0.5"
+                            src={
+                              project.lead.profilePic ||
+                              project.lead?.profilePic ||
+                              "/avatar.png"
+                            }
+                            className="size-4 rounded-full"
                           />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs text-gray-300">
-                              <span className="font-bold text-white">
-                                {n.sender?.fullName}
-                              </span>{" "}
-                              {n.text}
-                            </p>
-                            <p className="text-[10px] text-gray-500 mt-1">
-                              {new Date(n.createdAt).toLocaleDateString()}
-                            </p>
-                          </div>
-                          {!n.isRead && (
-                            <div className="size-1.5 bg-indigo-500 rounded-full mt-2"></div>
-                          )}
+                          <span className="text-gray-300">
+                            {project.lead.fullName || project.lead?.fullName}
+                          </span>
                         </div>
                       </div>
-                    ))
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
-            )}
-          </div>
-
-          {hasManageAccess && subTab === "overview" && (
-            <div className="flex items-center gap-2">
-                <button
-                onClick={() => setShowAddMember(true)}
-                className="bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-bold px-3 py-2 rounded-lg border border-[#424242] flex items-center gap-2 transition-all active:scale-95"
-                >
-                <Users className="size-3.5" />
-                <span>Add Member</span>
-                </button>
-                <button
-                onClick={() => {
-                    if(window.confirm("Are you sure you want to delete this project? This action cannot be undone.")) {
-                        useOrgStore.getState().deleteProject(project._id);
-                    }
-                }}
-                className="bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-bold px-3 py-2 rounded-lg border border-red-500/20 flex items-center gap-2 transition-all active:scale-95"
-                >
-                <AlertCircle className="size-3.5" />
-                <span>Delete</span>
-                </button>
             </div>
-          )}
 
-          <div className="h-8 w-[1px] bg-[#333] mx-2"></div>
-
-          {/* Tabs */}
-          <div className="flex bg-[#0d0d0d] p-1 rounded-lg border border-[#2f2f2f]">
-            <button
-              onClick={() => setSubTab("overview")}
-              className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${subTab === "overview" ? "bg-[#2f2f2f] text-white shadow-sm" : "text-gray-500 hover:text-gray-300"}`}
-            >
-              Overview
-            </button>
-            <button
-              onClick={() => setSubTab("chat")}
-              className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all flex items-center gap-2 ${subTab === "chat" ? "bg-[#2f2f2f] text-white shadow-sm" : "text-gray-500 hover:text-gray-300"}`}
-            >
-              Chat
-            </button>
+            {/* Mobile Notification Bell */}
+            <div className="md:hidden relative">
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="p-2 -mr-2 text-gray-400 hover:text-white rounded-lg transition-colors relative"
+              >
+                <img
+                  src="/bell.png"
+                  alt="Notifications"
+                  className="size-5 object-contain invert brightness-0 opacity-70"
+                />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1.5 right-1.5 size-2 bg-red-500 rounded-full border border-[#111]"></span>
+                )}
+              </button>
+            </div>
           </div>
 
+          {/* Right Actions & Tabs - Horizontally scrollable on mobile */}
+          <div className="flex items-center gap-2 md:gap-4 overflow-x-auto hide-scrollbar pb-1 md:pb-0 w-full md:w-auto">
+            {/* Desktop Notification Bell */}
+            <div className="hidden md:block relative shrink-0">
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="p-2 text-gray-400 hover:text-white hover:bg-[#2f2f2f] rounded-lg transition-colors relative"
+              >
+                <img
+                  src="/bell.png"
+                  alt="Notifications"
+                  className="size-5 object-contain invert brightness-0 opacity-70 hover:opacity-100 transition-opacity"
+                />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1.5 right-1.5 size-2 bg-red-500 rounded-full border border-[#111]"></span>
+                )}
+              </button>
 
+              {/* Notification Dropdown */}
+              {showNotifications && (
+                <div className="absolute right-0 top-full mt-2 w-80 bg-[#212121] border border-[#424242] rounded-xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2">
+                  <div className="p-3 border-b border-[#424242] flex items-center justify-between">
+                    <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+                      Notifications
+                    </h3>
+                    {unreadCount > 0 && (
+                      <button
+                        onClick={markAllAsRead}
+                        className="text-[10px] text-indigo-400 hover:text-indigo-300 font-medium"
+                      >
+                        Mark all read
+                      </button>
+                    )}
+                  </div>
+                  <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                    {isLoading ? (
+                      <div className="p-4 text-center text-xs text-gray-500">
+                        Loading...
+                      </div>
+                    ) : notifications.length === 0 ? (
+                      <div className="p-8 text-center text-gray-500 text-xs italic">
+                        No notifications
+                      </div>
+                    ) : (
+                      notifications.map((n) => (
+                        <div
+                          key={n._id}
+                          className={`p-3 border-b border-[#2f2f2f] hover:bg-[#1f1f1f] transition-colors cursor-pointer ${!n.isRead ? "bg-[#2f2f2f]" : ""}`}
+                          onClick={() => markAsRead(n._id)}
+                        >
+                          <div className="flex items-start gap-3">
+                            <img
+                              src={n.sender?.profilePic || "/avatar.png"}
+                              className="size-8 rounded-full object-cover mt-0.5"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs text-gray-300">
+                                <span className="font-bold text-white">
+                                  {n.sender?.fullName}
+                                </span>{" "}
+                                {n.text}
+                              </p>
+                              <p className="text-[10px] text-gray-500 mt-1">
+                                {new Date(n.createdAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                            {!n.isRead && (
+                              <div className="size-1.5 bg-indigo-500 rounded-full mt-2"></div>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {hasManageAccess && subTab === "overview" && (
+              <div className="flex items-center gap-2 shrink-0">
+                  <button
+                  onClick={() => setShowAddMember(true)}
+                  className="bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-bold px-3 py-1.5 md:py-2 rounded-lg border border-[#424242] flex items-center gap-1.5 md:gap-2 transition-all active:scale-95"
+                  >
+                  <Users className="size-3.5" />
+                  <span>Add Member</span>
+                  </button>
+                  <button
+                  onClick={() => {
+                      if(window.confirm("Are you sure you want to delete this project? This action cannot be undone.")) {
+                          useOrgStore.getState().deleteProject(project._id);
+                      }
+                  }}
+                  className="bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-bold px-3 py-1.5 md:py-2 rounded-lg border border-red-500/20 flex items-center gap-1.5 md:gap-2 transition-all active:scale-95"
+                  >
+                  <AlertCircle className="size-3.5" />
+                  <span className="hidden md:inline">Delete</span>
+                  </button>
+              </div>
+            )}
+
+            <div className="hidden md:block h-8 w-[1px] bg-[#333] mx-2 shrink-0"></div>
+
+            {/* Tabs */}
+            <div className="flex bg-[#0d0d0d] p-1 rounded-lg border border-[#2f2f2f] shrink-0">
+              <button
+                onClick={() => setSubTab("overview")}
+                className={`px-3 md:px-4 py-1.5 rounded-md text-xs md:text-sm font-bold transition-all ${subTab === "overview" ? "bg-[#2f2f2f] text-white shadow-sm" : "text-gray-500 hover:text-gray-300"}`}
+              >
+                Overview
+              </button>
+              <button
+                onClick={() => setSubTab("chat")}
+                className={`px-3 md:px-4 py-1.5 rounded-md text-xs md:text-sm font-bold transition-all flex items-center gap-1.5 md:gap-2 ${subTab === "chat" ? "bg-[#2f2f2f] text-white shadow-sm" : "text-gray-500 hover:text-gray-300"}`}
+              >
+                Chat
+              </button>
+            </div>
+
+          </div>
         </div>
       </div>
 

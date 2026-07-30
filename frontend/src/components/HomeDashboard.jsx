@@ -119,10 +119,17 @@ const HomeDashboard = () => {
     }, [date, view]);
 
     const filteredTasks = useMemo(() => {
-        return userTasks.filter(task => {
+        const safeTasks = Array.isArray(userTasks) ? userTasks : [];
+        return safeTasks.filter(task => {
             if (!task.dueDate) return false;
             const dueDate = new Date(task.dueDate);
-            return isWithinInterval(dueDate, { start: range.start, end: range.end });
+            if (!range.start || !range.end) return true; // Failsafe
+            try {
+                return isWithinInterval(dueDate, { start: range.start, end: range.end });
+            } catch (e) {
+                console.error("Date filtering error:", e);
+                return false;
+            }
         });
     }, [userTasks, range]);
 
@@ -313,12 +320,12 @@ const HomeDashboard = () => {
                     </div>
                 </div>
 
-                {/* Right: Calendar */}
-                <div className="lg:w-2/3 flex flex-col bg-[#212121] rounded-2xl border border-[#2f2f2f] overflow-hidden shadow-2xl relative">
+                {/* Right: Calendar (Desktop Only) */}
+                <div className="hidden lg:flex lg:w-2/3 flex-col bg-[#212121] rounded-2xl border border-[#2f2f2f] overflow-hidden shadow-2xl relative">
                     <div className="flex-1 p-1 h-full overflow-hidden">
                         <Calendar
                             localizer={localizer}
-                            events={userEvents}
+                            events={userEvents || []}
                             startAccessor="start"
                             endAccessor="end"
                             style={{ height: "100%" }}
@@ -328,11 +335,11 @@ const HomeDashboard = () => {
                             onView={setView}
                             onNavigate={setDate}
                             onSelectEvent={handleSelectEvent}
-                            onDrillDown={handleDrillDown} // Enable click-to-day
+                            onDrillDown={handleDrillDown}
                             onSelectSlot={handleSelectSlot}
                             selectable
-                            scrollToTime={new Date(1970, 1, 1, 8, 0, 0)} // Scroll to 8 AM default
-                            step={30} // 30 min steps for real feel
+                            scrollToTime={new Date(1970, 1, 1, 8, 0, 0)}
+                            step={30}
                             timeslots={2}
                             components={{
                                 event: EventComponent,
@@ -348,6 +355,43 @@ const HomeDashboard = () => {
                                 };
                             }}
                         />
+                    </div>
+                </div>
+
+                {/* Mobile Agenda View (Hidden on Desktop) */}
+                <div className="lg:hidden flex flex-col bg-[#212121] rounded-2xl border border-[#2f2f2f] overflow-hidden shadow-2xl relative mt-4">
+                    <div className="p-4 border-b border-[#2f2f2f] flex items-center justify-between bg-[#1a1a1a]">
+                        <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                            <CalendarIcon className="size-4 text-indigo-400" />
+                            Upcoming Agenda
+                        </h2>
+                        <button onClick={() => setIsCreateModalOpen(true)} className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg transition-colors font-medium">
+                            + New
+                        </button>
+                    </div>
+                    <div className="p-2 space-y-2 max-h-[400px] overflow-y-auto custom-scrollbar">
+                        {(!userEvents || userEvents.length === 0) ? (
+                            <div className="p-8 text-center text-gray-500 text-xs">No upcoming events or meetings</div>
+                        ) : (
+                            [...userEvents]
+                                .sort((a, b) => new Date(a.start) - new Date(b.start))
+                                .filter(e => new Date(e.end) >= new Date())
+                                .slice(0, 10)
+                                .map((event, idx) => (
+                                <div key={idx} onClick={() => handleSelectEvent(event)} className="p-3 bg-[#171717] hover:bg-[#2f2f2f] rounded-lg border border-[#2f2f2f] cursor-pointer transition-colors flex flex-col gap-1.5">
+                                    <div className="flex justify-between items-start">
+                                        <h3 className="text-sm font-medium text-gray-200 line-clamp-1 pr-4">{event.title}</h3>
+                                        <span className={`text-[9px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full ${event.type === 'meeting' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-blue-500/10 text-blue-400'}`}>
+                                            {event.type}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-xs text-gray-500 font-medium">
+                                        <Clock className="size-3.5" />
+                                        {format(new Date(event.start), "MMM d, h:mm a")} - {format(new Date(event.end), "h:mm a")}
+                                    </div>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
             </div>

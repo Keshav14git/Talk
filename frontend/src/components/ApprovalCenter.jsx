@@ -3,13 +3,15 @@ import { useApprovalStore } from "../store/useApprovalStore";
 import { useAuthStore } from "../store/useAuthStore";
 import { useParams } from "react-router-dom";
 import { useOrgStore } from "../store/useOrgStore";
-import { CheckCircle, XCircle, Clock, Inbox, Send, FileText, ChevronRight, Trash2, History, CalendarDays } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Inbox, Send, FileText, ChevronRight, Trash2, History, CalendarDays, Menu } from "lucide-react";
+import { useChatStore } from "../store/useChatStore";
 import RequestForms from "./forms/RequestForms";
 
 const ApprovalCenter = () => {
     const { orgId } = useParams();
     const { authUser } = useAuthStore();
     const { orgMembers } = useOrgStore();
+    const { setSidebarOpen } = useChatStore();
     const { inbox, sentRequests, history, leaveBalance, fetchInbox, fetchSentRequests, fetchHistory, fetchLeaveBalance, updateRequestStatus, deleteRequest, isLoading } = useApprovalStore();
     
     // Check if user is an admin/owner
@@ -48,10 +50,10 @@ const ApprovalCenter = () => {
         if (requests.length === 0) return <div className="p-8 text-center text-gray-500">No requests found.</div>;
         
         return (
-            <div className="space-y-4 p-8 lg:p-12 pt-6">
+            <div className="space-y-4 p-4 md:p-8 lg:p-12 pt-4 md:pt-6">
                 {requests.map(req => (
-                    <div key={req._id} className="bg-[#171717] border border-[#2f2f2f] hover:border-gray-600 transition-colors rounded-xl p-6 flex items-start justify-between">
-                        <div className="flex-1 max-w-3xl">
+                    <div key={req._id} className="bg-[#171717] border border-[#2f2f2f] hover:border-gray-600 transition-colors rounded-xl p-4 md:p-6 flex flex-col md:flex-row items-start justify-between gap-4">
+                        <div className="flex-1 w-full max-w-3xl">
                             <div className="flex items-center gap-3 mb-3">
                                 {getStatusIcon(req.status)}
                                 <span className="text-gray-200 font-semibold text-[15px] capitalize">{req.type.replace(/_/g, ' ')}</span>
@@ -83,18 +85,18 @@ const ApprovalCenter = () => {
                         </div>
 
                         {isInbox && req.status === "pending" && (
-                            <div className="flex flex-col gap-2 ml-6 shrink-0">
-                                <button onClick={() => handleApprove(req._id)} className="px-5 py-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white rounded-lg transition-colors text-[13px] font-medium border border-emerald-500/20 hover:border-emerald-500 min-w-[100px]">
+                            <div className="flex flex-row md:flex-col gap-2 md:ml-6 shrink-0 w-full md:w-auto mt-2 md:mt-0">
+                                <button onClick={() => handleApprove(req._id)} className="flex-1 md:flex-none px-5 py-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white rounded-lg transition-colors text-[13px] font-medium border border-emerald-500/20 hover:border-emerald-500 min-w-[100px]">
                                     Approve
                                 </button>
-                                <button onClick={() => handleDeny(req._id)} className="px-5 py-2 bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white rounded-lg transition-colors text-[13px] font-medium border border-rose-500/20 hover:border-rose-500 min-w-[100px]">
+                                <button onClick={() => handleDeny(req._id)} className="flex-1 md:flex-none px-5 py-2 bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white rounded-lg transition-colors text-[13px] font-medium border border-rose-500/20 hover:border-rose-500 min-w-[100px]">
                                     Deny
                                 </button>
                             </div>
                         )}
                         
                         {!isInbox && !isHistory && req.status === "pending" && (
-                            <div className="flex flex-col gap-2 ml-6 shrink-0 justify-center">
+                            <div className="flex flex-col gap-2 md:ml-6 shrink-0 justify-center absolute md:static top-4 right-4">
                                 <button onClick={() => handleDelete(req._id)} className="p-2 text-gray-500 hover:bg-rose-500/10 hover:text-rose-400 rounded-lg transition-colors border border-transparent hover:border-rose-500/20" title="Delete Request">
                                     <Trash2 className="w-4 h-4" />
                                 </button>
@@ -115,41 +117,44 @@ const ApprovalCenter = () => {
 
     return (
         <div className="flex-1 flex flex-col h-full bg-[#0d0d0d]">
-            <div className="h-16 border-b border-[#2f2f2f] bg-[#0d0d0d] flex items-center px-6 shrink-0">
+            <div className="h-16 border-b border-[#2f2f2f] bg-[#0d0d0d] flex items-center px-4 md:px-6 shrink-0 gap-3">
+                <button onClick={() => setSidebarOpen(true)} className="md:hidden p-2 -ml-2 text-gray-400 hover:text-white transition-colors shrink-0">
+                    <Menu className="size-6" />
+                </button>
                 <h1 className="text-lg font-semibold text-gray-200 flex items-center gap-2.5">
                     <FileText className="w-5 h-5 text-indigo-400" />
                     Approval Center
                 </h1>
             </div>
 
-            <div className="flex-1 overflow-hidden flex">
+            <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
                 {/* Sidebar Navigation */}
-                <div className="w-64 border-r border-[#2f2f2f] bg-[#171717] p-4 flex flex-col gap-2 shrink-0">
+                <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-[#2f2f2f] bg-[#171717] p-2 md:p-4 flex flex-row md:flex-col gap-2 shrink-0 overflow-x-auto hide-scrollbar">
                     <button 
                         onClick={() => setActiveTab("new")}
-                        className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-[14px] ${activeTab === "new" ? "bg-indigo-500/10 text-indigo-400 font-medium" : "text-gray-400 hover:bg-[#2a2a2a] hover:text-gray-200"}`}
+                        className={`flex items-center gap-2 md:gap-3 px-4 py-2 md:py-2.5 rounded-lg transition-all text-[13px] md:text-[14px] shrink-0 ${activeTab === "new" ? "bg-indigo-500/10 text-indigo-400 font-medium" : "text-gray-400 hover:bg-[#2a2a2a] hover:text-gray-200"}`}
                     >
                         <Send className="w-4 h-4" />
-                        <span>Submit Request</span>
+                        <span className="whitespace-nowrap">Submit Request</span>
                     </button>
                     
                     <button 
                         onClick={() => setActiveTab("my-requests")}
-                        className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-[14px] ${activeTab === "my-requests" ? "bg-[#2a2a2a] text-gray-200 font-medium" : "text-gray-400 hover:bg-[#2a2a2a] hover:text-gray-200"}`}
+                        className={`flex items-center gap-2 md:gap-3 px-4 py-2 md:py-2.5 rounded-lg transition-all text-[13px] md:text-[14px] shrink-0 ${activeTab === "my-requests" ? "bg-[#2a2a2a] text-gray-200 font-medium" : "text-gray-400 hover:bg-[#2a2a2a] hover:text-gray-200"}`}
                     >
                         <Clock className="w-4 h-4" />
-                        <span>My Requests</span>
+                        <span className="whitespace-nowrap">My Requests</span>
                     </button>
 
                     {(isAdmin || inbox.length > 0 || history?.length > 0) && (
                         <>
                             <button 
                                 onClick={() => setActiveTab("inbox")}
-                                className={`flex items-center justify-between px-4 py-2.5 rounded-lg transition-all text-[14px] ${activeTab === "inbox" ? "bg-[#2a2a2a] text-gray-200 font-medium" : "text-gray-400 hover:bg-[#2a2a2a] hover:text-gray-200"}`}
+                                className={`flex items-center justify-between gap-4 px-4 py-2 md:py-2.5 rounded-lg transition-all text-[13px] md:text-[14px] shrink-0 ${activeTab === "inbox" ? "bg-[#2a2a2a] text-gray-200 font-medium" : "text-gray-400 hover:bg-[#2a2a2a] hover:text-gray-200"}`}
                             >
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2 md:gap-3">
                                     <Inbox className="w-4 h-4" />
-                                    <span>Approvals Inbox</span>
+                                    <span className="whitespace-nowrap">Approvals Inbox</span>
                                 </div>
                                 {inbox.length > 0 && (
                                     <span className="bg-rose-500/20 text-rose-400 border border-rose-500/20 text-[10px] font-bold px-2 py-0.5 rounded-full">
@@ -160,10 +165,10 @@ const ApprovalCenter = () => {
 
                             <button 
                                 onClick={() => setActiveTab("history")}
-                                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-[14px] ${activeTab === "history" ? "bg-[#2a2a2a] text-gray-200 font-medium" : "text-gray-400 hover:bg-[#2a2a2a] hover:text-gray-200"}`}
+                                className={`flex items-center gap-2 md:gap-3 px-4 py-2 md:py-2.5 rounded-lg transition-all text-[13px] md:text-[14px] shrink-0 ${activeTab === "history" ? "bg-[#2a2a2a] text-gray-200 font-medium" : "text-gray-400 hover:bg-[#2a2a2a] hover:text-gray-200"}`}
                             >
                                 <History className="w-4 h-4" />
-                                <span>History</span>
+                                <span className="whitespace-nowrap">History</span>
                             </button>
                         </>
                     )}

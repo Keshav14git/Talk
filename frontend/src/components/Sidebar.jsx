@@ -125,15 +125,17 @@ const Sidebar = () => {
   return (
     <>
       {/* Mobile Backdrop */}
-      {isMobile && isSidebarOpen && (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/60 z-40 md:hidden backdrop-blur-sm transition-opacity" 
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+      <AnimatePresence>
+        {isMobile && isSidebarOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 z-40 md:hidden backdrop-blur-sm transition-opacity" 
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
       <motion.aside
         initial={{ width: 280, x: isMobile ? -280 : 0 }}

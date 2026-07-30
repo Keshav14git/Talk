@@ -161,7 +161,7 @@ const MessageInput = ({ overrideUser, overrideType }) => {
   }
 
   return (
-    <div className="p-3 w-full bg-gray-900 border-t border-gray-800 relative z-20">
+    <div className="p-3 pb-6 md:pb-3 w-full bg-gray-900 border-t border-gray-800 relative z-20">
 
       {/* Popups Layer - Absolute positioned above input */}
       {showEmoji && (

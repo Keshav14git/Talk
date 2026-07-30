@@ -123,15 +123,21 @@ const ProfileMenu = ({ collapsed }) => {
 
             {/* Portal Dropdown */}
             {isOpen && createPortal(
-                <div
-                    id="profile-menu-dropdown"
-                    className="fixed z-[9999] w-96 bg-[#171717] border border-[#3f3f3f] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 slide-in-from-bottom-2"
-                    style={{
-                        bottom: position.bottom,
-                        left: position.left,
-                        transformOrigin: 'bottom left'
-                    }}
-                >
+                <>
+                    {/* Mobile Backdrop */}
+                    <div className="fixed inset-0 bg-black/60 z-[9998] md:hidden animate-in fade-in" onClick={() => setIsOpen(false)} />
+                    
+                    <div
+                        id="profile-menu-dropdown"
+                        className="fixed z-[9999] bg-[#171717] shadow-2xl overflow-hidden animate-in fade-in duration-200
+                                   w-full inset-x-0 bottom-0 rounded-t-3xl slide-in-from-bottom-full border-t border-x border-[#3f3f3f] /* Mobile */
+                                   md:w-96 md:inset-auto md:rounded-2xl md:zoom-in-95 md:slide-in-from-bottom-2 md:border /* Desktop */"
+                        style={window.innerWidth >= 768 ? {
+                            bottom: position.bottom,
+                            left: position.left,
+                            transformOrigin: 'bottom left'
+                        } : {}}
+                    >
                     {/* Header Image Background */}
                     <div className="h-24 bg-gradient-to-r from-indigo-900/50 to-purple-900/50 relative">
                         <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20"></div>
@@ -272,7 +278,8 @@ const ProfileMenu = ({ collapsed }) => {
                             </button>
                         </div>
                     </div>
-                </div>,
+                </div>
+                </>,
                 document.body
             )}
         </>

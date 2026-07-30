@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useOrgStore } from "../store/useOrgStore";
 import { useAuthStore } from "../store/useAuthStore";
-import { Users, User, Clock, ChevronRight } from "lucide-react";
+import { Users, User, Clock, ChevronRight, Menu } from "lucide-react";
+import { useChatStore } from "../store/useChatStore";
 
 const TeamDashboard = () => {
     const { orgId } = useParams();
     const { fetchMyTeam } = useOrgStore();
     const { onlineUsers } = useAuthStore();
+    const { setSidebarOpen } = useChatStore();
     const [team, setTeam] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -27,20 +29,26 @@ const TeamDashboard = () => {
     if (isLoading) {
         return (
             <div className="flex-1 flex flex-col h-full bg-[#0d0d0d]">
-                <div className="h-16 border-b border-[#2f2f2f] flex items-center px-6 shrink-0">
+                <div className="h-16 border-b border-[#2f2f2f] flex items-center px-4 md:px-6 shrink-0 gap-3">
+                    <button onClick={() => setSidebarOpen(true)} className="md:hidden p-2 -ml-2 text-gray-400 hover:text-white transition-colors shrink-0">
+                        <Menu className="size-6" />
+                    </button>
                     <h1 className="text-lg font-semibold text-gray-200 flex items-center gap-2.5">
                         <Users className="w-5 h-5 text-indigo-400" />
                         My Team
                     </h1>
                 </div>
-                <div className="flex-1 p-8 text-gray-500">Loading team data...</div>
+                <div className="flex-1 p-4 md:p-8 text-gray-500">Loading team data...</div>
             </div>
         );
     }
 
     return (
         <div className="flex-1 flex flex-col h-full bg-[#0d0d0d]">
-            <div className="h-16 border-b border-[#2f2f2f] flex items-center px-6 shrink-0">
+            <div className="h-16 border-b border-[#2f2f2f] flex items-center px-4 md:px-6 shrink-0 gap-3">
+                <button onClick={() => setSidebarOpen(true)} className="md:hidden p-2 -ml-2 text-gray-400 hover:text-white transition-colors shrink-0">
+                    <Menu className="size-6" />
+                </button>
                 <h1 className="text-lg font-semibold text-gray-200 flex items-center gap-2.5">
                     <Users className="w-5 h-5 text-indigo-400" />
                     My Team
@@ -48,7 +56,7 @@ const TeamDashboard = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto custom-scrollbar">
-                <div className="p-8 lg:p-12 max-w-6xl mx-auto w-full">
+                <div className="p-4 md:p-8 lg:p-12 max-w-6xl mx-auto w-full">
                     
                     <div className="mb-8">
                         <h2 className="text-xl font-semibold text-gray-200">Direct Reports</h2>
